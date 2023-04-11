@@ -36,7 +36,7 @@
 #error "sys/_endian.h should not be included directly"
 #endif
 
-/* BSD Compatiblity */
+/* BSD Compatibility */
 #define	_BYTE_ORDER	__BYTE_ORDER__
 
 /*
