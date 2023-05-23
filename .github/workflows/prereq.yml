@@ -19,9 +19,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 11
-      - name: Check Email
-        run:  sh ./tools/build/check-email.sh HEAD~10..HEAD
       - name: Hack
-        run: git log -1
+        run: ./.github/workflows/fetch-until-merge-base-found.sh
+      - name: Check Email
+        run:  sh ./tools/build/check-email.sh origin/main..HEAD
       - name: Check Style
-        run:  ./tools/build/checkstyle9.pl -color=always HEAD~10..HEAD
+        run:  ./tools/build/checkstyle9.pl -color=always origin/main..HEAD
