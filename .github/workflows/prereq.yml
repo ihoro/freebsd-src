@@ -22,6 +22,6 @@ jobs:
       - name: Check Email
         run:  sh ./tools/build/check-email.sh HEAD~10..HEAD
       - name: Hack
-        run: git log -1
+        run: git -c protocol.version=2 fetch --no-tags --prune --progress --no-recurse-submodules --depth=11 origin main:refs/remotes/origin/main
       - name: Check Style
-        run:  ./tools/build/checkstyle9.pl -color=always HEAD~10..HEAD
+        run:  ./tools/build/checkstyle9.pl -color=always origin/main..HEAD
