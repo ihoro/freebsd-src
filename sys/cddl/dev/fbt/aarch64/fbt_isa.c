@@ -147,6 +147,8 @@ fbt_provide_module_function(linker_file_t lf, int symindx,
 		    ((*instr >> SUB_RD_SHIFT) & SUB_R_MASK) == 31 &&
 		    ((*instr >> SUB_RN_SHIFT) & SUB_R_MASK) == 31)
 			found = true;
+		if (found)
+			break; /* do not increment instr further */
 	}
 
 	if (!found)
