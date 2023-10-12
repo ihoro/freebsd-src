@@ -50,7 +50,7 @@ struct context {
 	ssize_t pkt_n;
 };
 
-void
+static void
 init(struct context *c)
 {
 	c->fd = socket(PF_DIVERT, SOCK_RAW, 0);
@@ -67,7 +67,7 @@ init(struct context *c)
 		errx(EX_OSERR, "Cannot bind divert socket.");
 }
 
-ssize_t
+static ssize_t
 recv_pkt(struct context *c)
 {
 	fd_set readfds;
@@ -89,13 +89,11 @@ recv_pkt(struct context *c)
 	    (struct sockaddr *) &c->sin, &c->sin_len);
 	if (c->pkt_n == -1)
 		errx(EX_IOERR, "recv_pkt: recvfrom() errors.");
-	if (c->pkt_n < sizeof(struct ip))
-		errx(EX_IOERR, "recv_pkt: packet is too short.");
 
 	return (c->pkt_n);
 }
 
-void
+static void
 send_pkt(struct context *c)
 {
 	ssize_t n;
