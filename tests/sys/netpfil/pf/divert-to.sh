@@ -90,7 +90,7 @@ in_div_body()
 		"pass all" \
 		"pass in inet proto icmp icmp-type echoreq divert-to 127.0.0.1 port 2000"
 
-	jexec div $(atf_get_srcdir)/divert-to.divapp 2000 &
+	jexec div $(atf_get_srcdir)/divapp 2000 &
 	divapp_pid=$!
 	# Wait for the divapp to be ready
 	sleep 1
@@ -129,7 +129,7 @@ in_div_in_body()
 		"pass all" \
 		"pass in inet proto icmp icmp-type echoreq divert-to 127.0.0.1 port 2000 no state"
 
-	jexec div $(atf_get_srcdir)/divert-to.divapp 2000 divert-back &
+	jexec div $(atf_get_srcdir)/divapp 2000 divert-back &
 	divapp_pid=$!
 	# Wait for the divapp to be ready
 	sleep 1
@@ -169,7 +169,7 @@ out_div_body()
 		"pass in inet proto icmp icmp-type echoreq no state" \
 		"pass out inet proto icmp icmp-type echorep divert-to 127.0.0.1 port 2000 no state"
 
-	jexec div $(atf_get_srcdir)/divert-to.divapp 2000 &
+	jexec div $(atf_get_srcdir)/divapp 2000 &
 	divapp_pid=$!
 	# Wait for the divapp to be ready
 	sleep 1
@@ -209,7 +209,7 @@ out_div_out_body()
 		"pass in inet proto icmp icmp-type echoreq no state" \
 		"pass out inet proto icmp icmp-type echorep divert-to 127.0.0.1 port 2000 no state"
 
-	jexec div $(atf_get_srcdir)/divert-to.divapp 2000 divert-back &
+	jexec div $(atf_get_srcdir)/divapp 2000 divert-back &
 	divapp_pid=$!
 	# Wait for the divapp to be ready
 	sleep 1
@@ -263,9 +263,9 @@ in_div_in_fwd_out_div_out_body()
 		"pass in inet proto icmp icmp-type echoreq divert-to 127.0.0.1 port 2001 no state" \
 		"pass out inet proto icmp icmp-type echoreq divert-to 127.0.0.1 port 2002 no state"
 
-	jexec router $(atf_get_srcdir)/divert-to.divapp 2001 divert-back &
+	jexec router $(atf_get_srcdir)/divapp 2001 divert-back &
 	indivapp_pid=$!
-	jexec router $(atf_get_srcdir)/divert-to.divapp 2002 divert-back &
+	jexec router $(atf_get_srcdir)/divapp 2002 divert-back &
 	outdivapp_pid=$!
 	# Wait for the divappS to be ready
 	sleep 1

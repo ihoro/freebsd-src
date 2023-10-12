@@ -25,6 +25,8 @@
  * SUCH DAMAGE.
  */
 
+/* Used by tests like divert-to.sh */
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <err.h>
