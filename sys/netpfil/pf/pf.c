@@ -7709,7 +7709,7 @@ pf_test(int dir, int pflags, struct ifnet *ifp, struct mbuf **m0,
 	if (__predict_false(ip_divert_ptr != NULL) &&
 	    ((ipfwtag = m_tag_locate(m, MTAG_IPFW_RULE, 0, NULL)) != NULL)) {
 		struct ipfw_rule_ref *rr = (struct ipfw_rule_ref *)(ipfwtag+1);
-		if (rr->info & IPFW_IS_DIVERT && rr->rulenum == 0) {
+		if (rr->info & IPFW_IS_DIVERT && ((rr->rulenum - 1) == dir)) {
 			if (pd.pf_mtag == NULL &&
 			    ((pd.pf_mtag = pf_get_mtag(m)) == NULL)) {
 				action = PF_DROP;
@@ -8040,6 +8040,9 @@ done:
 			DPFPRINTF(PF_DEBUG_MISC,
 			    ("pf: failed to allocate divert tag\n"));
 		}
+	} else if (PACKET_LOOPED(&pd)) {
+		/* this flag will be outdated if the pkt is forwarded */
+		pd.pf_mtag->flags &= ~PF_MTAG_FLAG_PACKET_LOOPED;
 	}
 
 	if (pd.act.log) {
