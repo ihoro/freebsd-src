@@ -2,6 +2,7 @@
 PACKAGE=	tests
 
 TESTSDIR=       ${TESTSBASE}/sys/netpfil/pf
+BINDIR=		${TESTSDIR}
 TESTS_SUBDIRS+=	ioctl
 
 ATF_TESTS_SH+=	altq \
