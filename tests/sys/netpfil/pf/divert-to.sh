@@ -55,6 +55,7 @@
 # div - diverted
 # out - outbound
 # fwd - forwarded
+# ipfwon - with ipfw enabled, which allows all
 #
 
 . $(atf_get_srcdir)/utils.subr
@@ -63,6 +64,13 @@ divert_init()
 {
 	if ! kldstat -q -m ipdivert; then
 		atf_skip "This test requires ipdivert"
+	fi
+}
+
+ipfw_init()
+{
+	if ! kldstat -q -m ipfw; then
+		atf_skip "This test requires ipfw"
 	fi
 }
 
@@ -224,6 +232,49 @@ out_div_out_cleanup()
 	pft_cleanup
 }
 
+atf_test_case "out_div_out_ipfwon" "cleanup"
+out_div_out_ipfwon_head()
+{
+	atf_set descr 'Test outbound > diverted > outbound | network terminated, with ipfw enabled'
+	atf_set require.user root
+}
+out_div_out_ipfwon_body()
+{
+	pft_init
+	divert_init
+	ipfw_init
+
+	epair=$(vnet_mkepair)
+	vnet_mkjail div ${epair}b
+	ifconfig ${epair}a 192.0.2.1/24 up
+	jexec div ifconfig ${epair}b 192.0.2.2/24 up
+	# the rule number is important to allow divert(4) packets:
+	jexec div ipfw add 65534 allow all from any to any
+
+	# Sanity check
+	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
+
+	jexec div pfctl -e
+	pft_set_rules div \
+		"pass all" \
+		"pass in inet proto icmp icmp-type echoreq no state" \
+		"pass out inet proto icmp icmp-type echorep divert-to 127.0.0.1 port 2000 no state"
+
+	jexec div $(atf_get_srcdir)/divapp 2000 divert-back &
+	divapp_pid=$!
+	# Wait for the divapp to be ready
+	sleep 1
+
+	# divapp is NOT expected to "eat" the packet
+	atf_check -s exit:0 -o ignore ping -c1 192.0.2.2
+
+	wait $divapp_pid
+}
+out_div_out_ipfwon_cleanup()
+{
+	pft_cleanup
+}
+
 atf_test_case "in_div_in_fwd_out_div_out" "cleanup"
 in_div_in_fwd_out_div_out_head()
 {
@@ -287,6 +338,7 @@ atf_init_test_cases()
 
 	atf_add_test_case "out_div"
 	atf_add_test_case "out_div_out"
+	atf_add_test_case "out_div_out_ipfwon"
 
 	atf_add_test_case "in_div_in_fwd_out_div_out"
 }
