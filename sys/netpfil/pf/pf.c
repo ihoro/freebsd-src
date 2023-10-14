@@ -8040,10 +8040,10 @@ done:
 			DPFPRINTF(PF_DEBUG_MISC,
 			    ("pf: failed to allocate divert tag\n"));
 		}
-	} else if (PACKET_LOOPED(&pd)) {
-		/* this flag will be outdated if the pkt is forwarded */
-		pd.pf_mtag->flags &= ~PF_MTAG_FLAG_PACKET_LOOPED;
 	}
+	/* this flag will need revising if the pkt is forwarded */
+	if (pd.pf_mtag)
+		pd.pf_mtag->flags &= ~PF_MTAG_FLAG_PACKET_LOOPED;
 
 	if (pd.act.log) {
 		struct pf_krule		*lr;
