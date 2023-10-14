@@ -74,6 +74,13 @@ ipfw_init()
 	fi
 }
 
+assert_ipfw_is_off()
+{
+	if kldstat -q -m ipfw; then
+		atf_skip "This test is for the case when ipfw is not loaded"
+	fi
+}
+
 atf_test_case "in_div" "cleanup"
 in_div_head()
 {
@@ -82,13 +89,18 @@ in_div_head()
 }
 in_div_body()
 {
+	local ipfwon
+
 	pft_init
 	divert_init
+	test "$1" == "ipfwon" && ipfwon="yes"
+	test $ipfwon && ipfw_init || assert_ipfw_is_off
 
 	epair=$(vnet_mkepair)
 	vnet_mkjail div ${epair}b
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
+	test $ipfwon && jexec div ipfw add 65534 allow all from any to any
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -113,6 +125,21 @@ in_div_cleanup()
 	pft_cleanup
 }
 
+atf_test_case "in_div_ipfwon" "cleanup"
+in_div_ipfwon_head()
+{
+	atf_set descr 'Test inbound > diverted | divapp terminated, with ipfw enabled'
+	atf_set require.user root
+}
+in_div_ipfwon_body()
+{
+	in_div_body "ipfwon"
+}
+in_div_ipfwon_cleanup()
+{
+	pft_cleanup
+}
+
 atf_test_case "in_div_in" "cleanup"
 in_div_in_head()
 {
@@ -121,13 +148,18 @@ in_div_in_head()
 }
 in_div_in_body()
 {
+	local ipfwon
+
 	pft_init
 	divert_init
+	test "$1" == "ipfwon" && ipfwon="yes"
+	test $ipfwon && ipfw_init || assert_ipfw_is_off
 
 	epair=$(vnet_mkepair)
 	vnet_mkjail div ${epair}b
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
+	test $ipfwon && jexec div ipfw add 65534 allow all from any to any
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -152,6 +184,21 @@ in_div_in_cleanup()
 	pft_cleanup
 }
 
+atf_test_case "in_div_in_ipfwon" "cleanup"
+in_div_in_ipfwon_head()
+{
+	atf_set descr 'Test inbound > diverted > inbound | host terminated, with ipfw enabled'
+	atf_set require.user root
+}
+in_div_in_ipfwon_body()
+{
+	in_div_in_body "ipfwon"
+}
+in_div_in_ipfwon_cleanup()
+{
+	pft_cleanup
+}
+
 atf_test_case "out_div" "cleanup"
 out_div_head()
 {
@@ -160,13 +207,18 @@ out_div_head()
 }
 out_div_body()
 {
+	local ipfwon
+
 	pft_init
 	divert_init
+	test "$1" == "ipfwon" && ipfwon="yes"
+	test $ipfwon && ipfw_init || assert_ipfw_is_off
 
 	epair=$(vnet_mkepair)
 	vnet_mkjail div ${epair}b
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
+	test $ipfwon && jexec div ipfw add 65534 allow all from any to any
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -192,6 +244,21 @@ out_div_cleanup()
 	pft_cleanup
 }
 
+atf_test_case "out_div_ipfwon" "cleanup"
+out_div_ipfwon_head()
+{
+	atf_set descr 'Test outbound > diverted | divapp terminated, with ipfw enabled'
+	atf_set require.user root
+}
+out_div_ipfwon_body()
+{
+	out_div_body "ipfwon"
+}
+out_div_ipfwon_cleanup()
+{
+	pft_cleanup
+}
+
 atf_test_case "out_div_out" "cleanup"
 out_div_out_head()
 {
@@ -200,13 +267,18 @@ out_div_out_head()
 }
 out_div_out_body()
 {
+	local ipfwon
+
 	pft_init
 	divert_init
+	test "$1" == "ipfwon" && ipfwon="yes"
+	test $ipfwon && ipfw_init || assert_ipfw_is_off
 
 	epair=$(vnet_mkepair)
 	vnet_mkjail div ${epair}b
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
+	test $ipfwon && jexec div ipfw add 65534 allow all from any to any
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -240,35 +312,7 @@ out_div_out_ipfwon_head()
 }
 out_div_out_ipfwon_body()
 {
-	pft_init
-	divert_init
-	ipfw_init
-
-	epair=$(vnet_mkepair)
-	vnet_mkjail div ${epair}b
-	ifconfig ${epair}a 192.0.2.1/24 up
-	jexec div ifconfig ${epair}b 192.0.2.2/24 up
-	# the rule number is important to allow divert(4) packets:
-	jexec div ipfw add 65534 allow all from any to any
-
-	# Sanity check
-	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
-
-	jexec div pfctl -e
-	pft_set_rules div \
-		"pass all" \
-		"pass in inet proto icmp icmp-type echoreq no state" \
-		"pass out inet proto icmp icmp-type echorep divert-to 127.0.0.1 port 2000 no state"
-
-	jexec div $(atf_get_srcdir)/divapp 2000 divert-back &
-	divapp_pid=$!
-	# Wait for the divapp to be ready
-	sleep 1
-
-	# divapp is NOT expected to "eat" the packet
-	atf_check -s exit:0 -o ignore ping -c1 192.0.2.2
-
-	wait $divapp_pid
+	out_div_out_body "ipfwon"
 }
 out_div_out_ipfwon_cleanup()
 {
@@ -283,8 +327,12 @@ in_div_in_fwd_out_div_out_head()
 }
 in_div_in_fwd_out_div_out_body()
 {
+	local ipfwon
+
 	pft_init
 	divert_init
+	test "$1" == "ipfwon" && ipfwon="yes"
+	test $ipfwon && ipfw_init || assert_ipfw_is_off
 
 	# host <a--epair0--b> router <a--epair1--b> site
 	epair0=$(vnet_mkepair)
@@ -295,10 +343,12 @@ in_div_in_fwd_out_div_out_body()
 	jexec router sysctl net.inet.ip.forwarding=1
 	jexec router ifconfig ${epair0}b 192.0.2.2/24 up
 	jexec router ifconfig ${epair1}a 198.51.100.1/24 up
+	test $ipfwon && jexec router ipfw add 65534 allow all from any to any
 
 	vnet_mkjail site ${epair1}b
 	jexec site ifconfig ${epair1}b 198.51.100.2/24 up
 	jexec site route add default 198.51.100.1
+	test $ipfwon && jexec site ipfw add 65534 allow all from any to any
 
 	route add -net 198.51.100.0/24 192.0.2.2
 
@@ -331,14 +381,33 @@ in_div_in_fwd_out_div_out_cleanup()
 	pft_cleanup
 }
 
+atf_test_case "in_div_in_fwd_out_div_out_ipfwon" "cleanup"
+in_div_in_fwd_out_div_out_ipfwon_head()
+{
+	atf_set descr 'Test inbound > diverted > inbound > forwarded > outbound > diverted > outbound | network terminated, with ipfw enabled'
+	atf_set require.user root
+}
+in_div_in_fwd_out_div_out_ipfwon_body()
+{
+	in_div_in_fwd_out_div_out_body "ipfwon"
+}
+in_div_in_fwd_out_div_out_ipfwon_cleanup()
+{
+	pft_cleanup
+}
+
 atf_init_test_cases()
 {
 	atf_add_test_case "in_div"
 	atf_add_test_case "in_div_in"
+	atf_add_test_case "in_div_ipfwon"
+	atf_add_test_case "in_div_in_ipfwon"
 
 	atf_add_test_case "out_div"
 	atf_add_test_case "out_div_out"
+	atf_add_test_case "out_div_ipfwon"
 	atf_add_test_case "out_div_out_ipfwon"
 
 	atf_add_test_case "in_div_in_fwd_out_div_out"
+	atf_add_test_case "in_div_in_fwd_out_div_out_ipfwon"
 }
