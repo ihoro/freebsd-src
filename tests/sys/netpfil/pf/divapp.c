@@ -27,6 +27,7 @@
 
 /* Used by tests like divert-to.sh */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <err.h>
@@ -97,11 +98,17 @@ static void
 send_pkt(struct context *c)
 {
 	ssize_t n;
+	char errstr[32];
 
 	n = sendto(c->fd, c->pkt, c->pkt_n, 0,
 	    (struct sockaddr *) &c->sin, c->sin_len);
+	if (n == -1) {
+		strerror_r(errno, errstr, sizeof(errstr));
+		errx(EX_IOERR, "send_pkt: sendto() errors: %d %s.", errno, errstr);
+	}
 	if (n != c->pkt_n)
-		errx(EX_IOERR, "send_pkt: sendto() errors.");
+		errx(EX_IOERR, "send_pkt: sendto() sent %zd of %zd bytes.",
+		    n, c->pkt_n);
 }
 
 int
