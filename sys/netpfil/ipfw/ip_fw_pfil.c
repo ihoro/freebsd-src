@@ -129,13 +129,12 @@ ipfw_check_packet(struct mbuf **m0, struct ifnet *ifp, int flags,
 	args.flags = (flags & PFIL_IN) ? IPFW_ARGS_IN : IPFW_ARGS_OUT;
 again:
 	/*
-	 * extract and remove the tag if present. If we are left
+	 * extract the tag if present. If we are left
 	 * with onepass, optimize the outgoing path.
 	 */
 	tag = m_tag_locate(*m0, MTAG_IPFW_RULE, 0, NULL);
 	if (tag != NULL) {
 		args.rule = *((struct ipfw_rule_ref *)(tag+1));
-		m_tag_delete(*m0, tag);
 		if (args.rule.info & IPFW_ONEPASS)
 			return (PFIL_PASS);
 		args.flags |= IPFW_ARGS_REF;
@@ -553,14 +552,17 @@ ipfw_divert(struct mbuf **m0, struct ip_fw_args *args, bool tee)
 	}
 
 	/* attach a tag to the packet with the reinject info */
-	tag = m_tag_alloc(MTAG_IPFW_RULE, 0,
-		    sizeof(struct ipfw_rule_ref), M_NOWAIT);
+	tag = m_tag_locate(clone, MTAG_IPFW_RULE, 0, NULL);
 	if (tag == NULL) {
-		FREE_PKT(clone);
-		return 1;
+		tag = m_tag_alloc(MTAG_IPFW_RULE, 0,
+			    sizeof(struct ipfw_rule_ref), M_NOWAIT);
+		if (tag == NULL) {
+			FREE_PKT(clone);
+			return 1;
+		}
+		m_tag_prepend(clone, tag);
 	}
 	*((struct ipfw_rule_ref *)(tag+1)) = args->rule;
-	m_tag_prepend(clone, tag);
 
 	/* Do the dirty job... */
 	ip_divert_ptr(clone, args->flags & IPFW_ARGS_IN);
