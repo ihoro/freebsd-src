@@ -81,13 +81,13 @@ assert_ipfw_is_off()
 	fi
 }
 
-atf_test_case "in_div" "cleanup"
-in_div_head()
+atf_test_case "ipfwoff_in_div" "cleanup"
+ipfwoff_in_div_head()
 {
 	atf_set descr 'Test inbound > diverted | divapp terminated'
 	atf_set require.user root
 }
-in_div_body()
+ipfwoff_in_div_body()
 {
 	local ipfwon
 
@@ -120,33 +120,33 @@ in_div_body()
 
 	wait $divapp_pid
 }
-in_div_cleanup()
+ipfwoff_in_div_cleanup()
 {
 	pft_cleanup
 }
 
-atf_test_case "in_div_ipfwon" "cleanup"
-in_div_ipfwon_head()
+atf_test_case "ipfwon_in_div" "cleanup"
+ipfwon_in_div_head()
 {
 	atf_set descr 'Test inbound > diverted | divapp terminated, with ipfw enabled'
 	atf_set require.user root
 }
-in_div_ipfwon_body()
+ipfwon_in_div_body()
 {
-	in_div_body "ipfwon"
+	ipfwoff_in_div_body "ipfwon"
 }
-in_div_ipfwon_cleanup()
+ipfwon_in_div_cleanup()
 {
 	pft_cleanup
 }
 
-atf_test_case "in_div_in" "cleanup"
-in_div_in_head()
+atf_test_case "ipfwoff_in_div_in" "cleanup"
+ipfwoff_in_div_in_head()
 {
 	atf_set descr 'Test inbound > diverted > inbound | host terminated'
 	atf_set require.user root
 }
-in_div_in_body()
+ipfwoff_in_div_in_body()
 {
 	local ipfwon
 
@@ -179,33 +179,33 @@ in_div_in_body()
 
 	wait $divapp_pid
 }
-in_div_in_cleanup()
+ipfwoff_in_div_in_cleanup()
 {
 	pft_cleanup
 }
 
-atf_test_case "in_div_in_ipfwon" "cleanup"
-in_div_in_ipfwon_head()
+atf_test_case "ipfwon_in_div_in" "cleanup"
+ipfwon_in_div_in_head()
 {
 	atf_set descr 'Test inbound > diverted > inbound | host terminated, with ipfw enabled'
 	atf_set require.user root
 }
-in_div_in_ipfwon_body()
+ipfwon_in_div_in_body()
 {
-	in_div_in_body "ipfwon"
+	ipfwoff_in_div_in_body "ipfwon"
 }
-in_div_in_ipfwon_cleanup()
+ipfwon_in_div_in_cleanup()
 {
 	pft_cleanup
 }
 
-atf_test_case "out_div" "cleanup"
-out_div_head()
+atf_test_case "ipfwoff_out_div" "cleanup"
+ipfwoff_out_div_head()
 {
 	atf_set descr 'Test outbound > diverted | divapp terminated'
 	atf_set require.user root
 }
-out_div_body()
+ipfwoff_out_div_body()
 {
 	local ipfwon
 
@@ -239,33 +239,33 @@ out_div_body()
 
 	wait $divapp_pid
 }
-out_div_cleanup()
+ipfwoff_out_div_cleanup()
 {
 	pft_cleanup
 }
 
-atf_test_case "out_div_ipfwon" "cleanup"
-out_div_ipfwon_head()
+atf_test_case "ipfwon_out_div" "cleanup"
+ipfwon_out_div_head()
 {
 	atf_set descr 'Test outbound > diverted | divapp terminated, with ipfw enabled'
 	atf_set require.user root
 }
-out_div_ipfwon_body()
+ipfwon_out_div_body()
 {
-	out_div_body "ipfwon"
+	ipfwoff_out_div_body "ipfwon"
 }
-out_div_ipfwon_cleanup()
+ipfwon_out_div_cleanup()
 {
 	pft_cleanup
 }
 
-atf_test_case "out_div_out" "cleanup"
-out_div_out_head()
+atf_test_case "ipfwoff_out_div_out" "cleanup"
+ipfwoff_out_div_out_head()
 {
 	atf_set descr 'Test outbound > diverted > outbound | network terminated'
 	atf_set require.user root
 }
-out_div_out_body()
+ipfwoff_out_div_out_body()
 {
 	local ipfwon
 
@@ -299,33 +299,33 @@ out_div_out_body()
 
 	wait $divapp_pid
 }
-out_div_out_cleanup()
+ipfwoff_out_div_out_cleanup()
 {
 	pft_cleanup
 }
 
-atf_test_case "out_div_out_ipfwon" "cleanup"
-out_div_out_ipfwon_head()
+atf_test_case "ipfwon_out_div_out" "cleanup"
+ipfwon_out_div_out_head()
 {
 	atf_set descr 'Test outbound > diverted > outbound | network terminated, with ipfw enabled'
 	atf_set require.user root
 }
-out_div_out_ipfwon_body()
+ipfwon_out_div_out_body()
 {
-	out_div_out_body "ipfwon"
+	ipfwoff_out_div_out_body "ipfwon"
 }
-out_div_out_ipfwon_cleanup()
+ipfwon_out_div_out_cleanup()
 {
 	pft_cleanup
 }
 
-atf_test_case "in_div_in_fwd_out_div_out" "cleanup"
-in_div_in_fwd_out_div_out_head()
+atf_test_case "ipfwoff_in_div_in_fwd_out_div_out" "cleanup"
+ipfwoff_in_div_in_fwd_out_div_out_head()
 {
 	atf_set descr 'Test inbound > diverted > inbound > forwarded > outbound > diverted > outbound | network terminated'
 	atf_set require.user root
 }
-in_div_in_fwd_out_div_out_body()
+ipfwoff_in_div_in_fwd_out_div_out_body()
 {
 	local ipfwon
 
@@ -376,38 +376,38 @@ in_div_in_fwd_out_div_out_body()
 
 	wait $indivapp_pid && wait $outdivapp_pid
 }
-in_div_in_fwd_out_div_out_cleanup()
+ipfwoff_in_div_in_fwd_out_div_out_cleanup()
 {
 	pft_cleanup
 }
 
-atf_test_case "in_div_in_fwd_out_div_out_ipfwon" "cleanup"
-in_div_in_fwd_out_div_out_ipfwon_head()
+atf_test_case "ipfwon_in_div_in_fwd_out_div_out" "cleanup"
+ipfwon_in_div_in_fwd_out_div_out_head()
 {
 	atf_set descr 'Test inbound > diverted > inbound > forwarded > outbound > diverted > outbound | network terminated, with ipfw enabled'
 	atf_set require.user root
 }
-in_div_in_fwd_out_div_out_ipfwon_body()
+ipfwon_in_div_in_fwd_out_div_out_body()
 {
-	in_div_in_fwd_out_div_out_body "ipfwon"
+	ipfwoff_in_div_in_fwd_out_div_out_body "ipfwon"
 }
-in_div_in_fwd_out_div_out_ipfwon_cleanup()
+ipfwon_in_div_in_fwd_out_div_out_cleanup()
 {
 	pft_cleanup
 }
 
 atf_init_test_cases()
 {
-	atf_add_test_case "in_div"
-	atf_add_test_case "in_div_in"
-	atf_add_test_case "in_div_ipfwon"
-	atf_add_test_case "in_div_in_ipfwon"
+	atf_add_test_case "ipfwoff_in_div"
+	atf_add_test_case "ipfwoff_in_div_in"
+	atf_add_test_case "ipfwon_in_div"
+	atf_add_test_case "ipfwon_in_div_in"
 
-	atf_add_test_case "out_div"
-	atf_add_test_case "out_div_out"
-	atf_add_test_case "out_div_ipfwon"
-	atf_add_test_case "out_div_out_ipfwon"
+	atf_add_test_case "ipfwoff_out_div"
+	atf_add_test_case "ipfwoff_out_div_out"
+	atf_add_test_case "ipfwon_out_div"
+	atf_add_test_case "ipfwon_out_div_out"
 
-	atf_add_test_case "in_div_in_fwd_out_div_out"
-	atf_add_test_case "in_div_in_fwd_out_div_out_ipfwon"
+	atf_add_test_case "ipfwoff_in_div_in_fwd_out_div_out"
+	atf_add_test_case "ipfwon_in_div_in_fwd_out_div_out"
 }
