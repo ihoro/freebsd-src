@@ -55,7 +55,7 @@ init(struct context *c)
 {
 	c->fd = socket(PF_DIVERT, SOCK_RAW, 0);
 	if (c->fd == -1)
-		errx(EX_OSERR, "Cannot create divert socket.");
+		errx(EX_OSERR, "init: Cannot create divert socket.");
 
 	memset(&c->sin, 0, sizeof(c->sin));
 	c->sin.sin_family = AF_INET; // TODO: AF_DIVERT does not work, a bug?
@@ -64,7 +64,7 @@ init(struct context *c)
 	c->sin_len = sizeof(struct sockaddr_in);
 
 	if (bind(c->fd, (struct sockaddr *) &c->sin, c->sin_len) != 0)
-		errx(EX_OSERR, "Cannot bind divert socket.");
+		errx(EX_OSERR, "init: Cannot bind divert socket.");
 }
 
 static ssize_t
