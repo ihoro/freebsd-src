@@ -175,7 +175,6 @@ divert_packet(struct mbuf *m, bool incoming)
 
 	NET_EPOCH_ASSERT();
 
-	nport = 0;
 	mtag = m_tag_locate(m, MTAG_IPFW_RULE, 0, NULL);
 	if (mtag != NULL) {
 		cookie = ((struct ipfw_rule_ref *)(mtag+1))->rulenum;
@@ -184,8 +183,7 @@ divert_packet(struct mbuf *m, bool incoming)
 	} else if ((mtag = m_tag_locate(m, MTAG_PF_DIVERT, 0, NULL)) != NULL) {
 		cookie = ((struct pf_divert_mtag *)(mtag+1))->idir;
 		nport = htons(((struct pf_divert_mtag *)(mtag+1))->ndir);
-	}
-	if (nport == 0) {
+	} else {
 		m_freem(m);
 		return;
 	}
