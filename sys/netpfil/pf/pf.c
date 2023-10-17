@@ -7717,12 +7717,12 @@ pf_test(int dir, int pflags, struct ifnet *ifp, struct mbuf **m0,
 				goto done;
 			}
 			pd.pf_mtag->flags |= PF_MTAG_FLAG_PACKET_LOOPED;
-			m_tag_delete(m, mtag);
 		}
 		if (pd.pf_mtag && pd.pf_mtag->flags & PF_MTAG_FLAG_FASTFWD_OURS_PRESENT) {
 			m->m_flags |= M_FASTFWD_OURS;
 			pd.pf_mtag->flags &= ~PF_MTAG_FLAG_FASTFWD_OURS_PRESENT;
 		}
+		m_tag_delete(m, mtag);
 	} else if (pf_normalize_ip(m0, kif, &reason, &pd) != PF_PASS) {
 		/* We do IP header normalization and packet reassembly here */
 		action = PF_DROP;
