@@ -234,6 +234,7 @@ ng_ipfw_rcvdata(hook_p hook, item_p item)
 	NGI_GET_M(item, m);
 	NG_FREE_ITEM(item);
 
+	// TODO
 	tag = m_tag_locate(m, MTAG_IPFW_RULE, 0, NULL);
 	if (tag == NULL) {
 		NG_FREE_M(m);
@@ -305,6 +306,7 @@ ng_ipfw_input(struct mbuf **m0, struct ip_fw_args *fwa, bool tee)
 		m = *m0;
 		*m0 = NULL;	/* it belongs now to netgraph */
 
+		// TODO
 		tag = m_tag_alloc(MTAG_IPFW_RULE, 0, sizeof(*r),
 			M_NOWAIT|M_ZERO);
 		if (tag == NULL) {

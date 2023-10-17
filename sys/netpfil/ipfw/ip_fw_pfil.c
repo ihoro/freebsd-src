@@ -133,8 +133,10 @@ again:
 	 * with onepass, optimize the outgoing path.
 	 */
 	tag = m_tag_locate(*m0, MTAG_IPFW_RULE, 0, NULL);
-	if (tag != NULL) {
+	if (tag != NULL &&
+	    !(((struct ipfw_rule_ref *)(tag+1))->info & IPFW_CONSUMED)) {
 		args.rule = *((struct ipfw_rule_ref *)(tag+1));
+		((struct ipfw_rule_ref *)(tag+1))->info |= IPFW_CONSUMED;
 		if (args.rule.info & IPFW_ONEPASS)
 			return (PFIL_PASS);
 		args.flags |= IPFW_ARGS_REF;
@@ -347,9 +349,10 @@ again:
 	 * Remove the tag if present.
 	 */
 	mtag = m_tag_locate(*m0, MTAG_IPFW_RULE, 0, NULL);
-	if (mtag != NULL) {
+	if (mtag != NULL &&
+	    !(((struct ipfw_rule_ref *)(tag+1))->info & IPFW_CONSUMED)) {
 		args.rule = *((struct ipfw_rule_ref *)(mtag+1));
-		m_tag_delete(*m0, mtag);
+		((struct ipfw_rule_ref *)(tag+1))->info |= IPFW_CONSUMED;
 		if (args.rule.info & IPFW_ONEPASS)
 			return (PFIL_PASS);
 		args.flags |= IPFW_ARGS_REF;

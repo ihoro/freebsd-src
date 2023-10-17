@@ -310,6 +310,7 @@ enum {
 	IPFW_IS_DIVERT	= 0x20000000,
 	IPFW_IS_DUMMYNET =0x10000000,
 	IPFW_IS_PIPE	= 0x08000000,	/* pipe=1, queue = 0 */
+	IPFW_CONSUMED	= 0x00010000,	/* mtag is processed */
 };
 #define MTAG_IPFW	1148380143	/* IPFW-tagged cookie */
 #define MTAG_IPFW_RULE	1262273568	/* rule reference */
