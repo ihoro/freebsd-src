@@ -412,7 +412,8 @@ div_send(struct socket *so, int flags, struct mbuf *m, struct sockaddr *nam,
 		m_tag_prepend(m, mtag);
 	}
 	pfdt = (struct pf_divert_mtag *)(mtag+1);
-	pfdt->idir = sin->sin_port;
+	if (sin)
+		pfdt->idir = sin->sin_port;
 
 	/* Reinject packet into the system as incoming or outgoing */
 	NET_EPOCH_ENTER(et);
