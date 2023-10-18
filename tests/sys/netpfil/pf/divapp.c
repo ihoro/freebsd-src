@@ -59,7 +59,7 @@ init(struct context *c)
 		errx(EX_OSERR, "init: Cannot create divert socket.");
 
 	memset(&c->sin, 0, sizeof(c->sin));
-	c->sin.sin_family = AF_INET; // TODO: AF_DIVERT does not work, a bug?
+	c->sin.sin_family = AF_INET;
 	c->sin.sin_port = htons(c->divert_port);
 	c->sin.sin_addr.s_addr = INADDR_ANY;
 	c->sin_len = sizeof(struct sockaddr_in);
