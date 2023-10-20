@@ -25,7 +25,7 @@
  * SUCH DAMAGE.
  */
 
-/* Used by tests like pf/divert-to.sh and ipfw/divert.sh */
+/* Used by divert(4) related tests */
 
 #include <errno.h>
 #include <stdlib.h>
