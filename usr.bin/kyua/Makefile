@@ -89,6 +89,7 @@ SRCS+=	utils/datetime.cpp			\
 	utils/process/executor.cpp		\
 	utils/process/fdstream.cpp		\
 	utils/process/isolation.cpp		\
+	utils/process/jail.cpp			\
 	utils/process/operations.cpp		\
 	utils/process/status.cpp		\
 	utils/process/system.cpp		\

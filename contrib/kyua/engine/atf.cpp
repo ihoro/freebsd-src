@@ -39,6 +39,7 @@ extern "C" {
 #include "engine/atf_list.hpp"
 #include "engine/atf_result.hpp"
 #include "engine/exceptions.hpp"
+#include "model/metadata.hpp"
 #include "model/test_case.hpp"
 #include "model/test_program.hpp"
 #include "model/test_result.hpp"
@@ -49,6 +50,7 @@ extern "C" {
 #include "utils/logging/macros.hpp"
 #include "utils/optional.ipp"
 #include "utils/process/exceptions.hpp"
+#include "utils/process/jail.hpp"
 #include "utils/process/operations.hpp"
 #include "utils/process/status.hpp"
 #include "utils/stream.hpp"
@@ -190,7 +192,15 @@ engine::atf_interface::exec_test(const model::test_program& test_program,
 
     args.push_back(F("-r%s") % (control_directory / result_name));
     args.push_back(test_case_name);
-    process::exec(test_program.absolute_path(), args);
+
+    const model::test_case& test_case = test_program.find(test_case_name);
+    const model::strings_set& jail = test_case.get_metadata().jail();
+    if (jail.empty())
+        process::exec(test_program.absolute_path(), args);
+    else
+        process::jailexec(test_program.absolute_path(), args,
+                          test_case_name, jail,
+                          test_case.get_metadata().has_cleanup());
 }
 
 
@@ -219,7 +229,14 @@ engine::atf_interface::exec_cleanup(
     }
 
     args.push_back(F("%s:cleanup") % test_case_name);
-    process::exec(test_program.absolute_path(), args);
+
+    const model::test_case& test_case = test_program.find(test_case_name);
+    const model::strings_set& jail = test_case.get_metadata().jail();
+    if (jail.empty())
+        process::exec(test_program.absolute_path(), args);
+    else
+        process::jailexec(test_program.absolute_path(), args,
+                          test_case_name, jail, false);
 }
 
 

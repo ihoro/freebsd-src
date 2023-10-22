@@ -249,6 +249,7 @@ init_tree(config::tree& tree)
     tree.define< config::string_node >("description");
     tree.define< config::bool_node >("has_cleanup");
     tree.define< config::bool_node >("is_exclusive");
+    tree.define< config::strings_set_node >("jail");
     tree.define< config::strings_set_node >("required_configs");
     tree.define< bytes_node >("required_disk_space");
     tree.define< paths_set_node >("required_files");
@@ -272,6 +273,7 @@ set_defaults(config::tree& tree)
     tree.set< config::string_node >("description", "");
     tree.set< config::bool_node >("has_cleanup", false);
     tree.set< config::bool_node >("is_exclusive", false);
+    tree.set< config::strings_set_node >("jail", model::strings_set());
     tree.set< config::strings_set_node >("required_configs",
                                          model::strings_set());
     tree.set< bytes_node >("required_disk_space", units::bytes(0));
@@ -489,6 +491,20 @@ model::metadata::is_exclusive(void) const
         return _pimpl->props.lookup< config::bool_node >("is_exclusive");
     } else {
         return get_defaults().lookup< config::bool_node >("is_exclusive");
+    }
+}
+
+
+/// Returns jail parameters to run a test with.
+///
+/// \return Set of jail parameters.
+const model::strings_set&
+model::metadata::jail(void) const
+{
+    if (_pimpl->props.is_set("jail")) {
+        return _pimpl->props.lookup< config::strings_set_node >("jail");
+    } else {
+        return get_defaults().lookup< config::strings_set_node >("jail");
     }
 }
 
@@ -916,6 +932,21 @@ model::metadata_builder&
 model::metadata_builder::set_is_exclusive(const bool exclusive)
 {
     set< config::bool_node >(_pimpl->props, "is_exclusive", exclusive);
+    return *this;
+}
+
+
+/// Sets jail parameters to run the test with.
+///
+/// \param params Set of jail parameters.
+///
+/// \return A reference to this builder.
+///
+/// \throw model::error If the value is invalid.
+model::metadata_builder&
+model::metadata_builder::set_jail(const model::strings_set& params)
+{
+    set< config::strings_set_node >(_pimpl->props, "jail", params);
     return *this;
 }
 
