@@ -218,6 +218,7 @@ extern void include_config(void *scanner, const char *cfname);
 extern struct cfjail *add_jail(void);
 extern void add_param(struct cfjail *j, const struct cfparam *p,
     enum intparam ipnum, const char *value);
+extern int transition_to_nopersist(struct cfjail *j);
 extern int bool_param(const struct cfparam *p);
 extern int int_param(const struct cfparam *p, int *ip);
 extern const char *string_param(const struct cfparam *p);

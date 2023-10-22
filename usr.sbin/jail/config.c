@@ -471,6 +471,25 @@ add_param(struct cfjail *j, const struct cfparam *p, enum intparam ipnum,
 }
 
 /*
+ * Return if nopersist parameter is explicitly provided.
+ */
+int
+transition_to_nopersist(struct cfjail *j)
+{
+	struct jailparam *jp;
+
+	// check if outcome of params sequence is that it's still persist
+	if (bool_param(j->intparams[KP_PERSIST]))
+		return 0;
+
+	for (jp = j->jp; jp < j->jp + j->njp; jp++)
+		if (equalopts(jp->jp_name, "persist"))
+			return 1;
+
+	return 0;
+}
+
+/*
  * Return if a boolean parameter exists and is true.
  */
 int

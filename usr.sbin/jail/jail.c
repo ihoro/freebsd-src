@@ -106,6 +106,13 @@ static const enum intparam startcommands[] = {
     IP__NULL
 };
 
+static const enum intparam startsetcommands[] = {
+    IP__NULL,
+    IP_EXEC_START,
+    IP_COMMAND,
+    IP__NULL
+};
+
 static const enum intparam stopcommands[] = {
     IP__NULL,
     IP_EXEC_PRESTOP,
@@ -412,7 +419,7 @@ main(int argc, char **argv)
 			 * depending on the jail's current status.
 			 */
 		case JF_START_SET:
-			j->flags = j->jid < 0 ? JF_START : JF_SET;
+			j->flags = j->jid < 0 ? JF_START : JF_START_SET;
 			break;
 		case JF_SET_RESTART:
 			if (j->jid < 0) {
@@ -474,6 +481,29 @@ main(int argc, char **argv)
 				if (verbose >= 0 && (j->name || verbose > 0))
 					jail_note(j, "updated\n");
 			}
+			dep_done(j, 0);
+			break;
+
+		case JF_START_SET:
+			if (dep_check(j))
+				continue;
+			if (transition_to_nopersist(j) &&
+			    (j->intparams[IP_EXEC_START] ||
+			    j->intparams[IP_COMMAND])) {
+				j->flags |= JF_PERSIST;
+			}
+			if (!(j->flags & JF_DEPEND) && j->comparam == NULL) {
+				if (rdtun_params(j, 1) < 0 ||
+				    update_jail(j) < 0)
+					continue;
+				if (verbose >= 0 && (j->name || verbose > 0))
+					jail_note(j, "updated\n");
+				j->comparam = startsetcommands;
+				j->comstring = NULL;
+			}
+			if (next_command(j))
+				continue;
+			clear_persist(j);
 			dep_done(j, 0);
 			break;
 
@@ -758,7 +788,8 @@ update_jail(struct cfjail *j)
 
 	ns = 0;
 	for (jp = j->jp; jp < j->jp + j->njp; jp++)
-		if (!JP_RDTUN(jp))
+		if (!JP_RDTUN(jp) && !((j->flags & JF_PERSIST) &&
+		    equalopts(jp->jp_name, "persist")))
 			ns++;
 	if (ns == 0)
 		return 0;
@@ -770,7 +801,8 @@ update_jail(struct cfjail *j)
 		return -1;
 	}
 	for (jp = j->jp; jp < j->jp + j->njp; jp++)
-		if (!JP_RDTUN(jp))
+		if (!JP_RDTUN(jp) && !((j->flags & JF_PERSIST) &&
+		    equalopts(jp->jp_name, "persist")))
 			*++sjp = *jp;
 
 	jid = jailparam_set_note(j, setparams, ns,
