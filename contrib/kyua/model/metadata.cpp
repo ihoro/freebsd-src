@@ -509,6 +509,17 @@ model::metadata::jail(void) const
 }
 
 
+/// Returns whether the test has a jail params string or not.
+///
+/// \return True if there is a jail params string; false otherwise.
+bool
+model::metadata::has_jail(void) const
+{
+    const std::string& params = jail();
+    return !params.empty();
+}
+
+
 /// Returns the list of configuration variables needed by the test.
 ///
 /// \return Set of configuration variables.

@@ -149,6 +149,9 @@ public:
 /// A new jail will always be 'persist', thus the caller is expected to remove
 /// the jail eventually via jail::remove().
 ///
+/// It's expected to be called inside a fork which runs interface::exec_test(),
+/// so we can fail a test fast if its execution environment setup fails.
+///
 /// \param program The test program binary absolute path.
 /// \param test_case_name Name of the test case.
 /// \param jail String of jail parameters.
@@ -214,4 +217,39 @@ jail::exec(const fs::path& program,
     av.insert(av.begin(), make_jail_name(program, test_case_name));
 
     process::exec(fs::path("/usr/sbin/jexec"), av);
+}
+
+
+/// Removes a jail based on test program path and case name.
+///
+/// It's expected to be run in a subprocess.
+///
+/// \param program The test program binary absolute path.
+/// \param test_case_name Name of the test case.
+void
+jail::remove(const fs::path& program,
+             const std::string& test_case_name)
+{
+    args_vector av;
+
+    // removal flag
+    av.push_back("-r");
+
+    // jail name
+    av.push_back(make_jail_name(program, test_case_name));
+
+    // invoke jail
+    std::auto_ptr< process::child > child = child::fork_capture(
+        run(fs::path("/usr/sbin/jail"), av));
+    process::status status = child->wait();
+
+    // expect success
+    if (status.exited() && status.exitstatus() == EXIT_SUCCESS)
+        std::exit(EXIT_SUCCESS);
+
+    // otherwise, let us know what jail thinks and fail fast
+    char err[330];
+    child->output().getline(err, 330);
+    std::cerr << err << "\n";
+    std::exit(EXIT_FAILURE);
 }

@@ -33,8 +33,6 @@
 
 #include "utils/process/operations_fwd.hpp"
 
-#include <set>
-
 #include "utils/defs.hpp"
 #include "utils/fs/path_fwd.hpp"
 
@@ -48,7 +46,7 @@ void create(const utils::fs::path&, const std::string&, const std::string&);
 void exec(const utils::fs::path&, const std::string&,
           const args_vector&) throw() UTILS_NORETURN;
 
-// void jail_remove();
+void remove(const utils::fs::path&, const std::string&);
 
 
 }  // namespace jail

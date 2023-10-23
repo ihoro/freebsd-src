@@ -239,17 +239,14 @@ engine::atf_interface::exec_cleanup(
 
     args.push_back(F("%s:cleanup") % test_case_name);
 
-    /*
+    printf("atf::exec_cleanup: %s, %s\n", test_program.absolute_path().str().c_str(), test_case_name.c_str());
     const model::test_case& test_case = test_program.find(test_case_name);
     const std::string& jail = test_case.get_metadata().jail();
     if (jail.empty())
-    */
         process::exec(test_program.absolute_path(), args);
-    /*
     else
-        process::jailexec(test_program.absolute_path(), args,
-                          test_case_name, jail, false);
-    */
+        process::jail::exec(test_program.absolute_path(), test_case_name,
+                            args);
 }
 
 

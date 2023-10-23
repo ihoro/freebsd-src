@@ -70,6 +70,7 @@ public:
     bool has_cleanup(void) const;
     bool is_exclusive(void) const;
     const std::string& jail(void) const;
+    bool has_jail(void) const;
     const strings_set& required_configs(void) const;
     const utils::units::bytes& required_disk_space(void) const;
     const paths_set& required_files(void) const;
