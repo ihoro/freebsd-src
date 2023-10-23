@@ -34,6 +34,7 @@ extern "C" {
 
 #include <cstdlib>
 
+#include "engine/execenv/execenv.hpp"
 #include "model/test_case.hpp"
 #include "model/test_program.hpp"
 #include "model/test_result.hpp"
@@ -104,8 +105,9 @@ engine::plain_interface::exec_test(
     }
 
     process::args_vector args;
-    process::exec(test_program.absolute_path(), args);
-    // TODO: add jail support
+
+    engine::execenv::init(test_program, test_case_name);
+    engine::execenv::exec(test_program, test_case_name, args);
 }
 
 

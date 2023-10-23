@@ -35,6 +35,7 @@ extern "C" {
 #include <cstdlib>
 
 #include "engine/exceptions.hpp"
+#include "engine/execenv/execenv.hpp"
 #include "engine/tap_parser.hpp"
 #include "model/test_case.hpp"
 #include "model/test_program.hpp"
@@ -151,8 +152,9 @@ engine::tap_interface::exec_test(
     }
 
     process::args_vector args;
-    process::exec(test_program.absolute_path(), args);
-    // TODO: add jail support
+
+    engine::execenv::init(test_program, test_case_name);
+    engine::execenv::exec(test_program, test_case_name, args);
 }
 
 
