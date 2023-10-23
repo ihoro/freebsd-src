@@ -149,8 +149,7 @@ public:
 /// A new jail will always be 'persist', thus the caller is expected to remove
 /// the jail eventually via jail::remove().
 ///
-/// It's expected to be called inside a fork which runs interface::exec_test(),
-/// so we can fail a test fast if its execution environment setup fails.
+/// It's expected to be run in a subprocess.
 ///
 /// \param program The test program binary absolute path.
 /// \param test_case_name Name of the test case.

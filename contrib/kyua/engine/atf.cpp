@@ -39,6 +39,7 @@ extern "C" {
 #include "engine/atf_list.hpp"
 #include "engine/atf_result.hpp"
 #include "engine/exceptions.hpp"
+#include "engine/execenv/execenv.hpp"
 #include "model/metadata.hpp"
 #include "model/test_case.hpp"
 #include "model/test_program.hpp"
@@ -50,7 +51,6 @@ extern "C" {
 #include "utils/logging/macros.hpp"
 #include "utils/optional.ipp"
 #include "utils/process/exceptions.hpp"
-#include "utils/process/jail.hpp"
 #include "utils/process/operations.hpp"
 #include "utils/process/status.hpp"
 #include "utils/stream.hpp"
@@ -193,23 +193,8 @@ engine::atf_interface::exec_test(const model::test_program& test_program,
     args.push_back(F("-r%s") % (control_directory / result_name));
     args.push_back(test_case_name);
 
-    // TODO:
-    // execenv::init(...);
-    // execenv::exec_test(...);
-    // execenv::exec_cleanup(...);
-    // execenv::deinit(...);
-
-    // TODO: extract the same jail logic from atf, plain, and tap
-    const model::test_case& test_case = test_program.find(test_case_name);
-    const std::string& jail = test_case.get_metadata().jail();
-    if (jail.empty())
-        process::exec(test_program.absolute_path(), args);
-    else {
-        process::jail::create(test_program.absolute_path(), test_case_name,
-                              jail);
-        process::jail::exec(test_program.absolute_path(), test_case_name,
-                            args);
-    }
+    engine::execenv::init(test_program, test_case_name);
+    engine::execenv::exec(test_program, test_case_name, args);
 }
 
 
@@ -239,14 +224,7 @@ engine::atf_interface::exec_cleanup(
 
     args.push_back(F("%s:cleanup") % test_case_name);
 
-    printf("atf::exec_cleanup: %s, %s\n", test_program.absolute_path().str().c_str(), test_case_name.c_str());
-    const model::test_case& test_case = test_program.find(test_case_name);
-    const std::string& jail = test_case.get_metadata().jail();
-    if (jail.empty())
-        process::exec(test_program.absolute_path(), args);
-    else
-        process::jail::exec(test_program.absolute_path(), test_case_name,
-                            args);
+    engine::execenv::exec(test_program, test_case_name, args);
 }
 
 

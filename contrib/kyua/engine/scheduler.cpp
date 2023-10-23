@@ -40,6 +40,7 @@ extern "C" {
 
 #include "engine/config.hpp"
 #include "engine/exceptions.hpp"
+#include "engine/execenv/execenv.hpp"
 #include "engine/requirements.hpp"
 #include "model/context.hpp"
 #include "model/metadata.hpp"
@@ -60,7 +61,6 @@ extern "C" {
 #include "utils/optional.ipp"
 #include "utils/passwd.hpp"
 #include "utils/process/executor.ipp"
-#include "utils/process/jail.hpp" // TODO: remove after execenv intro
 #include "utils/process/status.hpp"
 #include "utils/sanity.hpp"
 #include "utils/stacktrace.hpp"
@@ -559,7 +559,7 @@ public:
     void
     operator()(const fs::path& /* control_directory */)
     {
-        process::jail::remove(_test_program.absolute_path(), _test_case_name);
+        engine::execenv::cleanup(_test_program, _test_case_name);
     }
 };
 
@@ -1332,7 +1332,7 @@ scheduler::scheduler_handle::wait_any(void)
             return wait_any();
         }
 
-        if (test_case.get_metadata().has_jail()) { // TODO: has_execenv
+        if (test_case.get_metadata().has_execenv()) {
             _pimpl->spawn_execenv_cleanup(
                 test_data->test_program,
                 test_data->test_case_name,
@@ -1389,7 +1389,7 @@ scheduler::scheduler_handle::wait_any(void)
         const model::test_case& test_case = cleanup_data->test_program->find(
             cleanup_data->test_case_name);
 
-        if (test_case.get_metadata().has_jail()) { // TODO: has_execenv
+        if (test_case.get_metadata().has_execenv()) {
             _pimpl->spawn_execenv_cleanup(
                 cleanup_data->test_program,
                 cleanup_data->test_case_name,

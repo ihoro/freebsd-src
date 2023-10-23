@@ -129,7 +129,9 @@ SRCS+=	engine/atf.cpp			\
 	engine/scanner.cpp		\
 	engine/tap.cpp			\
 	engine/tap_parser.cpp		\
-	engine/scheduler.cpp
+	engine/scheduler.cpp		\
+	engine/execenv/execenv.cpp	\
+	engine/execenv/jail.cpp
 
 SRCS+=	store/dbtypes.cpp		\
 	store/exceptions.cpp		\

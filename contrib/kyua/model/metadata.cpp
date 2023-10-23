@@ -249,7 +249,7 @@ init_tree(config::tree& tree)
     tree.define< config::string_node >("description");
     tree.define< config::bool_node >("has_cleanup");
     tree.define< config::bool_node >("is_exclusive");
-    tree.define< config::string_node >("jail");
+    tree.define< config::string_node >("execenv_jail");
     tree.define< config::strings_set_node >("required_configs");
     tree.define< bytes_node >("required_disk_space");
     tree.define< paths_set_node >("required_files");
@@ -273,7 +273,7 @@ set_defaults(config::tree& tree)
     tree.set< config::string_node >("description", "");
     tree.set< config::bool_node >("has_cleanup", false);
     tree.set< config::bool_node >("is_exclusive", false);
-    tree.set< config::string_node >("jail", "");
+    tree.set< config::string_node >("execenv_jail", "");
     tree.set< config::strings_set_node >("required_configs",
                                          model::strings_set());
     tree.set< bytes_node >("required_disk_space", units::bytes(0));
@@ -495,28 +495,38 @@ model::metadata::is_exclusive(void) const
 }
 
 
-/// Returns jail parameters string to run a test with.
+/// Returns execenv jail parameters string to run a test with.
 ///
 /// \return String of jail parameters.
 const std::string&
-model::metadata::jail(void) const
+model::metadata::execenv_jail(void) const
 {
-    if (_pimpl->props.is_set("jail")) {
-        return _pimpl->props.lookup< config::string_node >("jail");
+    if (_pimpl->props.is_set("execenv_jail")) {
+        return _pimpl->props.lookup< config::string_node >("execenv_jail");
     } else {
-        return get_defaults().lookup< config::string_node >("jail");
+        return get_defaults().lookup< config::string_node >("execenv_jail");
     }
 }
 
 
-/// Returns whether the test has a jail params string or not.
+/// Returns whether the test has a execenv jail params string or not.
 ///
 /// \return True if there is a jail params string; false otherwise.
 bool
-model::metadata::has_jail(void) const
+model::metadata::has_execenv_jail(void) const
 {
-    const std::string& params = jail();
+    const std::string& params = execenv_jail();
     return !params.empty();
+}
+
+
+/// Returns whether the test has a specific execenv.
+///
+/// \return True if there is a specific execenv; false otherwise.
+bool
+model::metadata::has_execenv(void) const
+{
+    return has_execenv_jail();
 }
 
 
@@ -947,7 +957,7 @@ model::metadata_builder::set_is_exclusive(const bool exclusive)
 }
 
 
-/// Sets jail parameters string to run the test with.
+/// Sets execenv jail parameters string to run the test with.
 ///
 /// \param params String of jail parameters.
 ///
@@ -955,9 +965,9 @@ model::metadata_builder::set_is_exclusive(const bool exclusive)
 ///
 /// \throw model::error If the value is invalid.
 model::metadata_builder&
-model::metadata_builder::set_jail(const std::string& params)
+model::metadata_builder::set_execenv_jail(const std::string& params)
 {
-    set< config::string_node >(_pimpl->props, "jail", params);
+    set< config::string_node >(_pimpl->props, "execenv_jail", params);
     return *this;
 }
 
