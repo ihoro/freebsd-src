@@ -951,6 +951,69 @@ model::metadata_builder::set_jail(const model::strings_set& params)
 }
 
 
+/// Sets jail parameters to run the test with.
+///
+/// \param params Set of jail parameters as a string.
+///
+/// \return A reference to this builder.
+///
+/// \throw model::error If the value is invalid.
+model::metadata_builder&
+model::metadata_builder::set_jail(const std::string& str)
+{
+    model::strings_set params;
+    std::string p;
+    char quote = 0;
+
+    for (const char& c : str) {
+        // whitespace delimited parameter
+        if (quote == 0) {
+            if (std::isspace(c)) {
+                if (p.empty())
+                    continue;
+                params.insert(p);
+                printf ("p: %s\n", p.c_str());
+                p = "";
+            }
+            else if (c == '"' || c == '\'') {
+                if (!p.empty()) {
+                    params.insert(p);
+                    printf ("p: %s\n", p.c_str());
+                }
+                p = "";
+                quote = c;
+            }
+            else
+                p += c;
+        }
+
+        // quoted parameter
+        else {
+            if (c == quote) {
+                if (!p.empty()) {
+                    params.insert(p);
+                    printf ("p: %s\n", p.c_str());
+                }
+                p = "";
+                quote = 0;
+            }
+            else
+                p += c;
+        }
+    }
+
+    // leftovers
+    if (!p.empty()) {
+        params.insert(p);
+        printf ("p: %s\n", p.c_str());
+    }
+
+    set_jail(params);
+
+    return *this;
+}
+
+
 /// Sets the list of configuration variables needed by the test.
 ///
 /// \param vars Set of configuration variables.

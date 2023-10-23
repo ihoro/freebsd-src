@@ -40,14 +40,19 @@
 
 namespace utils {
 namespace process {
+namespace jail {
 
 
-void jailexec(const utils::fs::path&, const args_vector&,
-              const std::string& test_case_name,
-              const std::set< std::string >& jail,
-              bool persist) throw() UTILS_NORETURN;
+void create(const utils::fs::path&, const std::string&,
+            const std::set< std::string >&);
+
+void exec(const utils::fs::path&, const std::string&,
+          const args_vector&) throw() UTILS_NORETURN;
+
+// void jail_remove();
 
 
+}  // namespace jail
 }  // namespace process
 }  // namespace utils
 

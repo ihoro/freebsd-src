@@ -114,6 +114,7 @@ public:
     metadata_builder& set_has_cleanup(const bool);
     metadata_builder& set_is_exclusive(const bool);
     metadata_builder& set_jail(const strings_set&);
+    metadata_builder& set_jail(const std::string&);
     metadata_builder& set_required_configs(const strings_set&);
     metadata_builder& set_required_disk_space(const utils::units::bytes&);
     metadata_builder& set_required_files(const paths_set&);

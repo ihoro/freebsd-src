@@ -27,11 +27,126 @@
 
 #include "utils/process/jail.hpp"
 
+#include <iostream>
+#include <regex>
+
 #include "utils/fs/path.hpp"
+#include "utils/process/child.ipp"
+#include "utils/format/macros.hpp"
 #include "utils/process/operations.hpp"
+#include "utils/process/status.hpp"
 
 namespace fs = utils::fs;
 namespace process = utils::process;
+namespace jail = utils::process::jail;
+
+using utils::process::args_vector;
+using utils::process::child;
+
+
+namespace {
+
+
+static std::string
+make_jail_name(const fs::path& program, const std::string& test_case_name)
+{
+    std::string name = std::regex_replace(
+        program.str() + "_" + test_case_name,
+        std::regex(R"([^A-Za-z0-9_])"),
+        "_");
+
+    const std::string::size_type limit =
+        255 /* jail name max */ - 4 /* "kyua" prefix */;
+    if (name.length() > limit)
+        name.erase(0, name.length() - limit);
+
+    return "kyua" + name;
+}
+
+
+/// Functor to run a program.
+class run {
+    /// Program binary absolute path.
+    const utils::fs::path& _program;
+
+    /// Program arguments.
+    const args_vector& _args;
+
+public:
+    /// Constructor.
+    ///
+    /// \param program Program binary absolute path.
+    /// \param args Program arguments.
+    run(
+        const utils::fs::path& program,
+        const args_vector& args) :
+        _program(program),
+        _args(args)
+    {
+    }
+
+    /// Body of the subprocess.
+    void
+    operator()(void)
+    {
+        process::exec(_program, _args);
+    }
+};
+
+
+}  // anonymous namespace
+
+
+/// Create a jail based on test program path and case name.
+///
+/// A new jail will always be 'persist', thus the caller is expected to remove
+/// the jail eventually via jail::remove().
+///
+/// \param program The test program binary absolute path.
+/// \param test_case_name Name of the test case.
+/// \param jail Set of jail parameters.
+void
+jail::create(const fs::path& program,
+             const std::string& test_case_name,
+             const std::set< std::string >& jail)
+{
+    args_vector av;
+
+    av.push_back("-c");
+
+    // TODO: let's make jail be a string metadata and parse it only here before the jail invocation!
+
+    // some defaults to ease test authors' life
+    av.push_back("children.max=16");
+
+    // test defined jail params
+    for (std::set< std::string >::iterator it = jail.begin();
+         it != jail.end(); ++it) {
+        printf("jail::create, jail: %s\n", (*it).c_str());
+        av.push_back(*it);
+    }
+
+    // jail name
+    av.push_back(F("name=%s") % make_jail_name(program, test_case_name));
+
+    // it must be persist
+    av.push_back("persist");
+
+    // invoke jail
+    std::auto_ptr< process::child > child = child::fork_capture(
+        run(fs::path("/usr/sbin/jail"), av));
+    process::status status = child->wait();
+
+    // expect success
+    if (status.exited() && status.exitstatus() == EXIT_SUCCESS)
+        return;
+
+    // otherwise, let us know what jail thinks and fail fast
+    char err[330];
+    child->output().getline(err, 330);
+    std::cerr << err << "\n";
+    std::exit(EXIT_FAILURE);
+}
 
 
 /// Executes an external binary in a jail and replaces the current process.
@@ -43,39 +158,17 @@ namespace process = utils::process;
 /// as otherwise we would not be able to use vfork().  Only state stored in the
 /// stack can be touched.
 ///
-/// \param program The binary to execute.
-/// \param args The arguments to pass to the binary, without the program name.
+/// \param program The test program binary absolute path.
 /// \param test_case_name Name of the test case.
-/// \param jail Set of jail parameters.
-/// \param persist Whether a new jail should persist.
+/// \param args The arguments to pass to the binary, without the program name.
 void
-process::jailexec(const fs::path& program, const args_vector& args,
-                  const std::string& test_case_name,
-                  const std::set< std::string >& jail,
-                  bool persist) throw()
+jail::exec(const fs::path& program,
+                   const std::string& test_case_name,
+                   const args_vector& args) throw()
 {
-    // given program is a jail command
     args_vector av(args);
-    std::string command(program.str());
-    command.insert(0, "command=");
-    av.insert(av.begin(), command);
+    av.insert(av.begin(), program.str());
+    av.insert(av.begin(), make_jail_name(program, test_case_name));
 
-    av.insert(av.begin(), persist ? "persist" : "nopersist");
-
-    // test defined jail params come last to override defaults if needed
-    for (std::set< std::string >::iterator it = jail.begin();
-         it != jail.end(); ++it) {
-        av.insert(av.begin(), *it);
-    }
-
-    // some defaults to ease life for test authors
-    av.insert(av.begin(), "allow.raw_sockets");
-    av.insert(av.begin(), "vnet");
-    av.insert(av.begin(), "children.max=16");
-
-    // TODO: form jail name
-
-    // jail invocation
-    av.insert(av.begin(), "-qc");
-    process::exec(fs::path("/usr/sbin/jail"), av);
+    process::exec(fs::path("/usr/sbin/jexec"), av);
 }

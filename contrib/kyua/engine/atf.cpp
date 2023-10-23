@@ -193,14 +193,23 @@ engine::atf_interface::exec_test(const model::test_program& test_program,
     args.push_back(F("-r%s") % (control_directory / result_name));
     args.push_back(test_case_name);
 
+    // TODO:
+    // execenv::init(...);
+    // execenv::exec_test(...);
+    // execenv::exec_cleanup(...);
+    // execenv::deinit(...);
+
+    // TODO: extract the same jail logic from atf, plain, and tap
     const model::test_case& test_case = test_program.find(test_case_name);
     const model::strings_set& jail = test_case.get_metadata().jail();
     if (jail.empty())
         process::exec(test_program.absolute_path(), args);
-    else
-        process::jailexec(test_program.absolute_path(), args,
-                          test_case_name, jail,
-                          test_case.get_metadata().has_cleanup());
+    else {
+        process::jail::create(test_program.absolute_path(), test_case_name,
+                              jail);
+        process::jail::exec(test_program.absolute_path(), test_case_name,
+                            args);
+    }
 }
 
 
@@ -230,13 +239,17 @@ engine::atf_interface::exec_cleanup(
 
     args.push_back(F("%s:cleanup") % test_case_name);
 
+    /*
     const model::test_case& test_case = test_program.find(test_case_name);
     const model::strings_set& jail = test_case.get_metadata().jail();
     if (jail.empty())
+    */
         process::exec(test_program.absolute_path(), args);
+    /*
     else
         process::jailexec(test_program.absolute_path(), args,
                           test_case_name, jail, false);
+    */
 }
 
 
