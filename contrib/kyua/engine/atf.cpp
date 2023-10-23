@@ -201,7 +201,7 @@ engine::atf_interface::exec_test(const model::test_program& test_program,
 
     // TODO: extract the same jail logic from atf, plain, and tap
     const model::test_case& test_case = test_program.find(test_case_name);
-    const model::strings_set& jail = test_case.get_metadata().jail();
+    const std::string& jail = test_case.get_metadata().jail();
     if (jail.empty())
         process::exec(test_program.absolute_path(), args);
     else {
@@ -241,7 +241,7 @@ engine::atf_interface::exec_cleanup(
 
     /*
     const model::test_case& test_case = test_program.find(test_case_name);
-    const model::strings_set& jail = test_case.get_metadata().jail();
+    const std::string& jail = test_case.get_metadata().jail();
     if (jail.empty())
     */
         process::exec(test_program.absolute_path(), args);

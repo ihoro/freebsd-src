@@ -341,52 +341,9 @@ config::base_set_node< ValueType >::set_string(const std::string& raw_value)
 {
     std::set< ValueType > new_value;
 
-    printf("base_set_node::set_string: %s\n", raw_value.c_str());
-
-    std::vector< std::string > words;
-    std::string w;
-    char quote = 0;
-
-    for (const char& c : raw_value) {
-        // whitespace delimited word
-        if (quote == 0) {
-            if (std::isspace(c)) {
-                if (w.empty())
-                    continue;
-                words.push_back(w);
-                w = "";
-            }
-            else if (c == '"' || c == '\'') {
-                if (!w.empty())
-                    words.push_back(w);
-                w = "";
-                quote = c;
-            }
-            else
-                w += c;
-        }
-
-        // quoted word
-        else {
-            if (c == quote) {
-                if (!w.empty())
-                    words.push_back(w);
-                w = "";
-                quote = 0;
-            }
-            else
-                w += c;
-        }
-    }
-
-    // leftovers
-    if (!w.empty())
-        words.push_back(w);
-
-    // parse each word
+    const std::vector< std::string > words = text::split(raw_value, ' ');
     for (std::vector< std::string >::const_iterator iter = words.begin();
          iter != words.end(); ++iter) {
-        printf("parse word: %s\n", (*iter).c_str());
         if (!(*iter).empty())
             new_value.insert(parse_one(*iter));
     }

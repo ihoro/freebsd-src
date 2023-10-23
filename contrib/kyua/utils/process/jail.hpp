@@ -43,8 +43,7 @@ namespace process {
 namespace jail {
 
 
-void create(const utils::fs::path&, const std::string&,
-            const std::set< std::string >&);
+void create(const utils::fs::path&, const std::string&, const std::string&);
 
 void exec(const utils::fs::path&, const std::string&,
           const args_vector&) throw() UTILS_NORETURN;

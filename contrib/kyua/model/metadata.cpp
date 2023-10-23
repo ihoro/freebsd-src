@@ -249,7 +249,7 @@ init_tree(config::tree& tree)
     tree.define< config::string_node >("description");
     tree.define< config::bool_node >("has_cleanup");
     tree.define< config::bool_node >("is_exclusive");
-    tree.define< config::strings_set_node >("jail");
+    tree.define< config::string_node >("jail");
     tree.define< config::strings_set_node >("required_configs");
     tree.define< bytes_node >("required_disk_space");
     tree.define< paths_set_node >("required_files");
@@ -273,7 +273,7 @@ set_defaults(config::tree& tree)
     tree.set< config::string_node >("description", "");
     tree.set< config::bool_node >("has_cleanup", false);
     tree.set< config::bool_node >("is_exclusive", false);
-    tree.set< config::strings_set_node >("jail", model::strings_set());
+    tree.set< config::string_node >("jail", "");
     tree.set< config::strings_set_node >("required_configs",
                                          model::strings_set());
     tree.set< bytes_node >("required_disk_space", units::bytes(0));
@@ -495,16 +495,16 @@ model::metadata::is_exclusive(void) const
 }
 
 
-/// Returns jail parameters to run a test with.
+/// Returns jail parameters string to run a test with.
 ///
-/// \return Set of jail parameters.
-const model::strings_set&
+/// \return String of jail parameters.
+const std::string&
 model::metadata::jail(void) const
 {
     if (_pimpl->props.is_set("jail")) {
-        return _pimpl->props.lookup< config::strings_set_node >("jail");
+        return _pimpl->props.lookup< config::string_node >("jail");
     } else {
-        return get_defaults().lookup< config::strings_set_node >("jail");
+        return get_defaults().lookup< config::string_node >("jail");
     }
 }
 
@@ -936,80 +936,17 @@ model::metadata_builder::set_is_exclusive(const bool exclusive)
 }
 
 
-/// Sets jail parameters to run the test with.
+/// Sets jail parameters string to run the test with.
 ///
-/// \param params Set of jail parameters.
-///
-/// \return A reference to this builder.
-///
-/// \throw model::error If the value is invalid.
-model::metadata_builder&
-model::metadata_builder::set_jail(const model::strings_set& params)
-{
-    set< config::strings_set_node >(_pimpl->props, "jail", params);
-    return *this;
-}
-
-
-/// Sets jail parameters to run the test with.
-///
-/// \param params Set of jail parameters as a string.
+/// \param params String of jail parameters.
 ///
 /// \return A reference to this builder.
 ///
 /// \throw model::error If the value is invalid.
 model::metadata_builder&
-model::metadata_builder::set_jail(const std::string& str)
+model::metadata_builder::set_jail(const std::string& params)
 {
-    model::strings_set params;
-    std::string p;
-    char quote = 0;
-
-    for (const char& c : str) {
-        // whitespace delimited parameter
-        if (quote == 0) {
-            if (std::isspace(c)) {
-                if (p.empty())
-                    continue;
-                params.insert(p);
-                printf ("p: %s\n", p.c_str());
-                p = "";
-            }
-            else if (c == '"' || c == '\'') {
-                if (!p.empty()) {
-                    params.insert(p);
-                    printf ("p: %s\n", p.c_str());
-                }
-                p = "";
-                quote = c;
-            }
-            else
-                p += c;
-        }
-
-        // quoted parameter
-        else {
-            if (c == quote) {
-                if (!p.empty()) {
-                    params.insert(p);
-                    printf ("p: %s\n", p.c_str());
-                }
-                p = "";
-                quote = 0;
-            }
-            else
-                p += c;
-        }
-    }
-
-    // leftovers
-    if (!p.empty()) {
-        params.insert(p);
-        printf ("p: %s\n", p.c_str());
-    }
-
-    set_jail(params);
-
+    set< config::string_node >(_pimpl->props, "jail", params);
     return *this;
 }
 

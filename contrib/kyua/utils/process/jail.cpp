@@ -64,6 +64,53 @@ make_jail_name(const fs::path& program, const std::string& test_case_name)
 }
 
 
+static std::vector< std::string >
+parse_jail_params_string(const std::string& str)
+{
+    std::vector< std::string > params;
+    std::string p;
+    char quote = 0;
+
+    for (const char& c : str) {
+        // whitespace delimited parameter
+        if (quote == 0) {
+            if (std::isspace(c)) {
+                if (p.empty())
+                    continue;
+                params.push_back(p);
+                p = "";
+            }
+            else if (c == '"' || c == '\'') {
+                if (!p.empty())
+                    params.push_back(p);
+                p = "";
+                quote = c;
+            }
+            else
+                p += c;
+        }
+
+        // quoted parameter
+        else {
+            if (c == quote) {
+                if (!p.empty())
+                    params.push_back(p);
+                p = "";
+                quote = 0;
+            }
+            else
+                p += c;
+        }
+    }
+
+    // leftovers
+    if (!p.empty())
+        params.push_back(p);
+
+    return params;
+}
+
+
 /// Functor to run a program.
 class run {
     /// Program binary absolute path.
@@ -104,30 +151,26 @@ public:
 ///
 /// \param program The test program binary absolute path.
 /// \param test_case_name Name of the test case.
-/// \param jail Set of jail parameters.
+/// \param jail String of jail parameters.
 void
 jail::create(const fs::path& program,
              const std::string& test_case_name,
-             const std::set< std::string >& jail)
+             const std::string& jail_params)
 {
     args_vector av;
 
+    // creation flag
     av.push_back("-c");
-
-    // TODO: let's make jail be a string metadata and parse it only here before the jail invocation!
-
-    // some defaults to ease test authors' life
-    av.push_back("children.max=16");
-
-    // test defined jail params
-    for (std::set< std::string >::iterator it = jail.begin();
-         it != jail.end(); ++it) {
-        printf("jail::create, jail: %s\n", (*it).c_str());
-        av.push_back(*it);
-    }
 
     // jail name
     av.push_back(F("name=%s") % make_jail_name(program, test_case_name));
+
+    // some obvious defaults to ease test authors' life
+    av.push_back("children.max=16");
+
+    // test defined jail params
+    for (const std::string& p : parse_jail_params_string(jail_params))
+        av.push_back(p);
 
     // it must be persist
     av.push_back("persist");
