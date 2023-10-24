@@ -27,6 +27,12 @@
 
 #include "utils/process/jail.hpp"
 
+extern "C" {
+#include <unistd.h>
+#include <sys/stat.h>
+}
+
+#include <fstream>
 #include <iostream>
 #include <regex>
 
@@ -214,6 +220,33 @@ jail::exec(const fs::path& program,
 {
     args_vector av(args);
     av.insert(av.begin(), program.str());
+
+    // get our work dir
+    char cwd[256];
+    if (getcwd(cwd, 256) == NULL) {
+        std::cerr << "process::jail::exec: getcwd() errors: "
+            << strerror(errno) << ".\n";
+        std::exit(EXIT_FAILURE);
+    }
+
+    // prepare a script to run in a jail to change back to the work dir
+    // and exec the program
+    std::string cd_exec_path = std::string(cwd) + "/cd_exec.sh";
+    std::ofstream f(cd_exec_path);
+    f << "#!/bin/sh\n"
+      << "cd \"$1\" && shift && exec $*";
+    f.close();
+    if (chmod(cd_exec_path.c_str(),
+              S_IRUSR|S_IXUSR | S_IRGRP|S_IXGRP | S_IROTH|S_IXOTH) != 0) {
+        std::cerr << "process::jail::exec: chmod() errors: "
+            << strerror(errno) << ".\n";
+        std::exit(EXIT_FAILURE);
+    }
+
+    // change current work dir inside a jail back to kyua work dir
+    av.insert(av.begin(), cwd);
+    av.insert(av.begin(), cd_exec_path);
+
     av.insert(av.begin(), make_jail_name(program, test_case_name));
 
     process::exec(fs::path("/usr/sbin/jexec"), av);
