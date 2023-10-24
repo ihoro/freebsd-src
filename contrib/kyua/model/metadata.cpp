@@ -249,6 +249,7 @@ init_tree(config::tree& tree)
     tree.define< config::string_node >("description");
     tree.define< config::bool_node >("has_cleanup");
     tree.define< config::bool_node >("is_exclusive");
+    tree.define< config::string_node >("execenv");
     tree.define< config::string_node >("execenv_jail");
     tree.define< config::strings_set_node >("required_configs");
     tree.define< bytes_node >("required_disk_space");
@@ -273,6 +274,7 @@ set_defaults(config::tree& tree)
     tree.set< config::string_node >("description", "");
     tree.set< config::bool_node >("has_cleanup", false);
     tree.set< config::bool_node >("is_exclusive", false);
+    tree.set< config::string_node >("execenv", "");
     tree.set< config::string_node >("execenv_jail", "");
     tree.set< config::strings_set_node >("required_configs",
                                          model::strings_set());
@@ -495,6 +497,31 @@ model::metadata::is_exclusive(void) const
 }
 
 
+/// Returns execution environment name.
+///
+/// \return Name of configured execution environment.
+const std::string&
+model::metadata::execenv(void) const
+{
+    if (_pimpl->props.is_set("execenv")) {
+        return _pimpl->props.lookup< config::string_node >("execenv");
+    } else {
+        return get_defaults().lookup< config::string_node >("execenv");
+    }
+}
+
+
+/// Returns whether the test has any specific execenv apart from "host" one.
+///
+/// \return True if there is a non-host execenv configured; false otherwise.
+bool
+model::metadata::has_execenv(void) const
+{
+    const std::string& name = execenv();
+    return !name.empty() && name != "host";
+}
+
+
 /// Returns execenv jail parameters string to run a test with.
 ///
 /// \return String of jail parameters.
@@ -509,24 +536,13 @@ model::metadata::execenv_jail(void) const
 }
 
 
-/// Returns whether the test has an execenv jail params string or not.
+/// Returns whether the test is configured for jail execenv.
 ///
-/// \return True if there is a jail params string; false otherwise.
+/// \return True if there is a jail execenv is set; false otherwise.
 bool
-model::metadata::has_execenv_jail(void) const
+model::metadata::is_execenv_jail(void) const
 {
-    const std::string& params = execenv_jail();
-    return !params.empty();
-}
-
-
-/// Returns whether the test has any specific execenv.
-///
-/// \return True if there is a specific execenv configured; false otherwise.
-bool
-model::metadata::has_execenv(void) const
-{
-    return has_execenv_jail();
+    return execenv() == "jail";
 }
 
 
@@ -953,6 +969,21 @@ model::metadata_builder&
 model::metadata_builder::set_is_exclusive(const bool exclusive)
 {
     set< config::bool_node >(_pimpl->props, "is_exclusive", exclusive);
+    return *this;
+}
+
+
+/// Sets execution environment name.
+///
+/// \param name Execution environment name.
+///
+/// \return A reference to this builder.
+///
+/// \throw model::error If the value is invalid.
+model::metadata_builder&
+model::metadata_builder::set_execenv(const std::string& name)
+{
+    set< config::string_node >(_pimpl->props, "execenv", name);
     return *this;
 }
 

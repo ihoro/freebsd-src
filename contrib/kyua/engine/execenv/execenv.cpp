@@ -53,7 +53,7 @@ execenv::init(const model::test_program& test_program,
               const std::string& test_case_name)
 {
     const model::test_case& test_case = test_program.find(test_case_name);
-    if (test_case.get_metadata().has_execenv_jail())
+    if (test_case.get_metadata().is_execenv_jail())
         return execenv::jail::init(test_program, test_case_name);
     // else if ...other env
 
@@ -74,7 +74,7 @@ execenv::exec(const model::test_program& test_program,
               const args_vector& args) throw()
 {
     const model::test_case& test_case = test_program.find(test_case_name);
-    if (test_case.get_metadata().has_execenv_jail())
+    if (test_case.get_metadata().is_execenv_jail())
         execenv::jail::exec(test_program, test_case_name, args);
     // else if ...other env
 
@@ -94,7 +94,7 @@ execenv::cleanup(const model::test_program& test_program,
                  const std::string& test_case_name)
 {
     const model::test_case& test_case = test_program.find(test_case_name);
-    if (test_case.get_metadata().has_execenv_jail())
+    if (test_case.get_metadata().is_execenv_jail())
         return execenv::jail::cleanup(test_program, test_case_name);
     // else if ...other env
 
