@@ -233,6 +233,11 @@ jail::exec(const fs::path& program,
     // and exec the program
     std::string cd_exec_path = std::string(cwd) + "/cd_exec.sh";
     std::ofstream f(cd_exec_path);
+    if (f.fail()) {
+        std::cerr << "process::jail::exec: cannot create cd_exec.sh file: "
+            << strerror(errno) << ".\n";
+        std::exit(EXIT_FAILURE);
+    }
     f << "#!/bin/sh\n"
       << "cd \"$1\" && shift && exec $*";
     f.close();
