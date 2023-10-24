@@ -63,6 +63,10 @@ execenv_jail()
 {
 	atf_set execenv.jail vnet allow.raw_sockets \"exec.prepare=kldload -n if_epair\"
 }
+execenv_jail_init()
+{
+	ipfw add 65534 allow all from any to any
+}
 
 divert_init()
 {
@@ -82,15 +86,13 @@ in_div_body()
 {
 	firewall_init "ipfw"
 	divert_init
+	execenv_jail_init
 
 	epair=$(vnet_mkepair)
 	vnet_mkjail div ${epair}b
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
 	jexec div ipfw add 65534 allow all from any to any
-
-	ipfw add 100 check-state
-	ipfw add 200 allow all from me to any keep-state
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -123,15 +125,13 @@ in_div_in_body()
 {
 	firewall_init "ipfw"
 	divert_init
+	execenv_jail_init
 
 	epair=$(vnet_mkepair)
 	vnet_mkjail div ${epair}b
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
 	jexec div ipfw add 65534 allow all from any to any
-
-	ipfw add 100 check-state
-	ipfw add 200 allow all from me to any keep-state
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -164,15 +164,13 @@ out_div_body()
 {
 	firewall_init "ipfw"
 	divert_init
+	execenv_jail_init
 
 	epair=$(vnet_mkepair)
 	vnet_mkjail div ${epair}b
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
 	jexec div ipfw add 65534 allow all from any to any
-
-	ipfw add 100 check-state
-	ipfw add 200 allow all from me to any keep-state
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -205,15 +203,13 @@ out_div_out_body()
 {
 	firewall_init "ipfw"
 	divert_init
+	execenv_jail_init
 
 	epair=$(vnet_mkepair)
 	vnet_mkjail div ${epair}b
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
 	jexec div ipfw add 65534 allow all from any to any
-
-	ipfw add 100 check-state
-	ipfw add 200 allow all from me to any keep-state
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -246,6 +242,7 @@ in_div_in_fwd_out_div_out_body()
 {
 	firewall_init "ipfw"
 	divert_init
+	execenv_jail_init
 
 	# host <a--epair0--b> router <a--epair1--b> site
 	epair0=$(vnet_mkepair)
@@ -264,9 +261,6 @@ in_div_in_fwd_out_div_out_body()
 	jexec site route add default 198.51.100.1
 
 	route add -net 198.51.100.0/24 192.0.2.2
-
-	ipfw add 100 check-state
-	ipfw add 200 allow all from me to any keep-state
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
