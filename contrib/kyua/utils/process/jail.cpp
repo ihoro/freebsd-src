@@ -171,7 +171,8 @@ jail::create(const fs::path& program,
     av.push_back("children.max=16");
 
     // test defined jail params
-    for (const std::string& p : parse_jail_params_string(jail_params))
+    const std::vector< std::string > params = parse_jail_params_string(jail_params);
+    for (const std::string& p : params)
         av.push_back(p);
 
     // it must be persist
