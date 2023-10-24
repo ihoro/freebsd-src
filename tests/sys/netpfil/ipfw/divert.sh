@@ -59,6 +59,11 @@
 
 . $(atf_get_srcdir)/../common/utils.subr
 
+execenv_jail()
+{
+	atf_set execenv.jail vnet allow.raw_sockets \"exec.prepare=kldload -n if_epair\"
+}
+
 divert_init()
 {
 	if ! kldstat -q -m ipdivert; then
@@ -71,6 +76,7 @@ in_div_head()
 {
 	atf_set descr 'Test inbound > diverted | divapp terminated'
 	atf_set require.user root
+	execenv_jail
 }
 in_div_body()
 {
@@ -82,6 +88,9 @@ in_div_body()
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
 	jexec div ipfw add 65534 allow all from any to any
+
+	ipfw add 100 check-state
+	ipfw add 200 allow all from me to any keep-state
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -108,6 +117,7 @@ in_div_in_head()
 {
 	atf_set descr 'Test inbound > diverted > inbound | host terminated'
 	atf_set require.user root
+	execenv_jail
 }
 in_div_in_body()
 {
@@ -119,6 +129,9 @@ in_div_in_body()
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
 	jexec div ipfw add 65534 allow all from any to any
+
+	ipfw add 100 check-state
+	ipfw add 200 allow all from me to any keep-state
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -145,6 +158,7 @@ out_div_head()
 {
 	atf_set descr 'Test outbound > diverted | divapp terminated'
 	atf_set require.user root
+	execenv_jail
 }
 out_div_body()
 {
@@ -156,6 +170,9 @@ out_div_body()
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
 	jexec div ipfw add 65534 allow all from any to any
+
+	ipfw add 100 check-state
+	ipfw add 200 allow all from me to any keep-state
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -182,6 +199,7 @@ out_div_out_head()
 {
 	atf_set descr 'Test outbound > diverted > outbound | network terminated'
 	atf_set require.user root
+	execenv_jail
 }
 out_div_out_body()
 {
@@ -193,6 +211,9 @@ out_div_out_body()
 	ifconfig ${epair}a 192.0.2.1/24 up
 	jexec div ifconfig ${epair}b 192.0.2.2/24 up
 	jexec div ipfw add 65534 allow all from any to any
+
+	ipfw add 100 check-state
+	ipfw add 200 allow all from me to any keep-state
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
@@ -219,6 +240,7 @@ in_div_in_fwd_out_div_out_head()
 {
 	atf_set descr 'Test inbound > diverted > inbound > forwarded > outbound > diverted > outbound | network terminated'
 	atf_set require.user root
+	execenv_jail
 }
 in_div_in_fwd_out_div_out_body()
 {
@@ -242,6 +264,9 @@ in_div_in_fwd_out_div_out_body()
 	jexec site route add default 198.51.100.1
 
 	route add -net 198.51.100.0/24 192.0.2.2
+
+	ipfw add 100 check-state
+	ipfw add 200 allow all from me to any keep-state
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
