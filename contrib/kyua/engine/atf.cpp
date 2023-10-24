@@ -40,7 +40,6 @@ extern "C" {
 #include "engine/atf_result.hpp"
 #include "engine/exceptions.hpp"
 #include "engine/execenv/execenv.hpp"
-#include "model/metadata.hpp"
 #include "model/test_case.hpp"
 #include "model/test_program.hpp"
 #include "model/test_result.hpp"
