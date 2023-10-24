@@ -52,7 +52,7 @@ execenv::jail::init(const model::test_program& test_program,
                     const std::string& test_case_name)
 {
     const model::test_case& test_case = test_program.find(test_case_name);
-    const std::string& jail_params = test_case.get_metadata().execenv_jail();
+    const std::string jail_params = test_case.get_metadata().execenv_jail();
 
     process::jail::create(test_program.absolute_path(), test_case_name,
                           jail_params);
