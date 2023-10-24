@@ -162,7 +162,7 @@ jail::create(const fs::path& program,
     args_vector av;
 
     // creation flag
-    av.push_back("-c");
+    av.push_back("-qc");
 
     // jail name
     av.push_back(F("name=%s") % make_jail_name(program, test_case_name));
