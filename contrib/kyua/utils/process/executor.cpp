@@ -379,6 +379,7 @@ struct utils::process::executor::exit_handle::impl : utils::noncopyable {
         // from the destructor, which would make us crash due to an invalid
         // reference count.
         (*state_owners)--;
+	printf("exit_handle.cleanup(): pid=%d: *state_owners-1 = %lu\n", original_pid, *state_owners);
         // Marking this object as clean here, even if we did not do actually the
         // cleaning above, is fine (albeit a bit confusing).  Note that "another
         // owner" refers to a handle for a different PID, so that handle will be
@@ -689,6 +690,36 @@ struct utils::process::executor::executor_handle::impl : utils::noncopyable {
                 data._pimpl->state_owners,
                 all_exec_handles)));
     }
+
+    executor::exit_handle
+    reap(const int original_pid)
+    {
+        const exec_handles_map::iterator iter = all_exec_handles.find(
+            original_pid);
+        exec_handle& data = (*iter).second;
+        data._pimpl->timer.unprogram();
+
+        if (!fs::exists(data.stdout_file())) {
+            std::ofstream new_stdout(data.stdout_file().c_str());
+        }
+        if (!fs::exists(data.stderr_file())) {
+            std::ofstream new_stderr(data.stderr_file().c_str());
+        }
+
+        printf("reap: pid=%d, exec_handle.state_owners=%lu\n", original_pid, *data._pimpl->state_owners);
+
+        return exit_handle(std::shared_ptr< exit_handle::impl >(
+            new exit_handle::impl(
+                data.pid(),
+                none,
+                data._pimpl->unprivileged_user,
+                data._pimpl->start_time, datetime::timestamp::now(),
+                data.control_directory(),
+                data.stdout_file(),
+                data.stderr_file(),
+                data._pimpl->state_owners,
+                all_exec_handles)));
+    }
 };
 
 
@@ -876,6 +907,20 @@ executor::executor_handle::wait_any(void)
     signals::check_interrupt();
     const process::status status = process::wait_any();
     return _pimpl->post_wait(status.dead_pid(), status);
+}
+
+
+/// Forms exit_handle for the given PID subprocess.
+///
+/// Can be used in the cases when we want to do cleanup(s) of a killed test
+/// subprocess, but we do not have exit handle as we usually do after normal
+/// wait mechanism.
+///
+/// \return A pointer to an object describing the subprocess.
+executor::exit_handle
+executor::executor_handle::reap(const int pid)
+{
+    return _pimpl->reap(pid);
 }
 
 
