@@ -379,7 +379,6 @@ struct utils::process::executor::exit_handle::impl : utils::noncopyable {
         // from the destructor, which would make us crash due to an invalid
         // reference count.
         (*state_owners)--;
-	printf("exit_handle.cleanup(): pid=%d: *state_owners-1 = %lu\n", original_pid, *state_owners);
         // Marking this object as clean here, even if we did not do actually the
         // cleaning above, is fine (albeit a bit confusing).  Note that "another
         // owner" refers to a handle for a different PID, so that handle will be
@@ -705,8 +704,6 @@ struct utils::process::executor::executor_handle::impl : utils::noncopyable {
         if (!fs::exists(data.stderr_file())) {
             std::ofstream new_stderr(data.stderr_file().c_str());
         }
-
-        printf("reap: pid=%d, exec_handle.state_owners=%lu\n", original_pid, *data._pimpl->state_owners);
 
         return exit_handle(std::shared_ptr< exit_handle::impl >(
             new exit_handle::impl(

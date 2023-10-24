@@ -509,7 +509,7 @@ model::metadata::execenv_jail(void) const
 }
 
 
-/// Returns whether the test has a execenv jail params string or not.
+/// Returns whether the test has an execenv jail params string or not.
 ///
 /// \return True if there is a jail params string; false otherwise.
 bool
@@ -520,9 +520,9 @@ model::metadata::has_execenv_jail(void) const
 }
 
 
-/// Returns whether the test has a specific execenv.
+/// Returns whether the test has any specific execenv.
 ///
-/// \return True if there is a specific execenv; false otherwise.
+/// \return True if there is a specific execenv configured; false otherwise.
 bool
 model::metadata::has_execenv(void) const
 {

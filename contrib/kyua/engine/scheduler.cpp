@@ -218,6 +218,9 @@ struct test_exec_data : public exec_data {
     bool needs_execenv_cleanup;
 
     /// Original PID of the test case subprocess.
+    ///
+    /// This is used for the cleanup upon termination by a signal, to reap the
+    /// leftovers and form missing exit_handle.
     int pid;
 
     /// The exit_handle for this test once it has completed.

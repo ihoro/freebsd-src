@@ -170,7 +170,7 @@ executor::executor_handle::spawn_followup(Hook hook,
                                   base.control_directory(),
                                   base.work_directory(),
                                   base.unprivileged_user()),
-        base.stdout_file(), base.stderr_file()); // aha, I found you guys ;)
+        base.stdout_file(), base.stderr_file());
 
     return spawn_followup_post(base, timeout, child);
 }

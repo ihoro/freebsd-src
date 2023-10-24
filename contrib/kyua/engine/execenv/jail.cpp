@@ -55,7 +55,7 @@ execenv::jail::init(const model::test_program& test_program,
     const std::string& jail_params = test_case.get_metadata().execenv_jail();
 
     process::jail::create(test_program.absolute_path(), test_case_name,
-			  jail_params);
+                          jail_params);
 }
 
 
@@ -71,7 +71,7 @@ execenv::jail::exec(const model::test_program& test_program,
                     const args_vector& args) throw()
 {
     process::jail::exec(test_program.absolute_path(), test_case_name,
-			args);
+                        args);
 }
 
 

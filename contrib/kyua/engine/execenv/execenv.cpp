@@ -43,7 +43,8 @@ using utils::process::args_vector;
 /// Initialize execution environment.
 ///
 /// It's expected to be called inside a fork which runs interface::exec_test(),
-/// so we can fail a test fast if its execution environment setup fails.
+/// so we can fail a test fast if its execution environment setup fails, and
+/// test execution could use the configured proc environment, if expected.
 ///
 /// \param program The test program binary absolute path.
 /// \param test_case_name Name of the test case.
@@ -97,6 +98,6 @@ execenv::cleanup(const model::test_program& test_program,
         return execenv::jail::cleanup(test_program, test_case_name);
     // else if ...other env
 
-    // host environment by default
-    return;
+    // cleanup is not expected to be called for host environment
+    std::exit(EXIT_SUCCESS);
 }
