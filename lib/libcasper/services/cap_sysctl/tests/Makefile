@@ -3,6 +3,8 @@
 
 ATF_TESTS_C=	sysctl_test
 
+TEST_METADATA+=	execenv="host"
+
 .if ${MK_CASPER} != "no"
 LIBADD+=	casper
 LIBADD+=	cap_sysctl
