@@ -40,6 +40,8 @@ KYUAFILE?= auto
 # behavior defined here.
 #TEST_METADATA+= key="value"
 
+TEST_METADATA+= execenv="jail"
+
 # Per-test program metadata properties as a list of key/value pairs.
 #
 # These per-test program settings _extend_ the values provided in the
