@@ -490,7 +490,9 @@ bool
 model::metadata::is_exclusive(void) const
 {
     if (_pimpl->props.is_set("is_exclusive")) {
-        return _pimpl->props.lookup< config::bool_node >("is_exclusive");
+        const bool is_excl =
+            _pimpl->props.lookup< config::bool_node >("is_exclusive");
+        return is_excl && !is_execenv_jail();
     } else {
         return get_defaults().lookup< config::bool_node >("is_exclusive");
     }
