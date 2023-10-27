@@ -22,6 +22,8 @@ ATF_TESTS_SH+=	reentrancy_test
 ATF_TESTS_SH+=	resize_test
 ATF_TESTS_SH+=	setkey_test
 
+TEST_METADATA+=	execenv="host"
+
 ${PACKAGE}FILES+=		conf.sh
 
 CFLAGS.pbkdf2_test=	-I${SRCTOP}/sys

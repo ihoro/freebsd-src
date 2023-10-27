@@ -35,7 +35,7 @@ etalonPACKAGE=	${PACKAGE}
 TAP_TESTS_SH+=	1_test
 
 .for t in ${TAP_TESTS_SH}
-TEST_METADATA.$t+=	required_user="root"
+TEST_METADATA.$t+=	execenv="host",required_user="root"
 .endfor
 
 .include <bsd.test.mk>

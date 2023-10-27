@@ -9,7 +9,7 @@ TAP_TESTS_SH+=	2_test
 ${PACKAGE}FILES+=		conf.sh
 
 .for t in ${TAP_TESTS_SH}
-TEST_METADATA.$t+=	required_user="root"
+TEST_METADATA.$t+=	execenv="host",required_user="root"
 .endfor
 
 .include <bsd.test.mk>
