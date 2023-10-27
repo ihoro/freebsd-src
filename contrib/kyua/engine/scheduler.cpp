@@ -1377,6 +1377,7 @@ scheduler::scheduler_handle::wait_any(void)
                 // if the test's body reports a skip (because actions could have
                 // already been taken).
                 test_data->needs_cleanup = false;
+                test_data->needs_execenv_cleanup = false;
             }
         }
         if (!result) {
