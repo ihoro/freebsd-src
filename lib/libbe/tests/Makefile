@@ -3,6 +3,8 @@ PACKAGE=	tests
 
 ATF_TESTS_SH+= be_create
 
+TEST_METADATA+=	execenv="host"
+
 PROGS=		target_prog
 SRCS_target_prog=	target_prog.c
 BINDIR_target_prog=	${TESTSDIR}
