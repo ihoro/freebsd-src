@@ -8,8 +8,10 @@ TAP_TESTS_SH+=	ng_macfilter_test
 
 # Serialize tests since some share netgraph node names.
 TEST_METADATA+=	is_exclusive=true
+TEST_METADATA+=	execenv_jail="vnet \"exec.prepare=kldload -n netgraph ng_socket ng_hub ng_bridge ng_vlan_rotate\""
 TEST_METADATA.ng_macfilter_test+=	required_user="root"
 TEST_METADATA.ng_macfilter_test+=	required_programs="perl"
+TEST_METADATA.ng_macfilter_test+=	execenv="host"
 
 ATF_TESTS_C+=	basic		\
 		bridge		\
