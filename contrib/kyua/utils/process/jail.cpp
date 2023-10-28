@@ -231,10 +231,10 @@ jail::exec(const fs::path& program,
 
     // prepare a script to run in a jail to change back to the work dir
     // and exec the program
-    std::string cd_exec_path = std::string(cwd) + "/cd_exec.sh";
+    std::string cd_exec_path = std::string(cwd) + "/kyua_cd_exec.sh";
     std::ofstream f(cd_exec_path);
     if (f.fail()) {
-        std::cerr << "process::jail::exec: cannot create cd_exec.sh file: "
+        std::cerr << "process::jail::exec: cannot create kyua_cd_exec.sh file: "
             << strerror(errno) << ".\n";
         std::exit(EXIT_FAILURE);
     }
