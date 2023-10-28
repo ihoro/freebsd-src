@@ -89,7 +89,11 @@ CFLAGS+=		-I${.CURDIR}
 SRCS.fmtcheck2_test=	fmtcheck_test.c
 SRCS.fnmatch2_test=	fnmatch_test.c
 
-TEST_METADATA.setdomainname_test+=	is_exclusive=true
+TEST_METADATA.nice_test+=		execenv="host"
+TEST_METADATA.posix_spawn_test+=	execenv="host"
+TEST_METADATA.setdomainname_test+=	execenv="host",is_exclusive=true
+TEST_METADATA.sethostname_test+=	execenv="host"
+
 TESTS_SUBDIRS=	execve
 TESTS_SUBDIRS+=	posix_spawn
 
