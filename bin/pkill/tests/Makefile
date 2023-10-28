@@ -23,6 +23,7 @@ TAP_TESTS_SH+=			pgrep-n_test
 TAP_TESTS_SH+=			pgrep-o_test
 TAP_TESTS_SH+=			pgrep-q_test
 TAP_TESTS_SH+=			pgrep-s_test
+TEST_METADATA.pgrep-s_test+=	execenv="host"
 TAP_TESTS_SH+=			pgrep-t_test
 TAP_TESTS_SH+=			pgrep-v_test
 TAP_TESTS_SH+=			pgrep-x_test
@@ -34,6 +35,7 @@ TAP_TESTS_SH+=			pkill-_g_test
 TAP_TESTS_SH+=			pkill-g_test
 TAP_TESTS_SH+=			pkill-i_test
 TAP_TESTS_SH+=			pkill-j_test
+TEST_METADATA.pkill-j_test+=	execenv="host"
 TEST_METADATA.pkill-j_test+=	required_user="root"
 TEST_METADATA.pkill-j_test+=	required_programs="jail jls"
 TAP_TESTS_SH+=			pkill-s_test
