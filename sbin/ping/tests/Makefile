@@ -9,6 +9,9 @@ ATF_TESTS_SH+=	ping_test
 # Exclusive because each injection test case uses the same IP addresses
 TEST_METADATA.ping_test+=	is_exclusive="true"
 
+TEST_METADATA.ping_test+=	execenv="host"
+TEST_METADATA.test_ping.py+=	execenv_jail="vnet \"exec.prepare=kldload -n if_epair\""
+
 ${PACKAGE}FILES+= ping_c1_s56_t1.out
 ${PACKAGE}FILES+= ping_6_c1_s8_t1.out
 ${PACKAGE}FILES+= ping_c1_s56_t1_S127.out
