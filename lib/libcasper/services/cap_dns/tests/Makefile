@@ -3,7 +3,7 @@
 
 ATF_TESTS_C=	dns_test
 
-TEST_METADATA+=	execenv_jail="ip4=inherit ip6=inherit"
+TEST_METADATA+=	execenv="host",is_exclusive=true
 
 .if ${MK_CASPER} != "no"
 LIBADD+=	casper
