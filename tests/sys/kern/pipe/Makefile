@@ -11,4 +11,6 @@ PLAIN_TESTS_C+= pipe_reverse2_test
 PLAIN_TESTS_C+= pipe_reverse_test
 PLAIN_TESTS_C+= pipe_wraparound_test
 
+TEST_METADATA+=	execenv="host"
+
 .include <bsd.test.mk>

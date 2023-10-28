@@ -23,15 +23,18 @@ ATF_TESTS_C+=	ktls_test
 .endif
 ATF_TESTS_C+=	module_test
 ATF_TESTS_C+=	ptrace_test
-TEST_METADATA.ptrace_test+=		timeout="15"
+TEST_METADATA.ptrace_test+=		timeout="15",execenv="host"
 ATF_TESTS_C+=	reaper
 ATF_TESTS_C+=	sched_affinity
 ATF_TESTS_C+=	sigaltstack
 ATF_TESTS_C+=	sigwait
+TEST_METADATA.sigwait+=	is_exclusive="true",execenv="host"
 ATF_TESTS_C+=	socket_accf
+TEST_METADATA.socket_accf+=		execenv="host"
 ATF_TESTS_C+=	socket_msg_trunc
+TEST_METADATA.socket_msg_trunc+=	execenv_jail="ip4=inherit ip6=inherit"
 ATF_TESTS_C+=	socket_msg_waitall
-TEST_METADATA.sigwait+=	is_exclusive="true"
+TEST_METADATA.socket_msg_waitall+=	execenv_jail="ip4=inherit ip6=inherit"
 .if ${MACHINE_ARCH} != "i386" && ${MACHINE_ARCH:Mpowerpc*} == ""
 ATF_TESTS_C+=	subr_physmem_test
 .endif
@@ -56,6 +59,7 @@ ATF_TESTS_SH+=	sonewconn_overflow
 TEST_METADATA.sonewconn_overflow+=	required_programs="python"
 TEST_METADATA.sonewconn_overflow+=	required_user="root"
 ATF_TESTS_SH+=	sendfile_test
+TEST_METADATA.sendfile_test+=		execenv="host"
 
 ${PACKAGE}FILES+=	sonewconn_overflow.py
 ${PACKAGE}FILESMODE_sonewconn_overflow.py=0555
@@ -82,6 +86,7 @@ LIBADD.sigwait+=			rt
 NETBSD_ATF_TESTS_C+=	lockf_test
 NETBSD_ATF_TESTS_C+=	mqueue_test
 NETBSD_ATF_TESTS_C+=	sysv_test
+TEST_METADATA.sysv_test+=		execenv_jail="allow.sysvipc"
 
 CFLAGS.mqueue_test+=	-I${SRCTOP}/tests
 LIBADD.mqueue_test+=	rt
