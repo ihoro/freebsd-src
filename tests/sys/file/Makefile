@@ -12,6 +12,9 @@ PLAIN_TESTS_C+=	ftruncate_test
 PLAIN_TESTS_C+=	newfileops_on_fork_test
 ATF_TESTS_C+=	fspacectl_test
 
+TEST_METADATA.newfileops_on_fork_test+=	execenv="host"
+TEST_METADATA.path_test+=		execenv="host"
+
 PROGS+=		flock_helper
 
 LIBADD.closefrom_test=	util
