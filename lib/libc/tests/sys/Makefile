@@ -10,6 +10,8 @@ ATF_TESTS_C+=			cpuset_test
 ATF_TESTS_C+=			queue_test
 ATF_TESTS_C+=			sendfile_test
 
+TEST_METADATA.sendfile_test+=	execenv_jail="ip4=inherit ip6=inherit"
+
 # TODO: clone, lwp_create, lwp_ctl, posix_fadvise, recvmmsg,
 # swapcontext
 NETBSD_ATF_TESTS_C+=		access_test
@@ -79,6 +81,28 @@ TEST_METADATA.msgctl_test+=	is_exclusive="true"
 TEST_METADATA.msgget_test+=	is_exclusive="true"
 TEST_METADATA.msgsnd_test+=	is_exclusive="true"
 TEST_METADATA.msgrcv_test+=	is_exclusive="true"
+
+TEST_METADATA.access+=			execenv="host"
+TEST_METADATA.chroot+=			execenv="host"
+TEST_METADATA.clock_gettime_test+=	execenv="host"
+TEST_METADATA.getlogin_test+=		execenv="host"
+TEST_METADATA.link_test+=		execenv="host"
+TEST_METADATA.mincore_test+=		execenv="host"
+TEST_METADATA.mkdir_test+=		execenv="host"
+TEST_METADATA.mkfifo_test+=		execenv="host"
+TEST_METADATA.mknod_test+=		execenv="host"
+TEST_METADATA.mlock+=			execenv_jail="allow.mlock"
+TEST_METADATA.msgctl_test+=		execenv_jail="allow.sysvipc"
+TEST_METADATA.msgget_test+=		execenv_jail="allow.sysvipc"
+TEST_METADATA.msgsnd_test+=		execenv="host"
+TEST_METADATA.msgrcv_test+=		execenv_jail="allow.sysvipc"
+TEST_METADATA.revoke_test+=		execenv="host"
+TEST_METADATA.setrlimit_test+=		execenv="host"
+TEST_METADATA.setuid_test+=		execenv="host"
+TEST_METADATA.socketpair_test+=		execenv_jail="ip4=inherit ip6=inherit"
+TEST_METADATA.stat_test+=		execenv_jail="ip4=inherit ip6=inherit"
+TEST_METADATA.truncate_test+=		execenv="host"
+TEST_METADATA.unlink_test+=		execenv="host"
 
 .include "../Makefile.netbsd-tests"
 
