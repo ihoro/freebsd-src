@@ -21,6 +21,8 @@ TAP_TESTS_SH+=	02
 TAP_TESTS_SH+=	03
 TAP_TESTS_SH+=	04
 
+TEST_METADATA+=		execenv="host"
+
 .for t in ${TAP_TESTS_SH}
 # Tests hard-code a ZFS pool name of "acltools" and so cannot run in parallel.
 TEST_METADATA.$t+=	required_user="root" \
