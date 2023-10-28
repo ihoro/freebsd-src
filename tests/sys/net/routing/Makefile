@@ -17,6 +17,8 @@ ${PACKAGE}FILESMODE_generic_cleanup.sh=0555
 # so running them in parallel will lead to weird results.
 TEST_METADATA+=	is_exclusive=true
 
+TEST_METADATA+=	execenv_jail="vnet \"exec.prepare=kldload -n if_epair\""
+
 CFLAGS+=	-I${.CURDIR:H:H:H}
 
 .include <bsd.test.mk>
