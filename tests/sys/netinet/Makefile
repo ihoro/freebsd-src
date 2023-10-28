@@ -31,6 +31,14 @@ TEST_METADATA.output+=	required_programs="python"
 TEST_METADATA.redirect+= required_programs="python"
 TEST_METADATA.tcp6_v4mapped_bind_test+=	is_exclusive="true"
 
+TEST_METADATA+=				execenv_jail="vnet \"exec.prepare=kldload -n if_epair\""
+TEST_METADATA.ip6_v4mapped_test+=	execenv="host"
+TEST_METADATA.ip_reass_test+=		execenv="host"
+TEST_METADATA.so_reuseport_lb_test+=	execenv="host"
+TEST_METADATA.socket_afinet+=		execenv="host"
+TEST_METADATA.tcp_connect_port_test+=	execenv="host"
+TEST_METADATA.tcp_md5_getsockopt+=	execenv="host"
+
 PROGS=	udp_dontroute tcp_user_cookie
 
 ${PACKAGE}FILES+=		redirect.py
