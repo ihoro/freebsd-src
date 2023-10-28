@@ -71,6 +71,8 @@ ATF_TESTS_C+=	next_test
 ATF_TESTS_C+=	rem_test
 ATF_TESTS_C+=	trig_test
 
+TEST_METADATA+=	execenv="host"
+
 .if !empty(PROG) && !empty(TAP_TESTS_C:M${PROG})
 CFLAGS+=	-O0
 .endif
