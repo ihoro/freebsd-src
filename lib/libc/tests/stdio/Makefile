@@ -34,6 +34,8 @@ NETBSD_ATF_TESTS_C+=	popen_test
 NETBSD_ATF_TESTS_C+=	printf_test
 NETBSD_ATF_TESTS_C+=	scanf_test
 
+TEST_METADATA.fopen_test+=	execenv="host"
+
 LIBADD.eintr_test+=	 md
 LIBADD.printfloat_test+= m
 LIBADD.scanfloat_test+=  m
