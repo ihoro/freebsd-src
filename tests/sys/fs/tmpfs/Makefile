@@ -34,6 +34,14 @@ NETBSD_ATF_TESTS_SH+=	truncate_test
 NETBSD_ATF_TESTS_SH+=	vnd_test
 NETBSD_ATF_TESTS_SH+=	vnode_leak_test
 
+TEST_METADATA+=			execenv_jail="allow.mount allow.mount.tmpfs enforce_statfs=1"
+TEST_METADATA.sockets_test+=	execenv_jail="allow.mount allow.mount.tmpfs enforce_statfs=1 vnet"
+
+TEST_METADATA.mknod_test+=	execenv="host"
+TEST_METADATA.readdir_test+=	execenv="host"
+TEST_METADATA.vnd_test+=	execenv="host"
+TEST_METADATA.vnode_leak_test+=	execenv="host"
+
 ${PACKAGE}FILES+=	h_funcs.subr
 ${PACKAGE}FILESDIR=	${TESTSDIR}
 
