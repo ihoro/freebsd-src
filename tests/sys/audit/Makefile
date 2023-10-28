@@ -45,6 +45,7 @@ SRCS.process-control+=		utils.c
 SRCS.miscellaneous+=		miscellaneous.c
 SRCS.miscellaneous+=		utils.c
 
+TEST_METADATA+= execenv="host"
 TEST_METADATA+= timeout="30"
 TEST_METADATA+= required_user="root"
 # Only one process can be auditing, if we attempt to run these tests in parallel
