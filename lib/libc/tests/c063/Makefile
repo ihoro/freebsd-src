@@ -16,6 +16,9 @@ NETBSD_ATF_TESTS_C+=	symlinkat_test
 NETBSD_ATF_TESTS_C+=	unlinkat_test
 NETBSD_ATF_TESTS_C+=	utimensat_test
 
+TEST_METADATA.mknodat_test+=	execenv="host"
+TEST_METADATA.o_search_test+=	execenv="host"
+
 CFLAGS+= -D_INCOMPLETE_XOPEN_C063
 
 .include "../Makefile.netbsd-tests"
