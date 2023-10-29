@@ -61,7 +61,7 @@ SRCS.$p+=	mockfs.cc
 SRCS.$p+=	utils.cc
 .endfor
 
-TEST_METADATA.default_permissions+=	required_user="unprivileged"
+TEST_METADATA.default_permissions+=	required_user="unprivileged",execenv="host"
 TEST_METADATA.default_permissions_privileged+=	required_user="root"
 TEST_METADATA.mknod+=	required_user="root"
 TEST_METADATA.nfs+=	required_user="root"
