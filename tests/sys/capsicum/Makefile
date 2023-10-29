@@ -36,9 +36,10 @@ SRCS.capsicum-test+=	\
 	rename.cc
 
 LIBADD.capsicum-test+=	gtest pthread procstat
-TEST_METADATA.capsicum-test=	required_user="unprivileged",execenv="host"
 
-TEST_METADATA.bindat_connectat+=execenv_jail="ip4=inherit ip6=inherit"
+TEST_METADATA.bindat_connectat+=	execenv_jail="ip4=inherit ip6=inherit"
+TEST_METADATA.functional+=		required_user="unprivileged",execenv="host"
+TEST_METADATA.ioctls_test+=		required_user="unprivileged",execenv="host"
 
 .for p in mini-me mini-me.noexec mini-me.setuid
 PROGS+=		$p
