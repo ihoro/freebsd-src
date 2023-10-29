@@ -22,6 +22,8 @@ ATF_TESTS_C+=	${_T}
 SRCS.${_T}=	${_T}.c test_helpers.c
 .endfor
 
+TEST_METADATA.fs_test+=	execenv="host"
+
 .for p in process_helpers version_helper
 PROGS+=		${p}
 SRCS.${p}=	${p}.c
