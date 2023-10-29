@@ -19,7 +19,8 @@ TEST_METADATA+=	is_exclusive=true
 
 TEST_METADATA+=	execenv_jail="vnet \"exec.prepare=kldload -n if_epair\""
 
-TEST_METADATA.test_rtsock_multipath.py+= execenv="host"
+TEST_METADATA.test_rtsock_lladdr+=		execenv="host"
+TEST_METADATA.test_rtsock_multipath.py+=	execenv="host"
 
 CFLAGS+=	-I${.CURDIR:H:H:H}
 
