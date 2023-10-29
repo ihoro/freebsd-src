@@ -9,7 +9,7 @@ PLAIN_TESTS_SH=	yacc_tests
 # NOTE: due to caveats with how permissions are handled on FreeBSD
 # with root, this must be run as a non-privileged user; otherwise
 # the testcases will fail unexpectedly.
-TEST_METADATA.yacc_tests+=	required_user="unprivileged"
+TEST_METADATA.yacc_tests+=	required_user="unprivileged",execenv="host"
 
 SCRIPTS=	run_test
 SCRIPTSDIR=	${TESTSDIR}
