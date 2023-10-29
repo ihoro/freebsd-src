@@ -40,8 +40,6 @@ KYUAFILE?= auto
 # behavior defined here.
 #TEST_METADATA+= key="value"
 
-TEST_METADATA+= execenv="jail"
-
 # Per-test program metadata properties as a list of key/value pairs.
 #
 # These per-test program settings _extend_ the values provided in the
@@ -54,7 +52,7 @@ ${PACKAGE}FILESDIR_Kyuafile=	${TESTSDIR}
 .endif
 
 .for _T in ${_TESTS}
-_TEST_METADATA.${_T}= ${TEST_METADATA} ${TEST_METADATA.${_T}}
+_TEST_METADATA.${_T}= execenv="jail" ${TEST_METADATA} ${TEST_METADATA.${_T}}
 .endfor
 
 .if ${KYUAFILE:tl} == "auto"
