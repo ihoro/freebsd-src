@@ -9,6 +9,8 @@ ATF_TESTS_C+=	cpuset_test
 ATF_TESTS_C+=	expand_number_test
 ATF_TESTS_C+=	forkpty_test
 
+TEST_METADATA.forkpty_test+=	execenv="host"
+
 WARNS?=		2
 LIBADD+=	util
 
