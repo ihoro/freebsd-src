@@ -19,6 +19,9 @@ ATF_TESTS_SH=			\
 				proxy_ndp
 TEST_METADATA.output6+=	required_programs="python"
 
+TEST_METADATA+=			execenv_jail="vnet \"exec.prepare=kldload -n if_epair\""
+TEST_METADATA.redirect+=	execenv="host"
+
 ${PACKAGE}FILES+=		exthdr.py
 ${PACKAGE}FILES+=		mld.py
 ${PACKAGE}FILES+=		scapyi386.py
