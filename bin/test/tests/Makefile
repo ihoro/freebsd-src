@@ -9,4 +9,6 @@ TAP_TESTS_SH=	legacy_test
 # requested.  See https://code.google.com/p/kyua/issues/detail?id=6
 TEST_METADATA.legacy_test+= required_user="unprivileged"
 
+TEST_METADATA.legacy_test+= execenv="host"
+
 .include <bsd.test.mk>
