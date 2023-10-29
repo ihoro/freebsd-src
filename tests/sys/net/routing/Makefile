@@ -19,6 +19,8 @@ TEST_METADATA+=	is_exclusive=true
 
 TEST_METADATA+=	execenv_jail="vnet \"exec.prepare=kldload -n if_epair\""
 
+# TODO: panics found, at least on aarch64
+TEST_METADATA.test_rtsock_l3+=			execenv="host"
 TEST_METADATA.test_rtsock_lladdr+=		execenv="host"
 TEST_METADATA.test_rtsock_multipath.py+=	execenv="host"
 
