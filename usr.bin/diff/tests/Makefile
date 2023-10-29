@@ -3,6 +3,8 @@ PACKAGE=	tests
 
 ATF_TESTS_SH=	diff_test
 
+TEST_METADATA.diff_test+=	execenv="host"
+
 ${PACKAGE}FILES+=	\
 	Bflag_C.out \
 	Bflag_D.out \
