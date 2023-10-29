@@ -20,6 +20,7 @@ ATF_TESTS_C+=	fdgrowtable_test
 ATF_TESTS_C+=	kill_zombie
 .if ${MK_OPENSSL} != "no"
 ATF_TESTS_C+=	ktls_test
+TEST_METADATA.ktls_test+=	execenv="host"
 .endif
 ATF_TESTS_C+=	module_test
 ATF_TESTS_C+=	ptrace_test
