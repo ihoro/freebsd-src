@@ -11,4 +11,6 @@ TEST_METADATA.ugidfw_test+=	required_user="root"
 # be run simultaneously
 TEST_METADATA.matches_test+=	is_exclusive=true
 
+TEST_METADATA+=	execenv="host"
+
 .include <bsd.test.mk>

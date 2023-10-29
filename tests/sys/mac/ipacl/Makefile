@@ -5,6 +5,8 @@ TESTSDIR=		${TESTSBASE}/sys/mac/ipacl
 
 ATF_TESTS_SH+=	ipacl_test
 
+TEST_METADATA+=	execenv="host"
+
 ${PACKAGE}FILES+=	utils.subr
 
 .include <bsd.test.mk>
