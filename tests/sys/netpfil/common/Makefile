@@ -16,6 +16,8 @@ ATF_TESTS_SH+=	\
 # Tests reuse jail names and so cannot run in parallel.
 TEST_METADATA+=	is_exclusive=true
 
+TEST_METADATA+=	execenv="host"
+
 ${PACKAGE}FILES+=	\
 		utils.subr \
 		runner.subr \
