@@ -48,9 +48,9 @@ ATF_TESTS_PYTEST+=	sctp.py
 # Tests reuse jail names and so cannot run in parallel.
 TEST_METADATA+=	is_exclusive=true
 
-# If running in a jail
 TEST_METADATA+=	execenv_jail="vnet \"exec.prepare=kldload -n if_epair\""
 
+TEST_METADATA.pfsync+=		execenv="host"
 TEST_METADATA.route_to+=	execenv="host"
 TEST_METADATA.syncookie+=	execenv="host"
 
