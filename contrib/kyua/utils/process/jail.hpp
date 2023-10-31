@@ -40,12 +40,12 @@ namespace process {
 namespace jail {
 
 
-void create(const utils::fs::path&, const std::string&, const std::string&);
+void create(const std::string&, const std::string&);
 
-void exec(const utils::fs::path&, const std::string&,
-          const args_vector&) throw() UTILS_NORETURN;
+void exec(const std::string&, const utils::fs::path&, const args_vector&)
+    throw() UTILS_NORETURN;
 
-void remove(const utils::fs::path&, const std::string&);
+void remove(const std::string&);
 
 
 }  // namespace jail

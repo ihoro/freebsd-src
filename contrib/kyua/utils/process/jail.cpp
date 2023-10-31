@@ -34,7 +34,6 @@ extern "C" {
 
 #include <fstream>
 #include <iostream>
-#include <regex>
 
 #include "utils/fs/path.hpp"
 #include "utils/process/child.ipp"
@@ -51,23 +50,6 @@ using utils::process::child;
 
 
 namespace {
-
-
-static std::string
-make_jail_name(const fs::path& program, const std::string& test_case_name)
-{
-    std::string name = std::regex_replace(
-        program.str() + "_" + test_case_name,
-        std::regex(R"([^A-Za-z0-9_])"),
-        "_");
-
-    const std::string::size_type limit =
-        255 /* jail name max */ - 4 /* "kyua" prefix */;
-    if (name.length() > limit)
-        name.erase(0, name.length() - limit);
-
-    return "kyua" + name;
-}
 
 
 static std::vector< std::string >
@@ -150,20 +132,17 @@ public:
 }  // anonymous namespace
 
 
-/// Create a jail based on test program path and case name.
+/// Create a jail with a given name and params string.
 ///
 /// A new jail will always be 'persist', thus the caller is expected to remove
 /// the jail eventually via jail::remove().
 ///
 /// It's expected to be run in a subprocess.
 ///
-/// \param program The test program binary absolute path.
-/// \param test_case_name Name of the test case.
-/// \param jail String of jail parameters.
+/// \param jail_name Name of a new jail.
+/// \param jail_params String of jail parameters.
 void
-jail::create(const fs::path& program,
-             const std::string& test_case_name,
-             const std::string& jail_params)
+jail::create(const std::string& jail_name, const std::string& jail_params)
 {
     args_vector av;
 
@@ -171,7 +150,7 @@ jail::create(const fs::path& program,
     av.push_back("-qc");
 
     // jail name
-    av.push_back(F("name=%s") % make_jail_name(program, test_case_name));
+    av.push_back(F("name=%s") % jail_name);
 
     // some obvious defaults to ease test authors' life
     av.push_back("children.max=16");
@@ -210,13 +189,13 @@ jail::create(const fs::path& program,
 /// as otherwise we would not be able to use vfork().  Only state stored in the
 /// stack can be touched.
 ///
+/// \param jail_name Name of the jail to run within.
 /// \param program The test program binary absolute path.
-/// \param test_case_name Name of the test case.
 /// \param args The arguments to pass to the binary, without the program name.
 void
-jail::exec(const fs::path& program,
-                   const std::string& test_case_name,
-                   const args_vector& args) throw()
+jail::exec(const std::string& jail_name,
+           const fs::path& program,
+           const args_vector& args) throw()
 {
     args_vector av(args);
     av.insert(av.begin(), program.str());
@@ -252,21 +231,19 @@ jail::exec(const fs::path& program,
     av.insert(av.begin(), cwd);
     av.insert(av.begin(), cd_exec_path);
 
-    av.insert(av.begin(), make_jail_name(program, test_case_name));
+    av.insert(av.begin(), jail_name);
 
     process::exec(fs::path("/usr/sbin/jexec"), av);
 }
 
 
-/// Removes a jail based on test program path and case name.
+/// Removes a jail with a given name.
 ///
 /// It's expected to be run in a subprocess.
 ///
-/// \param program The test program binary absolute path.
-/// \param test_case_name Name of the test case.
+/// \param jail_name Name of a jail to remove.
 void
-jail::remove(const fs::path& program,
-             const std::string& test_case_name)
+jail::remove(const std::string& jail_name)
 {
     args_vector av;
 
@@ -274,7 +251,7 @@ jail::remove(const fs::path& program,
     av.push_back("-r");
 
     // jail name
-    av.push_back(make_jail_name(program, test_case_name));
+    av.push_back(jail_name);
 
     // invoke jail
     std::auto_ptr< process::child > child = child::fork_capture(

@@ -27,6 +27,8 @@
 
 #include "engine/execenv/jail.hpp"
 
+#include <regex>
+
 #include "model/metadata.hpp"
 #include "model/test_case.hpp"
 #include "model/test_program.hpp"
@@ -36,8 +38,32 @@
 
 namespace execenv = engine::execenv;
 namespace process = utils::process;
+namespace fs = utils::fs;
 
 using utils::process::args_vector;
+
+
+namespace {
+
+
+static std::string
+make_jail_name(const fs::path& program, const std::string& test_case_name)
+{
+    std::string name = std::regex_replace(
+        program.str() + "_" + test_case_name,
+        std::regex(R"([^A-Za-z0-9_])"),
+        "_");
+
+    const std::string::size_type limit =
+        255 /* jail name max */ - 4 /* "kyua" prefix */;
+    if (name.length() > limit)
+        name.erase(0, name.length() - limit);
+
+    return "kyua" + name;
+}
+
+
+}  // anonymous namespace
 
 
 /// Initialize execution environment.
@@ -53,8 +79,9 @@ execenv::jail::init(const model::test_program& test_program,
 {
     const model::test_case& test_case = test_program.find(test_case_name);
 
-    process::jail::create(test_program.absolute_path(), test_case_name,
-                          test_case.get_metadata().execenv_jail());
+    process::jail::create(
+        make_jail_name(test_program.absolute_path(), test_case_name),
+        test_case.get_metadata().execenv_jail());
 }
 
 
@@ -69,8 +96,9 @@ execenv::jail::exec(const model::test_program& test_program,
                     const std::string& test_case_name,
                     const args_vector& args) throw()
 {
-    process::jail::exec(test_program.absolute_path(), test_case_name,
-                        args);
+    process::jail::exec(
+        make_jail_name(test_program.absolute_path(), test_case_name),
+        test_program.absolute_path(), args);
 }
 
 
@@ -84,5 +112,6 @@ void
 execenv::jail::cleanup(const model::test_program& test_program,
                        const std::string& test_case_name)
 {
-    process::jail::remove(test_program.absolute_path(), test_case_name);
+    process::jail::remove(
+        make_jail_name(test_program.absolute_path(), test_case_name));
 }
