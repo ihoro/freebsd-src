@@ -8,6 +8,7 @@ TESTS_SUBDIRS+=	ioctl
 ATF_TESTS_SH+=	altq \
 		anchor \
 		divert-to \
+		divert-to_and_dnpipe \
 		dup \
 		ether \
 		forward \
