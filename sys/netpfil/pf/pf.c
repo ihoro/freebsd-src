@@ -303,7 +303,7 @@ static int		 pf_state_key_attach(struct pf_state_key *,
 static void		 pf_state_key_detach(struct pf_kstate *, int);
 static int		 pf_state_key_ctor(void *, int, void *, int);
 static u_int32_t	 pf_tcp_iss(struct pf_pdesc *);
-static __inline void	 pf_dummynet_flag_cleanup(struct mbuf *m,
+static __inline void	 pf_dummynet_flag_remove(struct mbuf *m,
 			    struct pf_mtag *pf_mtag);
 static int		 pf_dummynet(struct pf_pdesc *, struct pf_kstate *,
 			    struct pf_krule *, struct mbuf **);
@@ -4142,7 +4142,7 @@ pf_test_eth_rule(int dir, struct pfi_kkif *kif, struct mbuf **m0)
 
 		/* But only once. We may see the packet multiple times (e.g.
 		 * PFIL_IN/PFIL_OUT). */
-		pf_dummynet_flag_cleanup(m, mtag);
+		pf_dummynet_flag_remove(m, mtag);
 
 		return (PF_PASS);
 	}
@@ -4363,7 +4363,7 @@ pf_test_eth_rule(int dir, struct pfi_kkif *kif, struct mbuf **m0)
 		mtag->flags |= PF_MTAG_FLAG_DUMMYNET;
 		ip_dn_io_ptr(m0, &dnflow);
 		if (*m0 != NULL)
-			pf_dummynet_flag_cleanup(m, mtag);
+			pf_dummynet_flag_remove(m, mtag);
 	} else {
 		PF_RULES_RUNLOCK();
 	}
@@ -7797,7 +7797,7 @@ pf_test_eth(int dir, int pflags, struct ifnet *ifp, struct mbuf **m0,
 }
 
 static __inline void
-pf_dummynet_flag_cleanup(struct mbuf *m, struct pf_mtag *pf_mtag)
+pf_dummynet_flag_remove(struct mbuf *m, struct pf_mtag *pf_mtag)
 {
 	struct m_tag *mtag;
 
@@ -7861,7 +7861,7 @@ pf_dummynet_route(struct pf_pdesc *pd, struct pf_kstate *s,
 			ip_dn_io_ptr(m0, &dnflow);
 			if (*m0 != NULL) {
 				pd->pf_mtag->flags &= ~PF_MTAG_FLAG_ROUTE_TO;
-				pf_dummynet_flag_cleanup(*m0, pd->pf_mtag);
+				pf_dummynet_flag_remove(*m0, pd->pf_mtag);
 			}
 		}
 	}
@@ -7950,7 +7950,7 @@ pf_test(int dir, int pflags, struct ifnet *ifp, struct mbuf **m0,
 
 		/* But only once. We may see the packet multiple times (e.g.
 		 * PFIL_IN/PFIL_OUT). */
-		pf_dummynet_flag_cleanup(m, pd.pf_mtag);
+		pf_dummynet_flag_remove(m, pd.pf_mtag);
 		PF_RULES_RUNLOCK();
 
 		return (PF_PASS);
@@ -8511,7 +8511,7 @@ pf_test6(int dir, int pflags, struct ifnet *ifp, struct mbuf **m0, struct inpcb 
 
 	if (ip_dn_io_ptr != NULL && pd.pf_mtag != NULL &&
 	    pd.pf_mtag->flags & PF_MTAG_FLAG_DUMMYNET) {
-		pf_dummynet_flag_cleanup(m, pd.pf_mtag);
+		pf_dummynet_flag_remove(m, pd.pf_mtag);
 		/* Dummynet re-injects packets after they've
 		 * completed their delay. We've already
 		 * processed them, so pass unconditionally. */
