@@ -6211,6 +6211,8 @@ shutdown_pf(void)
 	int error = 0;
 	u_int32_t t[5];
 	char nn = '\0';
+	struct pf_kanchor *anchor;
+	int rs_num;
 
 	do {
 		if ((error = pf_begin_rules(&t[0], PF_RULESET_SCRUB, &nn))
@@ -6246,6 +6248,22 @@ shutdown_pf(void)
 		pf_commit_rules(t[3], PF_RULESET_BINAT, &nn);
 		pf_commit_rules(t[4], PF_RULESET_RDR, &nn);
 
+		/* Repeat the same for all user defined anchors */
+		RB_FOREACH_REVERSE(anchor, pf_kanchor_global, &V_pf_anchors) {
+			for (rs_num = 0; rs_num < PF_RULESET_MAX; ++rs_num) {
+				if ((error = pf_begin_rules(&t[rs_num], rs_num,
+				    anchor->path)) != 0) {
+					DPFPRINTF(PF_DEBUG_MISC, ("shutdown_pf: "
+					    "anchor=%s, rs_num=%d\n",
+					    anchor->path, rs_num));
+					goto error;	/* XXX: rollback? */
+				}
+				/* XXX: these should always succeed here */
+				pf_commit_rules(t[rs_num], rs_num,
+				    anchor->path);
+			}
+		}
+
 		if ((error = pf_clear_tables()) != 0)
 			break;
 
@@ -6271,6 +6289,7 @@ shutdown_pf(void)
 		/* fingerprints and interfaces have their own cleanup code */
 	} while(0);
 
+error:
 	return (error);
 }
 
