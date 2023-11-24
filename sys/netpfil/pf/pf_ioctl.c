@@ -5801,6 +5801,7 @@ pf_clear_tables(void)
 	int error;
 
 	bzero(&io, sizeof(io));
+	io.pfrio_flags |= PFR_FLAG_ALLRSETS;
 
 	error = pfr_clr_tables(&io.pfrio_table, &io.pfrio_ndel,
 	    io.pfrio_flags);
