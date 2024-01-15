@@ -30,8 +30,8 @@
 extern "C" {
 #include <unistd.h>
 #include <sys/stat.h>
-#include <sys/jail.h>
 }
+#define JAIL_MAX 999999 // <sys/jail.h>
 
 #include <fstream>
 #include <iostream>
