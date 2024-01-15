@@ -186,10 +186,6 @@ jail::create(const std::string& jail_name, const std::string& jail_params)
 /// This function must not use any of the logging features so that the output
 /// of the subprocess is not "polluted" by our own messages.
 ///
-/// This function must also not affect the global state of the current process
-/// as otherwise we would not be able to use vfork().  Only state stored in the
-/// stack can be touched.
-///
 /// \param jail_name Name of the jail to run within.
 /// \param program The test program binary absolute path.
 /// \param args The arguments to pass to the binary, without the program name.
