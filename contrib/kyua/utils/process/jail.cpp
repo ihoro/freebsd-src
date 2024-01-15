@@ -30,6 +30,7 @@
 extern "C" {
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/jail.h>
 }
 
 #include <fstream>
@@ -153,7 +154,7 @@ jail::create(const std::string& jail_name, const std::string& jail_params)
     av.push_back(F("name=%s") % jail_name);
 
     // some obvious defaults to ease test authors' life
-    av.push_back("children.max=16");
+    av.push_back(F("children.max=%d") % JAIL_MAX);
 
     // test defined jail params
     const std::vector< std::string > params = parse_jail_params_string(jail_params);
