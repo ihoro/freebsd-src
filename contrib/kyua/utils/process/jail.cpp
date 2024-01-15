@@ -182,9 +182,7 @@ process::jail::create(const std::string& jail_name,
         return;
 
     // otherwise, let us know what jail thinks and fail fast
-    char err[330];
-    child->output().getline(err, 330);
-    std::cerr << err << "\n";
+    std::cerr << child->output().rdbuf();
     std::exit(EXIT_FAILURE);
 }
 
@@ -259,8 +257,6 @@ process::jail::remove(const std::string& jail_name)
         std::exit(EXIT_SUCCESS);
 
     // otherwise, let us know what jail thinks and fail fast
-    char err[330];
-    child->output().getline(err, 330);
-    std::cerr << err << "\n";
+    std::cerr << child->output().rdbuf();
     std::exit(EXIT_FAILURE);
 }
