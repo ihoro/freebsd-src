@@ -106,6 +106,8 @@ enum prison_state {
 #define	JAIL_SYS_NEW		1
 #define	JAIL_SYS_INHERIT	2
 
+#define JAIL_MAX	999999
+
 #ifndef _KERNEL
 
 struct iovec;
@@ -125,8 +127,6 @@ __END_DECLS
 #include <sys/lock.h>
 #include <sys/mutex.h>
 #include <sys/_task.h>
-
-#define JAIL_MAX	999999
 
 #ifdef MALLOC_DECLARE
 MALLOC_DECLARE(M_PRISON);
