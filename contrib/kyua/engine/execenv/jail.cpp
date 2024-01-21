@@ -27,6 +27,11 @@
 
 #include "engine/execenv/jail.hpp"
 
+extern "C" {
+// FreeBSD Jail
+#include <sys/param.h>
+}
+
 #include <regex>
 
 #include "model/metadata.hpp"
@@ -46,6 +51,9 @@ using utils::process::args_vector;
 namespace {
 
 
+static const int jail_name_max_len = MAXHOSTNAMELEN - 1;
+static const char* jail_name_prefix = "kyua";
+
 static std::string
 make_jail_name(const fs::path& program, const std::string& test_case_name)
 {
@@ -55,11 +63,11 @@ make_jail_name(const fs::path& program, const std::string& test_case_name)
         "_");
 
     const std::string::size_type limit =
-        255 /* jail name max */ - 4 /* "kyua" prefix */;
+        jail_name_max_len - strlen(jail_name_prefix);
     if (name.length() > limit)
         name.erase(0, name.length() - limit);
 
-    return "kyua" + name;
+    return jail_name_prefix + name;
 }
 
 
