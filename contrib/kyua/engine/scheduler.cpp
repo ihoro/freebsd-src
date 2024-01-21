@@ -1420,7 +1420,7 @@ scheduler::scheduler_handle::wait_any(void)
             return wait_any();
         }
     } catch (const std::bad_cast& e) {
-        // ignored
+        // ok, let's check for another type
     }
 
     // test cleanup
@@ -1484,7 +1484,7 @@ scheduler::scheduler_handle::wait_any(void)
             }
         }
     } catch (const std::bad_cast& e) {
-        // ignored
+        // ok, let's check for another type
     }
 
     // execenv cleanup
@@ -1519,7 +1519,8 @@ scheduler::scheduler_handle::wait_any(void)
 
         handle = execenv_data->body_exit_handle;
     } catch (const std::bad_cast& e) {
-        // ignored
+        throw std::domain_error(
+            "Unexpected or not fully implemented yet exec_data type.");
     }
 
     INV(result);
