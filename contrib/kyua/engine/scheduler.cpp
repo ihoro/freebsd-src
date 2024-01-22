@@ -1519,8 +1519,7 @@ scheduler::scheduler_handle::wait_any(void)
 
         handle = execenv_data->body_exit_handle;
     } catch (const std::bad_cast& e) {
-        throw std::domain_error(
-            "Unexpected or not fully implemented yet exec_data type.");
+        // ok, it was one of the types above
     }
 
     INV(result);
