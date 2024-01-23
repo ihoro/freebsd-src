@@ -4479,8 +4479,7 @@ sysctl_jail_children(SYSCTL_HANDLER_ARGS)
 
 	pr = req->td->td_ucred->cr_prison;
 
-	switch (oidp->oid_kind & CTLTYPE)
-	{
+	switch (oidp->oid_kind & CTLTYPE) {
 	case CTLTYPE_INT:
 		i = *(int *)((char *)pr + arg2);
 		return (SYSCTL_OUT(req, &i, sizeof(i)));
