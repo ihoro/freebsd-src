@@ -39,6 +39,14 @@ max_cur_body()
 	origin_max=$(sysctl -n security.jail.children.max)
 	origin_cur=$(sysctl -n security.jail.children.cur)
 
+	# Magic numbers reasoning:
+	# 3 stands for:
+	#   - the test creates three jails: childfree, maxallowed, maxallowed.family
+	# 6 stands for:
+	#   - maxallowed.family wants to set children.max=4
+	#   - it means that its parent (maxallowed) should have at least children.max=5
+	#   - it makes the origin (parent of maxallowed) provide children.max=6 minimum
+	#
 	test $origin_cur -le $origin_max || atf_fail "Abnormal cur=$origin_cur > max=$origin_max."
 	test $((origin_max - origin_cur)) -ge 3 || atf_skip "Not enough child jails are allowed for the test."
 	test $origin_max -ge 6 || atf_skip "Not high enough children.max limit for the test."
