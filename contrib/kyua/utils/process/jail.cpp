@@ -31,10 +31,12 @@ extern "C" {
 #include <unistd.h>
 #include <sys/stat.h>
 
+// FreeBSD sysctl facility
+#include <sys/sysctl.h>
+
 // FreeBSD Jail syscalls
 #include <sys/param.h>
 #include <sys/jail.h>
-#define JAIL_MAX 999999
 
 // FreeBSD Jail library
 #include <jail.h>
@@ -160,9 +162,27 @@ process::jail::create(const std::string& jail_name,
     // jail name
     av.push_back("name=" + jail_name);
 
-    // some obvious defaults to ease test authors' life
-    // jail's children.max param must be lower than parent jail's max value,
-    av.push_back("children.max=" + std::to_string(JAIL_MAX - 1));
+    // determine maximum allowed children.max
+    int max;
+    size_t len = sizeof(max);
+    if (sysctlbyname("security.jail.children.max", &max, &len, NULL, 0) != 0) {
+        std::cerr << "sysctlbyname(security.jail.children.max) errors: "
+            << strerror(errno) << ".\n";
+        std::exit(EXIT_FAILURE);
+    }
+    if (len < sizeof(max)) {
+        std::cerr << "sysctlbyname(security.jail.children.max) provides less "
+            "data (" << len << ") than expected (" << sizeof(max) << ").\n";
+        std::exit(EXIT_FAILURE);
+    }
+    if (max < 0) {
+        std::cerr << "sysctlbyname(security.jail.children.max) yields "
+            "abnormal " << max << ".\n";
+        std::exit(EXIT_FAILURE);
+    }
+    if (max > 0)
+        max--; // a child jail must have less than parent's children.max
+    av.push_back("children.max=" + std::to_string(max));
 
     // test defined jail params
     const std::vector< std::string > params = parse_jail_params_string(jail_params);
