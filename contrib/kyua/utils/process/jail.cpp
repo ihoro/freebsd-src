@@ -28,6 +28,7 @@
 #include "utils/process/jail.hpp"
 
 extern "C" {
+#include <limits.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -218,8 +219,8 @@ process::jail::exec(const std::string& jail_name,
                     const args_vector& args) throw()
 {
     // get work dir prepared by kyua
-    char cwd[256];
-    if (getcwd(cwd, 256) == NULL) {
+    char cwd[PATH_MAX];
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
         std::cerr << "process::jail::exec: getcwd() errors: "
             << strerror(errno) << ".\n";
         std::exit(EXIT_FAILURE);
