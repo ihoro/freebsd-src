@@ -54,6 +54,18 @@ namespace {
 static const int jail_name_max_len = MAXHOSTNAMELEN - 1;
 static const char* jail_name_prefix = "kyua";
 
+/// Constructs a jail name based on program and test case.
+///
+/// The formula is "kyua" + <program path> + "_" + <test case name>.
+/// All non-alphanumeric chars are replaced with "_".
+///
+/// If a resulting string exceeds maximum allowed length of a jail name,
+/// then it's shortened from the left side keeping the "kyua" prefix.
+///
+/// \param program The test program.
+/// \param test_case_name Name of the test case.
+///
+/// \return A jail name string.
 static std::string
 make_jail_name(const fs::path& program, const std::string& test_case_name)
 {
@@ -79,7 +91,7 @@ make_jail_name(const fs::path& program, const std::string& test_case_name)
 /// It's expected to be called inside a fork which runs interface::exec_test(),
 /// so we can fail a test fast if its execution environment setup fails.
 ///
-/// \param program The test program binary absolute path.
+/// \param program The test program.
 /// \param test_case_name Name of the test case.
 void
 execenv::jail::init(const model::test_program& test_program,
@@ -97,8 +109,9 @@ execenv::jail::init(const model::test_program& test_program,
 ///
 /// It's expected to be called inside a fork which runs interface::exec_test().
 ///
-/// \param program The test program binary absolute path.
+/// \param program The test program.
 /// \param test_case_name Name of the test case.
+/// \param args The arguments to pass to the binary, without the program name.
 void
 execenv::jail::exec(const model::test_program& test_program,
                     const std::string& test_case_name,
@@ -114,7 +127,7 @@ execenv::jail::exec(const model::test_program& test_program,
 ///
 /// It's expected to be called inside a fork for execenv cleanup.
 ///
-/// \param program The test program binary absolute path.
+/// \param program The test program.
 /// \param test_case_name Name of the test case.
 void
 execenv::jail::cleanup(const model::test_program& test_program,
