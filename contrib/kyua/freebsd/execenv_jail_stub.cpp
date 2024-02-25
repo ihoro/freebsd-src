@@ -39,7 +39,7 @@ static inline void requires_freebsd(void) UTILS_NORETURN;
 static inline void
 requires_freebsd(void)
 {
-    std::cerr << "execenv=\"jail\" is a FreeBSD-only feature.\n";
+    std::cerr << "execenv=\"jail\" requires FreeBSD with jail feature.\n";
     std::exit(EXIT_FAILURE);
 }
 
