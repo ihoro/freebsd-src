@@ -26,6 +26,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+UTILS_LIBS += -ljail
+
 libutils_a_SOURCES += utils/process/child.cpp
 libutils_a_SOURCES += utils/process/child.hpp
 libutils_a_SOURCES += utils/process/child.ipp
@@ -44,6 +46,8 @@ libutils_a_SOURCES += utils/process/fdstream.hpp
 libutils_a_SOURCES += utils/process/fdstream_fwd.hpp
 libutils_a_SOURCES += utils/process/isolation.cpp
 libutils_a_SOURCES += utils/process/isolation.hpp
+libutils_a_SOURCES += utils/process/jail.hpp
+libutils_a_SOURCES += utils/process/jail.cpp
 libutils_a_SOURCES += utils/process/operations.cpp
 libutils_a_SOURCES += utils/process/operations.hpp
 libutils_a_SOURCES += utils/process/operations_fwd.hpp
