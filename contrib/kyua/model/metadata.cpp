@@ -490,9 +490,7 @@ bool
 model::metadata::is_exclusive(void) const
 {
     if (_pimpl->props.is_set("is_exclusive")) {
-        const bool is_excl =
-            _pimpl->props.lookup< config::bool_node >("is_exclusive");
-        return is_excl && !is_execenv_jail();
+        return _pimpl->props.lookup< config::bool_node >("is_exclusive");
     } else {
         return get_defaults().lookup< config::bool_node >("is_exclusive");
     }
@@ -535,16 +533,6 @@ model::metadata::execenv_jail(void) const
     } else {
         return get_defaults().lookup< config::string_node >("execenv_jail");
     }
-}
-
-
-/// Returns whether the test is configured for jail execenv.
-///
-/// \return True if there is a jail execenv is set; false otherwise.
-bool
-model::metadata::is_execenv_jail(void) const
-{
-    return execenv() == "jail";
 }
 
 

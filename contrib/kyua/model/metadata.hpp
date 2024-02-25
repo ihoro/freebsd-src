@@ -72,7 +72,6 @@ public:
     const std::string& execenv(void) const;
     bool has_execenv(void) const;
     const std::string& execenv_jail(void) const;
-    bool is_execenv_jail(void) const;
     const strings_set& required_configs(void) const;
     const utils::units::bytes& required_disk_space(void) const;
     const paths_set& required_files(void) const;
