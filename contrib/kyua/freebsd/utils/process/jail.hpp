@@ -25,31 +25,31 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/// \file engine/execenv/jail.hpp
-/// FreeBSD jail execution environment.
+/// \file freebsd/utils/process/jail.hpp
+/// Collection of utilities for FreeBSD jail.
 
-#if !defined(ENGINE_EXECENV_JAIL_HPP)
-#define ENGINE_EXECENV_JAIL_HPP
+#if !defined(FREEBSD_UTILS_PROCESS_JAIL_HPP)
+#define FREEBSD_UTILS_PROCESS_JAIL_HPP
 
-#include "model/test_program.hpp"
 #include "utils/defs.hpp"
+#include "utils/fs/path_fwd.hpp"
 #include "utils/process/operations_fwd.hpp"
 
-namespace engine {
-namespace execenv {
+namespace utils {
+namespace process {
 namespace jail {
 
 
-void init(const model::test_program&, const std::string&);
+void create(const std::string&, const std::string&);
 
-void exec(const model::test_program&, const std::string&,
-          const utils::process::args_vector&) throw() UTILS_NORETURN;
+void exec(const std::string&, const utils::fs::path&, const args_vector&)
+    throw() UTILS_NORETURN;
 
-void cleanup(const model::test_program&, const std::string&);
+void remove(const std::string&);
 
 
 }  // namespace jail
-}  // namespace execenv
-}  // namespace engine
+}  // namespace process
+}  // namespace utils
 
-#endif  // !defined(ENGINE_EXECENV_JAIL_HPP)
+#endif  // !defined(FREEBSD_UTILS_PROCESS_JAIL_HPP)

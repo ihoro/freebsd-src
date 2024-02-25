@@ -59,6 +59,7 @@ include doc/Makefile.am.inc
 include drivers/Makefile.am.inc
 include engine/Makefile.am.inc
 include examples/Makefile.am.inc
+include freebsd/Makefile.am.inc
 include integration/Makefile.am.inc
 include misc/Makefile.am.inc
 include model/Makefile.am.inc

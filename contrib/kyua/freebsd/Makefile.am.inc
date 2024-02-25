@@ -26,9 +26,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# TODO: Think of OOP based refactoring to invert the dependency. FreeBSD
-# related code should be like a plugin or extension.
-ENGINE_LIBS += ${FREEBSD_LIBS}
+FREEBSD_CFLAGS =
+FREEBSD_LIBS = libfreebsd.a
 
-libengine_a_SOURCES += engine/execenv/execenv.hpp
-libengine_a_SOURCES += engine/execenv/execenv.cpp
+noinst_LIBRARIES += libfreebsd.a
+libfreebsd_a_CPPFLAGS = -DGDB=\"$(GDB)\"
+libfreebsd_a_SOURCES =
+
+include freebsd/engine/Makefile.am.inc
+include freebsd/utils/Makefile.am.inc

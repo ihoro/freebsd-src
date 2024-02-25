@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Igor Ostapenko <pm@igoro.pro>
+// Copyright (c) 2024 Igor Ostapenko <pm@igoro.pro>
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -25,31 +25,44 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/// \file utils/process/jail.hpp
-/// Collection of utilities for FreeBSD jail.
+#include "freebsd/engine/execenv/jail.hpp"
 
-#if !defined(UTILS_PROCESS_JAIL_HPP)
-#define UTILS_PROCESS_JAIL_HPP
+#include <iostream>
 
-#include "utils/defs.hpp"
-#include "utils/fs/path_fwd.hpp"
 #include "utils/process/operations_fwd.hpp"
 
-namespace utils {
-namespace process {
-namespace jail {
+namespace execenv = engine::execenv;
+
+using utils::process::args_vector;
 
 
-void create(const std::string&, const std::string&);
+static inline void requires_freebsd(void) UTILS_NORETURN;
 
-void exec(const std::string&, const utils::fs::path&, const args_vector&)
-    throw() UTILS_NORETURN;
+static inline void
+requires_freebsd(void)
+{
+    std::cerr << "execenv=\"jail\" is a FreeBSD-only feature.\n";
+    std::exit(EXIT_FAILURE);
+}
 
-void remove(const std::string&);
+void
+execenv::jail::init(const model::test_program&,
+                    const std::string&)
+{
+    requires_freebsd();
+}
 
+void
+execenv::jail::exec(const model::test_program&,
+                    const std::string&,
+                    const args_vector&) throw()
+{
+    requires_freebsd();
+}
 
-}  // namespace jail
-}  // namespace process
-}  // namespace utils
-
-#endif  // !defined(UTILS_PROCESS_JAIL_HPP)
+void
+execenv::jail::cleanup(const model::test_program&,
+                       const std::string&)
+{
+    requires_freebsd();
+}

@@ -26,9 +26,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# TODO: Think of OOP based refactoring to invert the dependency. FreeBSD
-# related code should be like a plugin or extension.
-ENGINE_LIBS += ${FREEBSD_LIBS}
-
-libengine_a_SOURCES += engine/execenv/execenv.hpp
-libengine_a_SOURCES += engine/execenv/execenv.cpp
+libfreebsd_a_SOURCES += freebsd/engine/execenv/jail.hpp
+if FreeBSD
+libfreebsd_a_SOURCES += freebsd/engine/execenv/jail.cpp
+else
+libfreebsd_a_SOURCES += freebsd/engine/execenv/jail_stub.cpp
+endif

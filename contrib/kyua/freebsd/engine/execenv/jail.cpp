@@ -25,7 +25,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "engine/execenv/jail.hpp"
+#include "freebsd/engine/execenv/jail.hpp"
 
 extern "C" {
 // FreeBSD Jail
@@ -38,8 +38,9 @@ extern "C" {
 #include "model/test_case.hpp"
 #include "model/test_program.hpp"
 #include "utils/fs/path.hpp"
-#include "utils/process/jail.hpp"
 #include "utils/process/operations.hpp"
+
+#include "freebsd/utils/process/jail.hpp"
 
 namespace execenv = engine::execenv;
 namespace process = utils::process;
