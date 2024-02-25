@@ -62,7 +62,7 @@ execenv_jail::cleanup() const
 
 
 void
-execenv_jail::exec(const args_vector& args) const throw()
+execenv_jail::exec(const args_vector&) const throw()
 {
     requires_freebsd();
 }
