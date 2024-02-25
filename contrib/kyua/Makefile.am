@@ -69,7 +69,7 @@ include utils/Makefile.am.inc
 bin_PROGRAMS = kyua
 kyua_SOURCES = main.cpp
 kyua_CXXFLAGS = $(CLI_CFLAGS) $(ENGINE_CFLAGS) $(UTILS_CFLAGS)
-kyua_LDADD = $(CLI_LIBS) $(ENGINE_LIBS) $(UTILS_LIBS)
+kyua_LDADD = $(CLI_LIBS) $(ENGINE_LIBS) $(FREEBSD_LIBS) $(UTILS_LIBS)
 
 CHECK_ENVIRONMENT = KYUA_CONFDIR="/non-existent" \
                     KYUA_DOCDIR="$(abs_top_srcdir)" \

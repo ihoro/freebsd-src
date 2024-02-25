@@ -69,6 +69,7 @@ extern "C" {
 
 namespace config = utils::config;
 namespace datetime = utils::datetime;
+namespace execenv = engine::execenv;
 namespace executor = utils::process::executor;
 namespace fs = utils::fs;
 namespace logging = utils::logging;
@@ -573,7 +574,8 @@ public:
     void
     operator()(const fs::path& /* control_directory */)
     {
-        engine::execenv::cleanup(_test_program, _test_case_name);
+        auto e = execenv::get(_test_program, _test_case_name);
+        e->cleanup();
     }
 };
 

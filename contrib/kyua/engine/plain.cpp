@@ -48,6 +48,7 @@ extern "C" {
 #include "utils/sanity.hpp"
 
 namespace config = utils::config;
+namespace execenv = engine::execenv;
 namespace fs = utils::fs;
 namespace process = utils::process;
 
@@ -106,8 +107,9 @@ engine::plain_interface::exec_test(
 
     process::args_vector args;
 
-    engine::execenv::init(test_program, test_case_name);
-    engine::execenv::exec(test_program, test_case_name, args);
+    auto e = execenv::get(test_program, test_case_name);
+    e->init();
+    e->exec(args);
 }
 
 

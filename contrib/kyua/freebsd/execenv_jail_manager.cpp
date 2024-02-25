@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Igor Ostapenko <pm@igoro.pro>
+// Copyright (c) 2024 Igor Ostapenko <pm@igoro.pro>
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -25,31 +25,24 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/// \file freebsd/utils/process/jail.hpp
-/// Collection of utilities for FreeBSD jail.
+#include "freebsd/execenv_jail_manager.hpp"
 
-#if !defined(FREEBSD_UTILS_PROCESS_JAIL_HPP)
-#define FREEBSD_UTILS_PROCESS_JAIL_HPP
+#include "model/metadata.hpp"
+#include "model/test_case.hpp"
+#include "freebsd/execenv_jail.hpp"
 
-#include "utils/defs.hpp"
-#include "utils/fs/path_fwd.hpp"
-#include "utils/process/operations_fwd.hpp"
+static const std::string execenv_name = "jail";
 
-namespace utils {
-namespace process {
-namespace jail {
+std::unique_ptr< execenv::interface >
+freebsd::execenv_jail_manager::probe(
+    const model::test_program& test_program,
+    const std::string& test_case_name) const
+{
+    auto test_case = test_program.find(test_case_name);
+    if (test_case.get_metadata().execenv() != execenv_name)
+        return nullptr;
 
-
-void create(const std::string&, const std::string&);
-
-void exec(const std::string&, const utils::fs::path&, const args_vector&)
-    throw() UTILS_NORETURN;
-
-void remove(const std::string&);
-
-
-}  // namespace jail
-}  // namespace process
-}  // namespace utils
-
-#endif  // !defined(FREEBSD_UTILS_PROCESS_JAIL_HPP)
+    return std::unique_ptr< execenv::interface >(
+        new freebsd::execenv_jail(test_program, test_case_name)
+    );
+}

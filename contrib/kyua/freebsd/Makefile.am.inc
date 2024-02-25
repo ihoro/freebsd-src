@@ -31,7 +31,16 @@ FREEBSD_LIBS = libfreebsd.a
 
 noinst_LIBRARIES += libfreebsd.a
 libfreebsd_a_CPPFLAGS = -DGDB=\"$(GDB)\"
-libfreebsd_a_SOURCES =
+libfreebsd_a_SOURCES =  freebsd/main.hpp
+libfreebsd_a_SOURCES += freebsd/main.cpp
+libfreebsd_a_SOURCES += freebsd/execenv_jail.hpp
+libfreebsd_a_SOURCES += freebsd/execenv_jail_manager.hpp
+libfreebsd_a_SOURCES += freebsd/execenv_jail_manager.cpp
 
-include freebsd/engine/Makefile.am.inc
+if FreeBSD
+FREEBSD_LIBS += -ljail
+libfreebsd_a_SOURCES += freebsd/execenv_jail.cpp
 include freebsd/utils/Makefile.am.inc
+else
+libfreebsd_a_SOURCES += freebsd/execenv_jail_stub.cpp
+endif

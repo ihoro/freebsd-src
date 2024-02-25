@@ -26,4 +26,5 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-include freebsd/utils/process/Makefile.am.inc
+libfreebsd_a_SOURCES += freebsd/utils/jail.hpp
+libfreebsd_a_SOURCES += freebsd/utils/jail.cpp

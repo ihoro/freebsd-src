@@ -27,81 +27,37 @@
 
 #include "engine/execenv/execenv.hpp"
 
-#include "model/metadata.hpp"
-#include "model/test_case.hpp"
-#include "model/test_program.hpp"
-#include "utils/fs/path.hpp"
-#include "utils/process/operations.hpp"
-
-#include "freebsd/engine/execenv/jail.hpp"
+#include "engine/execenv/execenv_host.hpp"
 
 namespace execenv = engine::execenv;
-namespace process = utils::process;
 
-using utils::process::args_vector;
+using utils::none;
 
 
-/// Initialize execution environment.
+/// List of registered execution environments, except default host one.
 ///
-/// It's expected to be called inside a fork which runs interface::exec_test(),
-/// so we can fail a test fast if its execution environment setup fails, and
-/// test execution could use the configured proc environment, if expected.
-///
-/// \param program The test program binary absolute path.
-/// \param test_case_name Name of the test case.
+/// Use register_execenv() to add an entry to this global list.
+static std::vector< const std::shared_ptr< execenv::manager > >
+    execenv_managers;
+
+
 void
-execenv::init(const model::test_program& test_program,
-              const std::string& test_case_name)
+execenv::register_execenv(const std::shared_ptr< execenv::manager > manager)
 {
-    const model::test_case& test_case = test_program.find(test_case_name);
-
-    if (test_case.get_metadata().is_execenv_jail()) {
-        return execenv::jail::init(test_program, test_case_name);
-    } else {
-        // host environment by default
-        return;
-    }
+    execenv_managers.push_back(manager);
 }
 
 
-/// Execute within an execution environment.
-///
-/// It's expected to be called inside a fork which runs interface::exec_test().
-///
-/// \param program The test program binary absolute path.
-/// \param test_case_name Name of the test case.
-void
-execenv::exec(const model::test_program& test_program,
-              const std::string& test_case_name,
-              const args_vector& args) throw()
+std::unique_ptr< execenv::interface >
+execenv::get(const model::test_program& test_program,
+             const std::string& test_case_name)
 {
-    const model::test_case& test_case = test_program.find(test_case_name);
-
-    if (test_case.get_metadata().is_execenv_jail()) {
-        execenv::jail::exec(test_program, test_case_name, args);
-    } else {
-        // host environment by default
-        process::exec(test_program.absolute_path(), args);
+    for (auto m : execenv_managers) {
+        auto e = m->probe(test_program, test_case_name);
+        if (e != nullptr)
+            return e;
     }
-}
 
-
-/// Cleanup execution environment.
-///
-/// It's expected to be called inside a fork for execenv cleanup.
-///
-/// \param program The test program binary absolute path.
-/// \param test_case_name Name of the test case.
-void
-execenv::cleanup(const model::test_program& test_program,
-                 const std::string& test_case_name)
-{
-    const model::test_case& test_case = test_program.find(test_case_name);
-
-    if (test_case.get_metadata().is_execenv_jail()) {
-        return execenv::jail::cleanup(test_program, test_case_name);
-    } else {
-        // cleanup is not expected to be called for host environment
-        std::exit(EXIT_SUCCESS);
-    }
+    return std::unique_ptr< execenv::interface >(
+        new execenv::execenv_host(test_program, test_case_name));
 }

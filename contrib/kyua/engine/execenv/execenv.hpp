@@ -26,31 +26,99 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /// \file engine/execenv/execenv.hpp
-/// Execution environment multiplexer.
-///
-/// A test case may ask for a specific execution environment like running in
-/// a jail, what needs initialization before the test run and cleanup after.
-///
-/// By default, there is no specific execution environment, so called host
-/// environment, and no additional initialization or cleanup is done.
+/// Execution environment subsystem interface.
 
 #if !defined(ENGINE_EXECENV_EXECENV_HPP)
 #define ENGINE_EXECENV_EXECENV_HPP
 
 #include "model/test_program.hpp"
-#include "utils/defs.hpp"
+#include "utils/optional.ipp"
 #include "utils/process/operations_fwd.hpp"
+
+using utils::process::args_vector;
+using utils::optional;
 
 namespace engine {
 namespace execenv {
 
+/// Abstract interface of an execution environment.
+class interface {
+protected:
+    const model::test_program& test_program;
+    const std::string& test_case_name;
 
-void init(const model::test_program&, const std::string&);
+public:
+    /// Constructor.
+    ///
+    /// \param program The test program.
+    /// \param test_case_name Name of the test case.
+    interface(const model::test_program& test_program,
+              const std::string& test_case_name) :
+        test_program(test_program),
+        test_case_name(test_case_name)
+    {}
 
-void exec(const model::test_program&, const std::string&,
-          const utils::process::args_vector&) throw() UTILS_NORETURN;
+    /// Destructor.
+    virtual ~interface() {}
 
-void cleanup(const model::test_program&, const std::string&);
+    /// Initializes execution environment.
+    ///
+    /// It's expected to be called inside a fork which runs
+    /// scheduler::interface::exec_test(), so we can fail a test fast if its
+    /// execution environment setup fails, and test execution could use the
+    /// configured proc environment, if expected.
+    virtual void init() const = 0;
+
+    /// Cleanups or removes execution environment.
+    ///
+    /// It's expected to be called inside a fork for execenv cleanup.
+    virtual void cleanup() const = 0;
+
+    /// Executes a test within the execution environment.
+    ///
+    /// It's expected to be called inside a fork which runs
+    /// scheduler::interface::exec_test() or exec_cleanup().
+    ///
+    /// \param args The arguments to pass to the binary.
+    virtual void exec(const args_vector& args) const throw() UTILS_NORETURN = 0;
+};
+
+
+/// Abstract interface of an execution environment manager.
+class manager {
+public:
+    /// Destructor.
+    virtual ~manager() {}
+
+    /// Returns execution environment for a test.
+    ///
+    /// It checks if the given test is designed for this execution environment.
+    ///
+    /// \param program The test program.
+    /// \param test_case_name Name of the test case.
+    ///
+    /// \return An execenv object if the test conforms, or none.
+    virtual std::unique_ptr< interface > probe(
+        const model::test_program& test_program,
+        const std::string& test_case_name) const = 0;
+};
+
+
+/// Registers an execution environment.
+///
+/// \param manager Execution environment manager.
+void register_execenv(const std::shared_ptr< manager > manager);
+
+
+/// Returns execution environment for a test case.
+///
+/// \param program The test program.
+/// \param test_case_name Name of the test case.
+///
+/// \return An execution environment of a test.
+std::unique_ptr< execenv::interface > get(
+    const model::test_program& test_program,
+    const std::string& test_case_name);
 
 
 }  // namespace execenv
