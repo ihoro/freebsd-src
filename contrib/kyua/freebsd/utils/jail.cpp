@@ -202,7 +202,7 @@ jail::create(const std::string& jail_name,
     // determine maximum allowed children.max
     int max;
     size_t len = sizeof(max);
-    if (sysctlbyname("security.jail.children.max", &max, &len, NULL, 0) != 0) {
+    if (::sysctlbyname("security.jail.children.max", &max, &len, NULL, 0) != 0) {
         std::cerr << "sysctlbyname(security.jail.children.max) errors: "
             << strerror(errno) << ".\n";
         std::exit(EXIT_FAILURE);
@@ -256,14 +256,14 @@ jail::exec(const std::string& jail_name,
 {
     // get work dir prepared by kyua
     char cwd[PATH_MAX];
-    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+    if (::getcwd(cwd, sizeof(cwd)) == NULL) {
         std::cerr << "process::jail::exec: getcwd() errors: "
             << strerror(errno) << ".\n";
         std::exit(EXIT_FAILURE);
     }
 
     // get jail id by its name
-    int jid = jail_getid(jail_name.c_str());
+    int jid = ::jail_getid(jail_name.c_str());
     if (jid < 0) {
         std::cerr << "process::jail::exec: jail_getid() errors: "
             << strerror(errno) << ": " << jail_errmsg << ".\n";
@@ -271,14 +271,14 @@ jail::exec(const std::string& jail_name,
     }
 
     // attach to the jail
-    if (jail_attach(jid) == -1) {
+    if (::jail_attach(jid) == -1) {
         std::cerr << "process::jail::exec: jail_attach() errors: "
             << strerror(errno) << ".\n";
         std::exit(EXIT_FAILURE);
     }
 
     // set back the expected work dir
-    if (chdir(cwd) == -1) {
+    if (::chdir(cwd) == -1) {
         std::cerr << "process::jail::exec: chdir() errors: "
             << strerror(errno) << ".\n";
         std::exit(EXIT_FAILURE);
