@@ -132,10 +132,8 @@ SRCS+=	engine/atf.cpp			\
 	engine/execenv/execenv.cpp	\
 	engine/execenv/execenv_host.cpp
 
-SRCS+=	freebsd/execenv_jail.cpp		\
-	freebsd/execenv_jail_manager.cpp	\
-	freebsd/main.cpp			\
-	freebsd/utils/jail.cpp
+SRCS+=	freebsd/execenv_jail_manager.cpp\
+	freebsd/main.cpp		\
 
 SRCS+=	store/dbtypes.cpp		\
 	store/exceptions.cpp		\
@@ -167,6 +165,14 @@ SRCS+=	cli/cmd_about.cpp		\
 	cli/common.cpp			\
 	cli/config.cpp			\
 	cli/main.cpp
+
+.if ${MK_JAIL} == "no"
+SRCS+=	freebsd/execenv_jail_stub.cpp
+.else
+SRCS+=	freebsd/execenv_jail.cpp	\
+	freebsd/utils/jail.cpp
+LIBADD+=	jail
+.endif
 
 FILESGROUPS=	DOCS MISC STORE
 
