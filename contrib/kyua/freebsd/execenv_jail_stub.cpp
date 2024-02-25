@@ -47,6 +47,9 @@ requires_freebsd(void)
 namespace freebsd {
 
 
+bool execenv_jail_supported = false;
+
+
 void
 execenv_jail::init() const
 {

@@ -33,6 +33,20 @@
 
 static const std::string execenv_name = "jail";
 
+const std::string&
+freebsd::execenv_jail_manager::name() const
+{
+    return execenv_name;
+}
+
+
+bool
+freebsd::execenv_jail_manager::is_supported() const
+{
+    return freebsd::execenv_jail_supported;
+}
+
+
 std::unique_ptr< execenv::interface >
 freebsd::execenv_jail_manager::probe(
     const model::test_program& test_program,

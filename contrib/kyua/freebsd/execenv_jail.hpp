@@ -43,6 +43,9 @@ using utils::process::args_vector;
 namespace freebsd {
 
 
+extern bool execenv_jail_supported;
+
+
 class execenv_jail : public execenv::interface {
 public:
     execenv_jail(const model::test_program& test_program,

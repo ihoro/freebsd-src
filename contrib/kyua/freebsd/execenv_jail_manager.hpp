@@ -40,6 +40,8 @@ namespace freebsd {
 
 class execenv_jail_manager : public execenv::manager {
 public:
+    const std::string& name() const;
+    bool is_supported() const;
     std::unique_ptr< execenv::interface > probe(
         const model::test_program& test_program,
         const std::string& test_case_name) const;

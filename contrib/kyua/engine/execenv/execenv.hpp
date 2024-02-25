@@ -90,6 +90,14 @@ public:
     /// Destructor.
     virtual ~manager() {}
 
+    /// Returns name of an execution environment.
+    virtual const std::string& name() const = 0;
+
+    /// Returns whether this execution environment is actually supported.
+    ///
+    /// It can be compile time and/or runtime check.
+    virtual bool is_supported() const = 0;
+
     /// Returns execution environment for a test.
     ///
     /// It checks if the given test is designed for this execution environment.
@@ -111,6 +119,12 @@ public:
 ///
 /// \param manager Execution environment manager.
 void register_execenv(const std::shared_ptr< manager > manager);
+
+
+/// Returns list of registered execenv managers, except default host one.
+///
+/// \return A vector of pointers to execenv managers.
+const std::vector< const std::shared_ptr< manager> > execenvs();
 
 
 /// Returns execution environment for a test case.

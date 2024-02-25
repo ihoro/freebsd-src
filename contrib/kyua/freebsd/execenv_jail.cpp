@@ -38,6 +38,9 @@ using freebsd::utils::jail;
 namespace freebsd {
 
 
+bool execenv_jail_supported = true;
+
+
 void
 execenv_jail::init() const
 {

@@ -48,6 +48,13 @@ execenv::register_execenv(const std::shared_ptr< execenv::manager > manager)
 }
 
 
+const std::vector< const std::shared_ptr< execenv::manager> >
+execenv::execenvs()
+{
+    return execenv_managers;
+}
+
+
 std::unique_ptr< execenv::interface >
 execenv::get(const model::test_program& test_program,
              const std::string& test_case_name)
