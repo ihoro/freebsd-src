@@ -101,6 +101,9 @@ public:
     virtual std::unique_ptr< interface > probe(
         const model::test_program& test_program,
         const std::string& test_case_name) const = 0;
+
+    // TODO: execenv related extra metadata could be provided by a manager
+    // not to know how exactly and where it should be added to the kyua
 };
 
 
