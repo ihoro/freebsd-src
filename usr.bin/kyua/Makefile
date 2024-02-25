@@ -89,7 +89,6 @@ SRCS+=	utils/datetime.cpp			\
 	utils/process/executor.cpp		\
 	utils/process/fdstream.cpp		\
 	utils/process/isolation.cpp		\
-	utils/process/jail.cpp			\
 	utils/process/operations.cpp		\
 	utils/process/status.cpp		\
 	utils/process/system.cpp		\
@@ -131,7 +130,12 @@ SRCS+=	engine/atf.cpp			\
 	engine/tap_parser.cpp		\
 	engine/scheduler.cpp		\
 	engine/execenv/execenv.cpp	\
-	engine/execenv/jail.cpp
+	engine/execenv/execenv_host.cpp
+
+SRCS+=	freebsd/execenv_jail.cpp		\
+	freebsd/execenv_jail_manager.cpp	\
+	freebsd/main.cpp			\
+	freebsd/utils/jail.cpp
 
 SRCS+=	store/dbtypes.cpp		\
 	store/exceptions.cpp		\
