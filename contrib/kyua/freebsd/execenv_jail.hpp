@@ -55,7 +55,7 @@ public:
 
     void init() const;
     void cleanup() const;
-    void exec(const args_vector& args) const throw() UTILS_NORETURN;
+    void exec(const args_vector& args) const UTILS_NORETURN;
 };
 
 

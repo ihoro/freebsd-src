@@ -45,7 +45,7 @@ execenv::execenv_host::cleanup() const
 
 
 void
-execenv::execenv_host::exec(const args_vector& args) const throw()
+execenv::execenv_host::exec(const args_vector& args) const
 {
-    utils::process::exec(test_program.absolute_path(), args);
+    utils::process::exec(_test_program.absolute_path(), args);
 }

@@ -44,8 +44,8 @@ namespace execenv {
 /// Abstract interface of an execution environment.
 class interface {
 protected:
-    const model::test_program& test_program;
-    const std::string& test_case_name;
+    const model::test_program& _test_program;
+    const std::string& _test_case_name;
 
 public:
     /// Constructor.
@@ -54,8 +54,8 @@ public:
     /// \param test_case_name Name of the test case.
     interface(const model::test_program& test_program,
               const std::string& test_case_name) :
-        test_program(test_program),
-        test_case_name(test_case_name)
+        _test_program(test_program),
+        _test_case_name(test_case_name)
     {}
 
     /// Destructor.
@@ -80,7 +80,7 @@ public:
     /// scheduler::interface::exec_test() or exec_cleanup().
     ///
     /// \param args The arguments to pass to the binary.
-    virtual void exec(const args_vector& args) const throw() UTILS_NORETURN = 0;
+    virtual void exec(const args_vector& args) const UTILS_NORETURN = 0;
 };
 
 
@@ -124,7 +124,7 @@ void register_execenv(const std::shared_ptr< manager > manager);
 /// Returns list of registered execenv managers, except default host one.
 ///
 /// \return A vector of pointers to execenv managers.
-const std::vector< const std::shared_ptr< manager> > execenvs();
+const std::vector< std::shared_ptr< manager> > execenvs();
 
 
 /// Returns execution environment for a test case.

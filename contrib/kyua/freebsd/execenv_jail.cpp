@@ -44,10 +44,10 @@ bool execenv_jail_supported = true;
 void
 execenv_jail::init() const
 {
-    auto test_case = test_program.find(test_case_name);
+    auto test_case = _test_program.find(_test_case_name);
 
     jail().create(
-        jail().make_name(test_program.absolute_path(), test_case_name),
+        jail().make_name(_test_program.absolute_path(), _test_case_name),
         test_case.get_metadata().execenv_jail()
     );
 }
@@ -57,17 +57,17 @@ void
 execenv_jail::cleanup() const
 {
     jail().remove(
-        jail().make_name(test_program.absolute_path(), test_case_name)
+        jail().make_name(_test_program.absolute_path(), _test_case_name)
     );
 }
 
 
 void
-execenv_jail::exec(const args_vector& args) const throw()
+execenv_jail::exec(const args_vector& args) const
 {
     jail().exec(
-        jail().make_name(test_program.absolute_path(), test_case_name),
-        test_program.absolute_path(),
+        jail().make_name(_test_program.absolute_path(), _test_case_name),
+        _test_program.absolute_path(),
         args
     );
 }

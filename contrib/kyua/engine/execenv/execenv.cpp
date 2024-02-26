@@ -37,7 +37,7 @@ using utils::none;
 /// List of registered execution environments, except default host one.
 ///
 /// Use register_execenv() to add an entry to this global list.
-static std::vector< const std::shared_ptr< execenv::manager > >
+static std::vector< std::shared_ptr< execenv::manager > >
     execenv_managers;
 
 
@@ -48,7 +48,7 @@ execenv::register_execenv(const std::shared_ptr< execenv::manager > manager)
 }
 
 
-const std::vector< const std::shared_ptr< execenv::manager> >
+const std::vector< std::shared_ptr< execenv::manager> >
 execenv::execenvs()
 {
     return execenv_managers;
