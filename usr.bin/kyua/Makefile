@@ -14,7 +14,7 @@ KYUA_SRCDIR=	${SRCTOP}/contrib/kyua
 PACKAGE=	tests
 PROG_CXX=	kyua
 SRCS=		main.cpp
-LIBADD=		lutok sqlite3 jail
+LIBADD=		lutok sqlite3
 
 MAN=		kyua-about.1 \
 		kyua-config.1 \
