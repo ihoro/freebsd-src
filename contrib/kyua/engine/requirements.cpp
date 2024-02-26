@@ -107,18 +107,22 @@ check_allowed_architectures(const model::strings_set& allowed_architectures,
 ///
 /// \return Empty if the execenv is in the list or an error message otherwise.
 static std::string
-check_execenv(const std::string& execenv,
-              const config::tree& user_config)
+check_execenv(const std::string& execenv, const config::tree& user_config)
 {
     std::string name = execenv;
     if (name.empty())
-        name = "host";
+        name = "host"; // if a test claims nothing then it's host based
 
-    const std::set< std::string > execenvs =
-        user_config.lookup< config::strings_set_node >("execenv");
+    std::set< std::string > execenvs;
+    try {
+        execenvs = user_config.lookup< config::strings_set_node >("execenv");
+    } catch (const config::unknown_key_error&) {
+        // okay, user config does not define it, empty set then
+    }
+
     if (execenvs.find(name) == execenvs.end())
-        return F("'%s' execenv is not supported or not allowed according "
-	    "to the runtime user configuration") % name;
+        return F("'%s' execenv is not supported or not allowed by "
+	    "the runtime user configuration") % name;
 
     return "";
 }
