@@ -133,7 +133,7 @@ SRCS+=	engine/atf.cpp			\
 	engine/execenv/execenv_host.cpp
 
 SRCS+=	freebsd/execenv_jail_manager.cpp\
-	freebsd/main.cpp		\
+	freebsd/main.cpp
 
 SRCS+=	store/dbtypes.cpp		\
 	store/exceptions.cpp		\
