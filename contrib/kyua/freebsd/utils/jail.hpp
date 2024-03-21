@@ -43,7 +43,6 @@ namespace freebsd {
 namespace utils {
 
 
-// TODO: do we want a singleton here?
 class jail {
 public:
     std::vector< std::string > parse_params_string(const std::string& str);
