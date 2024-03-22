@@ -74,7 +74,7 @@ The following variables are internally recognized by
 .It Va architecture
 Name of the system architecture (aka processor type).
 .It Va execenv
-Space separated list of execution environment names.
+Whitespace-separated list of execution environment names.
 .Pp
 Only tests which require one of the given execution environments will be run.
 .It Va parallelism
