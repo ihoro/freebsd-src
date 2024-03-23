@@ -25,7 +25,7 @@
 .\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-.Dd March 22, 2024
+.Dd March 23, 2024
 .Dt KYUAFILE 5
 .Os
 .Sh NAME
@@ -174,31 +174,37 @@ section below for clarification.
 .It Va description
 Textual description of the test.
 .It Va execenv
-The name of the execution environment to be used for running the test. If
-empty or not defined, the
+The name of the execution environment to be used for running the test.
+If empty or not defined, the
 .Sq host
-execution environment is meant. The possible values are:
+execution environment is meant.
+The possible values are:
 .Bl -tag -width xUnnnnnnn
 .It host
 The default environment which runs the test as a usual child process.
 .It jail
-The FreeBSD jail environment. It creates a temporary jail to run the test and
-its optional cleanup logic within.
+The
+.Fx
+jail environment.
+It creates a temporary jail to run the test and its optional cleanup logic
+within.
 .El
 .It Va execenv_jail
-Additional test-specific whitespace-separated parameters of FreeBSD's
+Additional test-specific whitespace-separated parameters of
+.Fx
 .Xr jail 8
 to create a temporary jail within which the test is run.
 It makes sense only if execenv is set to
 .Sq jail .
-
+.sp
 Kyua implicitly adds
 .Sq children.max
 .Xr jail 8
 parameter for a temporary jail with the maximum possible value according to
-the jail Kyua itself is running within. It allows tests to easily spawn their
-own sub-jails without additional configuration. It can be overriden via
-execenv_jail if needed.
+the jail Kyua itself is running within.
+It allows tests to easily spawn their own sub-jails without additional
+configuration.
+It can be overridden via execenv_jail if needed.
 .It Va is_exclusive
 If true, indicates that this test program cannot be executed along any other
 programs at the same time.
