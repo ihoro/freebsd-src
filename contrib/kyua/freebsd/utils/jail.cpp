@@ -257,7 +257,7 @@ jail::exec(const std::string& jail_name,
     // get work dir prepared by kyua
     char cwd[PATH_MAX];
     if (::getcwd(cwd, sizeof(cwd)) == NULL) {
-        std::cerr << "process::jail::exec: getcwd() errors: "
+        std::cerr << "jail::exec: getcwd() errors: "
             << strerror(errno) << ".\n";
         std::exit(EXIT_FAILURE);
     }
@@ -265,21 +265,21 @@ jail::exec(const std::string& jail_name,
     // get jail id by its name
     int jid = ::jail_getid(jail_name.c_str());
     if (jid < 0) {
-        std::cerr << "process::jail::exec: jail_getid() errors: "
+        std::cerr << "jail::exec: jail_getid() errors: "
             << strerror(errno) << ": " << jail_errmsg << ".\n";
         std::exit(EXIT_FAILURE);
     }
 
     // attach to the jail
     if (::jail_attach(jid) == -1) {
-        std::cerr << "process::jail::exec: jail_attach() errors: "
+        std::cerr << "jail::exec: jail_attach() errors: "
             << strerror(errno) << ".\n";
         std::exit(EXIT_FAILURE);
     }
 
     // set back the expected work dir
     if (::chdir(cwd) == -1) {
-        std::cerr << "process::jail::exec: chdir() errors: "
+        std::cerr << "jail::exec: chdir() errors: "
             << strerror(errno) << ".\n";
         std::exit(EXIT_FAILURE);
     }
