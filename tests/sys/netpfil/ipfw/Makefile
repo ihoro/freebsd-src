@@ -2,7 +2,9 @@ PACKAGE=	tests
 
 TESTSDIR=       ${TESTSBASE}/sys/netpfil/ipfw
 
-ATF_TESTS_SH+=	fwd
+ATF_TESTS_SH+=	fwd \
+		divert
+
 ${PACKAGE}FILES+=	fwd_inetd.conf
 
 .include <bsd.test.mk>

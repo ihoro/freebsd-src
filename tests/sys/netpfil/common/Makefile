@@ -2,6 +2,7 @@
 PACKAGE=	tests
 
 TESTSDIR=	${TESTSBASE}/sys/netpfil/common
+BINDIR=		${TESTSDIR}
 
 
 ATF_TESTS_SH+=	\
@@ -15,6 +16,8 @@ ATF_TESTS_SH+=	\
 
 # Tests reuse jail names and so cannot run in parallel.
 TEST_METADATA+=	is_exclusive=true
+
+PROGS=	divapp
 
 ${PACKAGE}FILES+=	\
 		utils.subr \
