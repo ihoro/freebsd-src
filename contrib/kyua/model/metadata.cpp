@@ -248,10 +248,10 @@ init_tree(config::tree& tree)
     tree.define< config::strings_set_node >("allowed_platforms");
     tree.define_dynamic("custom");
     tree.define< config::string_node >("description");
-    tree.define< config::bool_node >("has_cleanup");
-    tree.define< config::bool_node >("is_exclusive");
     tree.define< config::string_node >("execenv");
     tree.define< config::string_node >("execenv_jail");
+    tree.define< config::bool_node >("has_cleanup");
+    tree.define< config::bool_node >("is_exclusive");
     tree.define< config::strings_set_node >("required_configs");
     tree.define< bytes_node >("required_disk_space");
     tree.define< paths_set_node >("required_files");
@@ -273,10 +273,10 @@ set_defaults(config::tree& tree)
     tree.set< config::strings_set_node >("allowed_platforms",
                                          model::strings_set());
     tree.set< config::string_node >("description", "");
-    tree.set< config::bool_node >("has_cleanup", false);
-    tree.set< config::bool_node >("is_exclusive", false);
     tree.set< config::string_node >("execenv", "");
     tree.set< config::string_node >("execenv_jail", "");
+    tree.set< config::bool_node >("has_cleanup", false);
+    tree.set< config::bool_node >("is_exclusive", false);
     tree.set< config::strings_set_node >("required_configs",
                                          model::strings_set());
     tree.set< bytes_node >("required_disk_space", units::bytes(0));
@@ -469,35 +469,6 @@ model::metadata::description(void) const
 }
 
 
-/// Returns whether the test has a cleanup part or not.
-///
-/// \return True if there is a cleanup part; false otherwise.
-bool
-model::metadata::has_cleanup(void) const
-{
-    if (_pimpl->props.is_set("has_cleanup")) {
-        return _pimpl->props.lookup< config::bool_node >("has_cleanup");
-    } else {
-        return get_defaults().lookup< config::bool_node >("has_cleanup");
-    }
-}
-
-
-/// Returns whether the test is exclusive or not.
-///
-/// \return True if the test has to be run on its own, not concurrently with any
-/// other tests; false otherwise.
-bool
-model::metadata::is_exclusive(void) const
-{
-    if (_pimpl->props.is_set("is_exclusive")) {
-        return _pimpl->props.lookup< config::bool_node >("is_exclusive");
-    } else {
-        return get_defaults().lookup< config::bool_node >("is_exclusive");
-    }
-}
-
-
 /// Returns execution environment name.
 ///
 /// \return Name of configured execution environment.
@@ -508,6 +479,34 @@ model::metadata::execenv(void) const
         return _pimpl->props.lookup< config::string_node >("execenv");
     } else {
         return get_defaults().lookup< config::string_node >("execenv");
+    }
+}
+
+
+/// Returns execenv jail parameters string to run a test with.
+///
+/// \return String of jail parameters.
+const std::string&
+model::metadata::execenv_jail(void) const
+{
+    if (_pimpl->props.is_set("execenv_jail")) {
+        return _pimpl->props.lookup< config::string_node >("execenv_jail");
+    } else {
+        return get_defaults().lookup< config::string_node >("execenv_jail");
+    }
+}
+
+
+/// Returns whether the test has a cleanup part or not.
+///
+/// \return True if there is a cleanup part; false otherwise.
+bool
+model::metadata::has_cleanup(void) const
+{
+    if (_pimpl->props.is_set("has_cleanup")) {
+        return _pimpl->props.lookup< config::bool_node >("has_cleanup");
+    } else {
+        return get_defaults().lookup< config::bool_node >("has_cleanup");
     }
 }
 
@@ -523,16 +522,17 @@ model::metadata::has_execenv(void) const
 }
 
 
-/// Returns execenv jail parameters string to run a test with.
+/// Returns whether the test is exclusive or not.
 ///
-/// \return String of jail parameters.
-const std::string&
-model::metadata::execenv_jail(void) const
+/// \return True if the test has to be run on its own, not concurrently with any
+/// other tests; false otherwise.
+bool
+model::metadata::is_exclusive(void) const
 {
-    if (_pimpl->props.is_set("execenv_jail")) {
-        return _pimpl->props.lookup< config::string_node >("execenv_jail");
+    if (_pimpl->props.is_set("is_exclusive")) {
+        return _pimpl->props.lookup< config::bool_node >("is_exclusive");
     } else {
-        return get_defaults().lookup< config::string_node >("execenv_jail");
+        return get_defaults().lookup< config::bool_node >("is_exclusive");
     }
 }
 
@@ -934,36 +934,6 @@ model::metadata_builder::set_description(const std::string& description)
 }
 
 
-/// Sets whether the test has a cleanup part or not.
-///
-/// \param cleanup True if the test has a cleanup part; false otherwise.
-///
-/// \return A reference to this builder.
-///
-/// \throw model::error If the value is invalid.
-model::metadata_builder&
-model::metadata_builder::set_has_cleanup(const bool cleanup)
-{
-    set< config::bool_node >(_pimpl->props, "has_cleanup", cleanup);
-    return *this;
-}
-
-
-/// Sets whether the test is exclusive or not.
-///
-/// \param exclusive True if the test is exclusive; false otherwise.
-///
-/// \return A reference to this builder.
-///
-/// \throw model::error If the value is invalid.
-model::metadata_builder&
-model::metadata_builder::set_is_exclusive(const bool exclusive)
-{
-    set< config::bool_node >(_pimpl->props, "is_exclusive", exclusive);
-    return *this;
-}
-
-
 /// Sets execution environment name.
 ///
 /// \param name Execution environment name.
@@ -990,6 +960,36 @@ model::metadata_builder&
 model::metadata_builder::set_execenv_jail(const std::string& params)
 {
     set< config::string_node >(_pimpl->props, "execenv_jail", params);
+    return *this;
+}
+
+
+/// Sets whether the test has a cleanup part or not.
+///
+/// \param cleanup True if the test has a cleanup part; false otherwise.
+///
+/// \return A reference to this builder.
+///
+/// \throw model::error If the value is invalid.
+model::metadata_builder&
+model::metadata_builder::set_has_cleanup(const bool cleanup)
+{
+    set< config::bool_node >(_pimpl->props, "has_cleanup", cleanup);
+    return *this;
+}
+
+
+/// Sets whether the test is exclusive or not.
+///
+/// \param exclusive True if the test is exclusive; false otherwise.
+///
+/// \return A reference to this builder.
+///
+/// \throw model::error If the value is invalid.
+model::metadata_builder&
+model::metadata_builder::set_is_exclusive(const bool exclusive)
+{
+    set< config::bool_node >(_pimpl->props, "is_exclusive", exclusive);
     return *this;
 }
 
