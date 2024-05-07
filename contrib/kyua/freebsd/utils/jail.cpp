@@ -63,7 +63,7 @@ using utils::process::args_vector;
 using utils::process::child;
 
 
-static const int jail_name_max_len = MAXHOSTNAMELEN - 1;
+static const size_t jail_name_max_len = MAXHOSTNAMELEN - 1;
 static const char* jail_name_prefix = "kyua";
 
 
