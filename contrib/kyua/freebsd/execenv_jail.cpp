@@ -32,8 +32,6 @@
 #include "model/test_case.hpp"
 #include "utils/fs/path.hpp"
 
-using freebsd::utils::jail;
-
 
 namespace freebsd {
 
@@ -41,13 +39,16 @@ namespace freebsd {
 bool execenv_jail_supported = true;
 
 
+static utils::jail jail = utils::jail();
+
+
 void
 execenv_jail::init() const
 {
     auto test_case = _test_program.find(_test_case_name);
 
-    jail().create(
-        jail().make_name(_test_program.absolute_path(), _test_case_name),
+    jail.create(
+        jail.make_name(_test_program.absolute_path(), _test_case_name),
         test_case.get_metadata().execenv_jail()
     );
 }
@@ -56,8 +57,8 @@ execenv_jail::init() const
 void
 execenv_jail::cleanup() const
 {
-    jail().remove(
-        jail().make_name(_test_program.absolute_path(), _test_case_name)
+    jail.remove(
+        jail.make_name(_test_program.absolute_path(), _test_case_name)
     );
 }
 
@@ -65,8 +66,8 @@ execenv_jail::cleanup() const
 void
 execenv_jail::exec(const args_vector& args) const
 {
-    jail().exec(
-        jail().make_name(_test_program.absolute_path(), _test_case_name),
+    jail.exec(
+        jail.make_name(_test_program.absolute_path(), _test_case_name),
         _test_program.absolute_path(),
         args
     );
