@@ -222,7 +222,7 @@ struct test_exec_data : public exec_data {
     ///
     /// This is used for the cleanup upon termination by a signal, to reap the
     /// leftovers and form missing exit_handle.
-    int pid;
+    pid_t pid;
 
     /// The exit_handle for this test once it has completed.
     ///
@@ -241,7 +241,7 @@ struct test_exec_data : public exec_data {
                    const std::string& test_case_name_,
                    const std::shared_ptr< scheduler::interface > interface_,
                    const config::tree& user_config_,
-                   const int pid_) :
+                   const pid_t pid_) :
         exec_data(test_program_, test_case_name_),
         interface(interface_), user_config(user_config_), pid(pid_)
     {

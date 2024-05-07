@@ -691,7 +691,7 @@ struct utils::process::executor::executor_handle::impl : utils::noncopyable {
     }
 
     executor::exit_handle
-    reap(const int original_pid)
+    reap(const pid_t original_pid)
     {
         const exec_handles_map::iterator iter = all_exec_handles.find(
             original_pid);
