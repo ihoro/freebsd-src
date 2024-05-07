@@ -41,6 +41,10 @@ using utils::optional;
 namespace engine {
 namespace execenv {
 
+
+extern const char* default_execenv_name;
+
+
 /// Abstract interface of an execution environment.
 class interface {
 protected:

@@ -28,6 +28,7 @@
 
 #include "engine/requirements.hpp"
 
+#include "engine/execenv/execenv.hpp"
 #include "model/metadata.hpp"
 #include "model/types.hpp"
 #include "utils/config/nodes.ipp"
@@ -111,7 +112,7 @@ check_execenv(const std::string& execenv, const config::tree& user_config)
 {
     std::string name = execenv;
     if (name.empty())
-        name = "host"; // if a test claims nothing then it's host based
+        name = engine::execenv::default_execenv_name; // if test claims nothing
 
     std::set< std::string > execenvs;
     try {

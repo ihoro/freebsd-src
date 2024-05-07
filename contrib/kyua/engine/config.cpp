@@ -82,7 +82,7 @@ set_defaults(config::tree& tree)
     for (auto em : execenv::execenvs())
         if (em->is_supported())
             supported.insert(em->name());
-    supported.insert("host");
+    supported.insert(execenv::default_execenv_name);
     tree.set< config::strings_set_node >("execenv", supported);
 
     // TODO(jmmv): Automatically derive this from the number of CPUs in the
@@ -241,10 +241,10 @@ engine::empty_config(void)
     config::tree tree(false);
     init_tree(tree);
 
-    // Tests of Kyua itself tend to use an empty config, and they want
-    // to allow running usual host based test cases.
+    // Tests of Kyua itself tend to use an empty config, i.e. default
+    // execution environment is used. Let's allow it.
     std::set< std::string > supported;
-    supported.insert("host");
+    supported.insert(engine::execenv::default_execenv_name);
     tree.set< config::strings_set_node >("execenv", supported);
 
     return tree;

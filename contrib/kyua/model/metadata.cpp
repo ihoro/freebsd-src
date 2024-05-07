@@ -30,6 +30,7 @@
 
 #include <memory>
 
+#include "engine/execenv/execenv.hpp"
 #include "model/exceptions.hpp"
 #include "model/types.hpp"
 #include "utils/config/exceptions.hpp"
@@ -511,14 +512,14 @@ model::metadata::execenv(void) const
 }
 
 
-/// Returns whether the test has any specific execenv apart from "host" one.
+/// Returns whether the test has a specific execenv apart from default one.
 ///
 /// \return True if there is a non-host execenv configured; false otherwise.
 bool
 model::metadata::has_execenv(void) const
 {
     const std::string& name = execenv();
-    return !name.empty() && name != "host";
+    return !name.empty() && name != engine::execenv::default_execenv_name;
 }
 
 
