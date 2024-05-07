@@ -264,7 +264,7 @@ jail::exec(const std::string& jail_name,
 
     // get jail id by its name
     int jid = ::jail_getid(jail_name.c_str());
-    if (jid < 0) {
+    if (jid == -1) {
         std::cerr << "jail::exec: jail_getid() errors: "
             << strerror(errno) << ": " << jail_errmsg << ".\n";
         std::exit(EXIT_FAILURE);
