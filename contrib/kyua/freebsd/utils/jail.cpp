@@ -201,20 +201,21 @@ jail::create(const std::string& jail_name,
     av.push_back("name=" + jail_name);
 
     // determine maximum allowed children.max
+    const char* const oid = "security.jail.children.max";
     int max;
     size_t len = sizeof(max);
-    if (::sysctlbyname("security.jail.children.max", &max, &len, NULL, 0) != 0) {
-        std::cerr << "sysctlbyname(security.jail.children.max) errors: "
+    if (::sysctlbyname(oid, &max, &len, NULL, 0) != 0) {
+        std::cerr << "sysctlbyname(" << oid << ") errors: "
             << strerror(errno) << ".\n";
         std::exit(EXIT_FAILURE);
     }
     if (len < sizeof(max)) {
-        std::cerr << "sysctlbyname(security.jail.children.max) provides less "
+        std::cerr << "sysctlbyname(" << oid << ") provides less "
             "data (" << len << ") than expected (" << sizeof(max) << ").\n";
         std::exit(EXIT_FAILURE);
     }
     if (max < 0) {
-        std::cerr << "sysctlbyname(security.jail.children.max) yields "
+        std::cerr << "sysctlbyname(" << oid << ") yields "
             "abnormal " << max << ".\n";
         std::exit(EXIT_FAILURE);
     }
