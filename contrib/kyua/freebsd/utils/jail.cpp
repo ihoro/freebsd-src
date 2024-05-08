@@ -1,4 +1,5 @@
-// Copyright (c) 2024 Igor Ostapenko <pm@igoro.pro>
+// Copyright 2024 The Kyua Authors.
+// All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
