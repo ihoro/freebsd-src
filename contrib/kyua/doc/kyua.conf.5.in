@@ -77,6 +77,10 @@ Name of the system architecture (aka processor type).
 Whitespace-separated list of execution environment names.
 .Pp
 Only tests which require one of the given execution environments will be run.
+.Pp
+See
+.Xr kyuafile 5
+for the list of possible execution environments.
 .It Va parallelism
 Maximum number of test cases to execute concurrently.
 .It Va platform
