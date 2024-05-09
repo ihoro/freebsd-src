@@ -185,7 +185,8 @@ The default environment which runs the test as a usual child process.
 .It jail
 The
 .Fx
-jail environment.
+.Xr jail 8
+environment.
 It creates a temporary jail to run the test and its optional cleanup logic
 within.
 .El
@@ -197,14 +198,20 @@ to create a temporary jail within which the test is run.
 It makes sense only if execenv is set to
 .Sq jail .
 .sp
-Kyua implicitly adds
+.Xr kyua 1
+implicitly passes
 .Sq children.max
+parameter to
 .Xr jail 8
-parameter for a temporary jail with the maximum possible value according to
-the jail Kyua itself is running within.
+for a temporary jail with the maximum possible value according to
+the jail
+.Xr kyua 1
+itself is running within.
 It allows tests to easily spawn their own sub-jails without additional
 configuration.
-It can be overridden via execenv_jail if needed.
+It can be overridden via
+.Va execenv_jail
+if needed.
 .It Va is_exclusive
 If true, indicates that this test program cannot be executed along any other
 programs at the same time.
@@ -394,7 +401,9 @@ plain_test_program{name='the_test',
 .Ed
 .Ss FreeBSD jail execution environment
 The following example configures the test to be run within a temporary jail
-created by Kyua with VNET support and the permission to create raw sockets:
+with
+.Xr vnet 9
+support and the permission to create raw sockets:
 .Bd -literal -offset indent
 syntax(2)
 
