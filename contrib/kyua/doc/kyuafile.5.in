@@ -190,6 +190,10 @@ environment.
 It creates a temporary jail to run the test and its optional cleanup logic
 within.
 .Pp
+This feature requires
+.Xr kyua 1
+to be running with superuser privileges.
+.Pp
 The formula of a temporary jail name is
 .Sq kyua
 +
@@ -427,6 +431,13 @@ atf_test_program{name='network_test',
                  execenv_jail='vnet allow.raw_sockets',
                  required_user='root'}
 .Ed
+.Pp
+A test case itself may have no requirements in superuser privileges,
+but required_user='root' metadata property reminds that the jail execution
+environment requires
+.Xr kyua 1
+being running with root privileges, and the test is skipped otherwise with
+the respective message.
 .Ss Connecting disjoint test suites
 Now suppose you had various test suites on your file system and you would
 like to connect them together so that they could be executed and treated as
