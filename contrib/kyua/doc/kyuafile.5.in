@@ -450,7 +450,15 @@ but required_user='root' metadata property reminds that the jail execution
 environment requires
 .Xr kyua 1
 being running with root privileges, and the test is skipped otherwise with
-the respective message.
+the respective message. The combination of
+.Va execenv
+set to
+.Sq jail
+and
+.Va required_user
+set to
+.Sq unprivileged
+does not work respectively.
 .Ss Connecting disjoint test suites
 Now suppose you had various test suites on your file system and you would
 like to connect them together so that they could be executed and treated as
