@@ -194,6 +194,19 @@ This feature requires
 .Xr kyua 1
 to be running with superuser privileges.
 .Pp
+The difference between
+.Va security.jail.children.max
+and
+.Va security.jail.children.cur
+sysctl of the jail
+.Xr kyua 1
+is running within must have a value high enough for the jail based tests
+planned to be run.
+For instance, the value 1 should be enough for a sequential run of simple
+tests.
+Otherwise, such aspects as parallel test execution and sub-jails spawned
+by specific test cases should be considered.
+.Pp
 The formula of a temporary jail name is
 .Sq kyua
 +
