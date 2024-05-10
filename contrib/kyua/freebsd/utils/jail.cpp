@@ -109,41 +109,22 @@ jail::parse_params_string(const std::string& str)
     std::string p;
     char quote = 0;
 
-    for (const char& c : str) {
-        // whitespace delimited parameter
-        if (quote == 0) {
-            if (std::isspace(c)) {
-                if (p.empty())
-                    continue;
-                params.push_back(p);
-                p = "";
+    std::istringstream iss(str);
+    while (iss >> p) {
+        if (p.front() == '"' || p.front() == '\'') {
+            quote = p.front();
+            p.erase(p.begin());
+            if (p.find(quote) == std::string::npos) {
+                std::string rest;
+                std::getline(iss, rest, quote);
+                p += rest;
+                iss.ignore();
             }
-            else if (c == '"' || c == '\'') {
-                if (!p.empty())
-                    params.push_back(p);
-                p = "";
-                quote = c;
-            }
-            else
-                p += c;
+            if (p.back() == quote)
+                p.erase(p.end() - 1);
         }
-
-        // quoted parameter
-        else {
-            if (c == quote) {
-                if (!p.empty())
-                    params.push_back(p);
-                p = "";
-                quote = 0;
-            }
-            else
-                p += c;
-        }
-    }
-
-    // leftovers
-    if (!p.empty())
         params.push_back(p);
+    }
 
     return params;
 }
