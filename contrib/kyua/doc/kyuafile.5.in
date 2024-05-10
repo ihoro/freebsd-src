@@ -189,6 +189,19 @@ The
 environment.
 It creates a temporary jail to run the test and its optional cleanup logic
 within.
+.Pp
+The formula of a temporary jail name is
+.Sq kyua
++
+.Va test program path
++
+.Sq _
++
+.Va test case name .
+All non-alphanumeric characters are replaced with
+.Sq _ .
+.Sq kyua_usr_tests_sys_netpfil_pf_pass_block_v4
+is an example for /usr/tests/sys/netpfil/pf/pass_block:v4 test case.
 .El
 .It Va execenv_jail
 Additional test-specific whitespace-separated parameters of
