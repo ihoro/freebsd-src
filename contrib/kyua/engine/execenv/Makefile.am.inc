@@ -26,7 +26,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-libengine_a_SOURCES += engine/execenv/execenv.hpp
-libengine_a_SOURCES += engine/execenv/execenv.cpp
-libengine_a_SOURCES += engine/execenv/execenv_host.hpp
-libengine_a_SOURCES += engine/execenv/execenv_host.cpp
+ENGINE_EXECENV_CFLAGS =
+ENGINE_EXECENV_LIBS = libengine_execenv.la
+
+noinst_LTLIBRARIES += libengine_execenv.la
+libengine_execenv_la_SOURCES  = engine/execenv/execenv.hpp
+libengine_execenv_la_SOURCES += engine/execenv/execenv.cpp
+libengine_execenv_la_SOURCES += engine/execenv/execenv_host.hpp
+libengine_execenv_la_SOURCES += engine/execenv/execenv_host.cpp

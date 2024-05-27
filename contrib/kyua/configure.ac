@@ -27,7 +27,7 @@ dnl (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 AC_INIT([Kyua], [0.14], [kyua-discuss@googlegroups.com], [kyua],
-        [https://github.com/jmmv/kyua/])
+        [https://github.com/freebsd/kyua/])
 AC_PREREQ([2.65])
 
 
@@ -42,8 +42,8 @@ AC_CONFIG_TESTDIR([bootstrap])
 
 AM_INIT_AUTOMAKE([1.9 foreign subdir-objects -Wall])
 
-
 AC_LANG([C++])
+AC_PROG_AR
 AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
@@ -58,21 +58,19 @@ KYUA_MEMORY
 AC_CHECK_FUNCS([putenv setenv unsetenv])
 AC_CHECK_HEADERS([termios.h])
 
-
-AC_PROG_RANLIB
-
+LT_INIT
 
 m4_ifndef([PKG_CHECK_MODULES],
-    [m4_fatal([Cannot find pkg.m4; see the INSTALL document for help])])
+    [m4_fatal([Cannot find pkg.m4; see the INSTALL.md document for help])])
 
 m4_ifndef([ATF_CHECK_CXX],
-    [m4_fatal([Cannot find atf-c++.m4; see the INSTALL document for help])])
+    [m4_fatal([Cannot find atf-c++.m4; see the INSTALL.md document for help])])
 ATF_CHECK_CXX([>= 0.17])
 m4_ifndef([ATF_CHECK_SH],
-    [m4_fatal([Cannot find atf-sh.m4; see the INSTALL document for help])])
+    [m4_fatal([Cannot find atf-sh.m4; see the INSTALL.md document for help])])
 ATF_CHECK_SH([>= 0.15])
 m4_ifndef([ATF_ARG_WITH],
-    [m4_fatal([Cannot find atf-common.m4; see the INSTALL document for help])])
+    [m4_fatal([Cannot find atf-common.m4; see the INSTALL.md document for help])])
 ATF_ARG_WITH
 
 PKG_CHECK_MODULES([LUTOK], [lutok >= 0.4],

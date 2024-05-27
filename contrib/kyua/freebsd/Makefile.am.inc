@@ -27,20 +27,20 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 FREEBSD_CFLAGS =
-FREEBSD_LIBS = libfreebsd.a
+FREEBSD_LIBS = libfreebsd.la
 
-noinst_LIBRARIES += libfreebsd.a
-libfreebsd_a_CPPFLAGS = -DGDB=\"$(GDB)\"
-libfreebsd_a_SOURCES =  freebsd/main.hpp
-libfreebsd_a_SOURCES += freebsd/main.cpp
-libfreebsd_a_SOURCES += freebsd/execenv_jail.hpp
-libfreebsd_a_SOURCES += freebsd/execenv_jail_manager.hpp
-libfreebsd_a_SOURCES += freebsd/execenv_jail_manager.cpp
+noinst_LTLIBRARIES += libfreebsd.la
+libfreebsd_la_CPPFLAGS = -DGDB=\"$(GDB)\"
+libfreebsd_la_SOURCES  = freebsd/main.hpp
+libfreebsd_la_SOURCES += freebsd/main.cpp
+libfreebsd_la_SOURCES += freebsd/execenv_jail.hpp
+libfreebsd_la_SOURCES += freebsd/execenv_jail_manager.hpp
+libfreebsd_la_SOURCES += freebsd/execenv_jail_manager.cpp
 
 if FreeBSD
 FREEBSD_LIBS += -ljail
-libfreebsd_a_SOURCES += freebsd/execenv_jail.cpp
+libfreebsd_la_SOURCES += freebsd/execenv_jail.cpp
 include freebsd/utils/Makefile.am.inc
 else
-libfreebsd_a_SOURCES += freebsd/execenv_jail_stub.cpp
+libfreebsd_la_SOURCES += freebsd/execenv_jail_stub.cpp
 endif
