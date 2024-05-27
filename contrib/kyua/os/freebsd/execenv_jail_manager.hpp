@@ -26,53 +26,29 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "freebsd/execenv_jail.hpp"
+/// \file os/freebsd/execenv_jail_manager.hpp
+/// FreeBSD jail execution environment manager.
 
-#include "freebsd/utils/jail.hpp"
-#include "model/metadata.hpp"
-#include "model/test_case.hpp"
-#include "utils/fs/path.hpp"
+#if !defined(FREEBSD_EXECENV_JAIL_MANAGER_HPP)
+#define FREEBSD_EXECENV_JAIL_MANAGER_HPP
 
+#include "engine/execenv/execenv.hpp"
+
+namespace execenv = engine::execenv;
 
 namespace freebsd {
 
 
-bool execenv_jail_supported = true;
-
-
-static utils::jail jail = utils::jail();
-
-
-void
-execenv_jail::init() const
-{
-    auto test_case = _test_program.find(_test_case_name);
-
-    jail.create(
-        jail.make_name(_test_program.absolute_path(), _test_case_name),
-        test_case.get_metadata().execenv_jail_params()
-    );
-}
-
-
-void
-execenv_jail::cleanup() const
-{
-    jail.remove(
-        jail.make_name(_test_program.absolute_path(), _test_case_name)
-    );
-}
-
-
-void
-execenv_jail::exec(const args_vector& args) const
-{
-    jail.exec(
-        jail.make_name(_test_program.absolute_path(), _test_case_name),
-        _test_program.absolute_path(),
-        args
-    );
-}
+class execenv_jail_manager : public execenv::manager {
+public:
+    const std::string& name() const;
+    bool is_supported() const;
+    std::unique_ptr< execenv::interface > probe(
+        const model::test_program& test_program,
+        const std::string& test_case_name) const;
+};
 
 
 }  // namespace freebsd
+
+#endif  // !defined(FREEBSD_EXECENV_JAIL_MANAGER_HPP)

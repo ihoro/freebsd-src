@@ -27,7 +27,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "cli/main.hpp"
-#include "freebsd/main.hpp"
+#include "os/freebsd/main.hpp"
 
 
 /// Program entry point.

@@ -26,7 +26,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/// \file freebsd/utils/jail.hpp
+/// \file os/freebsd/utils/jail.hpp
 /// FreeBSD jail utilities.
 
 #if !defined(FREEBSD_UTILS_JAIL_HPP)

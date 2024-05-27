@@ -26,29 +26,40 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "freebsd/main.hpp"
+/// \file os/freebsd/execenv_jail.hpp
+/// FreeBSD jail execution environment.
+
+#if !defined(FREEBSD_EXECENV_JAIL_HPP)
+#define FREEBSD_EXECENV_JAIL_HPP
 
 #include "engine/execenv/execenv.hpp"
-#include "freebsd/execenv_jail_manager.hpp"
+
+#include "utils/process/operations_fwd.hpp"
 
 namespace execenv = engine::execenv;
 
-/// FreeBSD related features initialization.
-///
-/// \param argc The number of arguments passed on the command line.
-/// \param argv NULL-terminated array containing the command line arguments.
-///
-/// \return 0 on success, some other integer on error.
-///
-/// \throw std::exception This throws any uncaught exception.  Such exceptions
-///     are bugs, but we let them propagate so that the runtime will abort and
-///     dump core.
-int
-freebsd::main(const int, const char* const* const)
-{
-    execenv::register_execenv(
-        std::shared_ptr< execenv::manager >(new freebsd::execenv_jail_manager())
-    );
+using utils::process::args_vector;
 
-    return 0;
-}
+
+namespace freebsd {
+
+
+extern bool execenv_jail_supported;
+
+
+class execenv_jail : public execenv::interface {
+public:
+    execenv_jail(const model::test_program& test_program,
+                 const std::string& test_case_name) :
+        execenv::interface(test_program, test_case_name)
+    {}
+
+    void init() const;
+    void cleanup() const;
+    void exec(const args_vector& args) const UTILS_NORETURN;
+};
+
+
+}  // namespace freebsd
+
+#endif  // !defined(FREEBSD_EXECENV_JAIL_HPP)

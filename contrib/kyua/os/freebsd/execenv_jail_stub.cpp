@@ -26,16 +26,50 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/// \file freebsd/main.hpp
-/// FreeBSD related features initialization.
+#include "os/freebsd/execenv_jail.hpp"
 
-#if !defined(FREEBSD_MAIN_HPP)
-#define FREEBSD_MAIN_HPP
+#include <iostream>
+
+#include "utils/process/operations_fwd.hpp"
+
+using utils::process::args_vector;
+
+
+static inline void requires_freebsd(void) UTILS_NORETURN;
+
+static inline void
+requires_freebsd(void)
+{
+    std::cerr << "execenv=\"jail\" requires FreeBSD with jail feature.\n";
+    std::exit(EXIT_FAILURE);
+}
+
 
 namespace freebsd {
 
-int main(const int argc, const char* const* const argv);
+
+bool execenv_jail_supported = false;
+
+
+void
+execenv_jail::init() const
+{
+    requires_freebsd();
+}
+
+
+void
+execenv_jail::cleanup() const
+{
+    requires_freebsd();
+}
+
+
+void
+execenv_jail::exec(const args_vector&) const
+{
+    requires_freebsd();
+}
+
 
 }  // namespace freebsd
-
-#endif  // !defined(FREEBSD_MAIN_HPP)

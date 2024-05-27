@@ -26,40 +26,53 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/// \file freebsd/execenv_jail.hpp
-/// FreeBSD jail execution environment.
+#include "os/freebsd/execenv_jail.hpp"
 
-#if !defined(FREEBSD_EXECENV_JAIL_HPP)
-#define FREEBSD_EXECENV_JAIL_HPP
-
-#include "engine/execenv/execenv.hpp"
-
-#include "utils/process/operations_fwd.hpp"
-
-namespace execenv = engine::execenv;
-
-using utils::process::args_vector;
+#include "model/metadata.hpp"
+#include "model/test_case.hpp"
+#include "os/freebsd/utils/jail.hpp"
+#include "utils/fs/path.hpp"
 
 
 namespace freebsd {
 
 
-extern bool execenv_jail_supported;
+bool execenv_jail_supported = true;
 
 
-class execenv_jail : public execenv::interface {
-public:
-    execenv_jail(const model::test_program& test_program,
-                 const std::string& test_case_name) :
-        execenv::interface(test_program, test_case_name)
-    {}
+static utils::jail jail = utils::jail();
 
-    void init() const;
-    void cleanup() const;
-    void exec(const args_vector& args) const UTILS_NORETURN;
-};
+
+void
+execenv_jail::init() const
+{
+    auto test_case = _test_program.find(_test_case_name);
+
+    jail.create(
+        jail.make_name(_test_program.absolute_path(), _test_case_name),
+        test_case.get_metadata().execenv_jail_params()
+    );
+}
+
+
+void
+execenv_jail::cleanup() const
+{
+    jail.remove(
+        jail.make_name(_test_program.absolute_path(), _test_case_name)
+    );
+}
+
+
+void
+execenv_jail::exec(const args_vector& args) const
+{
+    jail.exec(
+        jail.make_name(_test_program.absolute_path(), _test_case_name),
+        _test_program.absolute_path(),
+        args
+    );
+}
 
 
 }  // namespace freebsd
-
-#endif  // !defined(FREEBSD_EXECENV_JAIL_HPP)

@@ -26,38 +26,16 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "freebsd/execenv_jail_manager.hpp"
+/// \file os/freebsd/main.hpp
+/// FreeBSD related features initialization.
 
-#include "model/metadata.hpp"
-#include "model/test_case.hpp"
-#include "freebsd/execenv_jail.hpp"
+#if !defined(FREEBSD_MAIN_HPP)
+#define FREEBSD_MAIN_HPP
 
-static const std::string execenv_name = "jail";
+namespace freebsd {
 
-const std::string&
-freebsd::execenv_jail_manager::name() const
-{
-    return execenv_name;
-}
+int main(const int argc, const char* const* const argv);
 
+}  // namespace freebsd
 
-bool
-freebsd::execenv_jail_manager::is_supported() const
-{
-    return freebsd::execenv_jail_supported;
-}
-
-
-std::unique_ptr< execenv::interface >
-freebsd::execenv_jail_manager::probe(
-    const model::test_program& test_program,
-    const std::string& test_case_name) const
-{
-    auto test_case = test_program.find(test_case_name);
-    if (test_case.get_metadata().execenv() != execenv_name)
-        return nullptr;
-
-    return std::unique_ptr< execenv::interface >(
-        new freebsd::execenv_jail(test_program, test_case_name)
-    );
-}
+#endif  // !defined(FREEBSD_MAIN_HPP)

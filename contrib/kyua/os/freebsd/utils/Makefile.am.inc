@@ -26,21 +26,5 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-FREEBSD_CFLAGS =
-FREEBSD_LIBS = libfreebsd.la
-
-noinst_LTLIBRARIES += libfreebsd.la
-libfreebsd_la_CPPFLAGS = -DGDB=\"$(GDB)\"
-libfreebsd_la_SOURCES  = freebsd/main.hpp
-libfreebsd_la_SOURCES += freebsd/main.cpp
-libfreebsd_la_SOURCES += freebsd/execenv_jail.hpp
-libfreebsd_la_SOURCES += freebsd/execenv_jail_manager.hpp
-libfreebsd_la_SOURCES += freebsd/execenv_jail_manager.cpp
-
-if FreeBSD
-FREEBSD_LIBS += -ljail
-libfreebsd_la_SOURCES += freebsd/execenv_jail.cpp
-include freebsd/utils/Makefile.am.inc
-else
-libfreebsd_la_SOURCES += freebsd/execenv_jail_stub.cpp
-endif
+libfreebsd_la_SOURCES += os/freebsd/utils/jail.hpp
+libfreebsd_la_SOURCES += os/freebsd/utils/jail.cpp

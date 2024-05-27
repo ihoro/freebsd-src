@@ -26,50 +26,38 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "freebsd/execenv_jail.hpp"
+#include "os/freebsd/execenv_jail_manager.hpp"
 
-#include <iostream>
+#include "model/metadata.hpp"
+#include "model/test_case.hpp"
+#include "os/freebsd/execenv_jail.hpp"
 
-#include "utils/process/operations_fwd.hpp"
+static const std::string execenv_name = "jail";
 
-using utils::process::args_vector;
-
-
-static inline void requires_freebsd(void) UTILS_NORETURN;
-
-static inline void
-requires_freebsd(void)
+const std::string&
+freebsd::execenv_jail_manager::name() const
 {
-    std::cerr << "execenv=\"jail\" requires FreeBSD with jail feature.\n";
-    std::exit(EXIT_FAILURE);
+    return execenv_name;
 }
 
 
-namespace freebsd {
-
-
-bool execenv_jail_supported = false;
-
-
-void
-execenv_jail::init() const
+bool
+freebsd::execenv_jail_manager::is_supported() const
 {
-    requires_freebsd();
+    return freebsd::execenv_jail_supported;
 }
 
 
-void
-execenv_jail::cleanup() const
+std::unique_ptr< execenv::interface >
+freebsd::execenv_jail_manager::probe(
+    const model::test_program& test_program,
+    const std::string& test_case_name) const
 {
-    requires_freebsd();
+    auto test_case = test_program.find(test_case_name);
+    if (test_case.get_metadata().execenv() != execenv_name)
+        return nullptr;
+
+    return std::unique_ptr< execenv::interface >(
+        new freebsd::execenv_jail(test_program, test_case_name)
+    );
 }
-
-
-void
-execenv_jail::exec(const args_vector&) const
-{
-    requires_freebsd();
-}
-
-
-}  // namespace freebsd
