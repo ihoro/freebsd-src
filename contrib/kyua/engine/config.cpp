@@ -61,7 +61,7 @@ static void
 init_tree(config::tree& tree)
 {
     tree.define< config::string_node >("architecture");
-    tree.define< config::strings_set_node >("execenv");
+    tree.define< config::strings_set_node >("execenvs");
     tree.define< config::positive_int_node >("parallelism");
     tree.define< config::string_node >("platform");
     tree.define< engine::user_node >("unprivileged_user");
@@ -83,7 +83,7 @@ set_defaults(config::tree& tree)
         if (em->is_supported())
             supported.insert(em->name());
     supported.insert(execenv::default_execenv_name);
-    tree.set< config::strings_set_node >("execenv", supported);
+    tree.set< config::strings_set_node >("execenvs", supported);
 
     // TODO(jmmv): Automatically derive this from the number of CPUs in the
     // machine and forcibly set to a value greater than 1.  Still testing
@@ -245,7 +245,7 @@ engine::empty_config(void)
     // execution environment is used. Let's allow it.
     std::set< std::string > supported;
     supported.insert(engine::execenv::default_execenv_name);
-    tree.set< config::strings_set_node >("execenv", supported);
+    tree.set< config::strings_set_node >("execenvs", supported);
 
     return tree;
 }

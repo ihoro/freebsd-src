@@ -116,7 +116,7 @@ check_execenv(const std::string& execenv, const config::tree& user_config)
 
     std::set< std::string > execenvs;
     try {
-        execenvs = user_config.lookup< config::strings_set_node >("execenv");
+        execenvs = user_config.lookup< config::strings_set_node >("execenvs");
     } catch (const config::unknown_key_error&) {
         // okay, user config does not define it, empty set then
     }

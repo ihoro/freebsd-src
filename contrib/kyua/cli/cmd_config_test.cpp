@@ -61,7 +61,7 @@ fake_config(void)
 {
     config::tree user_config = engine::default_config();
     user_config.set_string("architecture", "the-architecture");
-    user_config.set_string("execenv", "the-env");
+    user_config.set_string("execenvs", "the-env");
     user_config.set_string("parallelism", "128");
     user_config.set_string("platform", "the-platform");
     //user_config.set_string("unprivileged_user", "");
@@ -86,7 +86,7 @@ ATF_TEST_CASE_BODY(all)
 
     ATF_REQUIRE_EQ(6, ui.out_log().size());
     ATF_REQUIRE_EQ("architecture = the-architecture", ui.out_log()[0]);
-    ATF_REQUIRE_EQ("execenv = the-env", ui.out_log()[1]);
+    ATF_REQUIRE_EQ("execenvs = the-env", ui.out_log()[1]);
     ATF_REQUIRE_EQ("parallelism = 128", ui.out_log()[2]);
     ATF_REQUIRE_EQ("platform = the-platform", ui.out_log()[3]);
     ATF_REQUIRE_EQ("test_suites.foo.bar = first", ui.out_log()[4]);

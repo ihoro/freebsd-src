@@ -36,7 +36,7 @@
 .Pp
 Variables:
 .Va architecture ,
-.Va execenv ,
+.Va execenvs ,
 .Va platform ,
 .Va test_suites ,
 .Va unprivileged_user .
@@ -73,7 +73,7 @@ The following variables are internally recognized by
 .Bl -tag -width XX -offset indent
 .It Va architecture
 Name of the system architecture (aka processor type).
-.It Va execenv
+.It Va execenvs
 Whitespace-separated list of execution environment names.
 .Pp
 Only tests which require one of the given execution environments will be run.
