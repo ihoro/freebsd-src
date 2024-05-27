@@ -249,7 +249,7 @@ init_tree(config::tree& tree)
     tree.define_dynamic("custom");
     tree.define< config::string_node >("description");
     tree.define< config::string_node >("execenv");
-    tree.define< config::string_node >("execenv_jail");
+    tree.define< config::string_node >("execenv_jail_params");
     tree.define< config::bool_node >("has_cleanup");
     tree.define< config::bool_node >("is_exclusive");
     tree.define< config::strings_set_node >("required_configs");
@@ -274,7 +274,7 @@ set_defaults(config::tree& tree)
                                          model::strings_set());
     tree.set< config::string_node >("description", "");
     tree.set< config::string_node >("execenv", "");
-    tree.set< config::string_node >("execenv_jail", "");
+    tree.set< config::string_node >("execenv_jail_params", "");
     tree.set< config::bool_node >("has_cleanup", false);
     tree.set< config::bool_node >("is_exclusive", false);
     tree.set< config::strings_set_node >("required_configs",
@@ -483,16 +483,18 @@ model::metadata::execenv(void) const
 }
 
 
-/// Returns execenv jail parameters string to run a test with.
+/// Returns execenv jail(8) parameters string to run a test with.
 ///
 /// \return String of jail parameters.
 const std::string&
-model::metadata::execenv_jail(void) const
+model::metadata::execenv_jail_params(void) const
 {
-    if (_pimpl->props.is_set("execenv_jail")) {
-        return _pimpl->props.lookup< config::string_node >("execenv_jail");
+    if (_pimpl->props.is_set("execenv_jail_params")) {
+        return _pimpl->props.lookup< config::string_node >(
+	    "execenv_jail_params");
     } else {
-        return get_defaults().lookup< config::string_node >("execenv_jail");
+        return get_defaults().lookup< config::string_node >(
+	    "execenv_jail_params");
     }
 }
 
@@ -949,7 +951,7 @@ model::metadata_builder::set_execenv(const std::string& name)
 }
 
 
-/// Sets execenv jail parameters string to run the test with.
+/// Sets execenv jail(8) parameters string to run the test with.
 ///
 /// \param params String of jail parameters.
 ///
@@ -957,9 +959,9 @@ model::metadata_builder::set_execenv(const std::string& name)
 ///
 /// \throw model::error If the value is invalid.
 model::metadata_builder&
-model::metadata_builder::set_execenv_jail(const std::string& params)
+model::metadata_builder::set_execenv_jail_params(const std::string& params)
 {
-    set< config::string_node >(_pimpl->props, "execenv_jail", params);
+    set< config::string_node >(_pimpl->props, "execenv_jail_params", params);
     return *this;
 }
 

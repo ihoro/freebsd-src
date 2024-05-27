@@ -220,7 +220,7 @@ All non-alphanumeric characters are replaced with
 .Sq kyua_usr_tests_sys_netpfil_pf_pass_block_v4
 is an example for /usr/tests/sys/netpfil/pf/pass_block:v4 test case.
 .El
-.It Va execenv_jail
+.It Va execenv_jail_params
 Additional test-specific whitespace-separated parameters of
 .Fx
 .Xr jail 8
@@ -240,7 +240,7 @@ itself is running within.
 It allows tests to easily spawn their own sub-jails without additional
 configuration.
 It can be overridden via
-.Va execenv_jail
+.Va execenv_jail_params
 if needed.
 .It Va is_exclusive
 If true, indicates that this test program cannot be executed along any other
@@ -441,7 +441,7 @@ test_suite('FreeBSD')
 
 atf_test_program{name='network_test',
                  execenv='jail',
-                 execenv_jail='vnet allow.raw_sockets',
+                 execenv_jail_params='vnet allow.raw_sockets',
                  required_user='root'}
 .Ed
 .Pp

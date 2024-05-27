@@ -64,7 +64,7 @@ static const char* const default_metadata =
     "allowed_platforms is empty\n"
     "description is empty\n"
     "execenv is empty\n"
-    "execenv_jail is empty\n"
+    "execenv_jail_params is empty\n"
     "has_cleanup = false\n"
     "is_exclusive = false\n"
     "required_configs is empty\n"
@@ -83,7 +83,7 @@ static const char* const overriden_metadata =
     "allowed_platforms is empty\n"
     "description = Textual description\n"
     "execenv is empty\n"
-    "execenv_jail is empty\n"
+    "execenv_jail_params is empty\n"
     "has_cleanup = false\n"
     "is_exclusive = false\n"
     "required_configs is empty\n"
@@ -204,7 +204,7 @@ ATF_TEST_CASE_BODY(junit_metadata__overrides)
         .add_allowed_platform("platform1")
         .set_description("This is a test")
 	.set_execenv("jail")
-	.set_execenv_jail("vnet")
+	.set_execenv_jail_params("vnet")
         .set_has_cleanup(true)
         .set_is_exclusive(true)
         .add_required_config("config1")
@@ -222,7 +222,7 @@ ATF_TEST_CASE_BODY(junit_metadata__overrides)
         + "allowed_platforms = platform1\n"
         + "description = This is a test\n"
         + "execenv = jail\n"
-        + "execenv_jail = vnet\n"
+        + "execenv_jail_params = vnet\n"
         + "has_cleanup = true\n"
         + "is_exclusive = true\n"
         + "required_configs = config1\n"

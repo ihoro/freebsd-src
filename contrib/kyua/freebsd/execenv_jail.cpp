@@ -50,7 +50,7 @@ execenv_jail::init() const
 
     jail.create(
         jail.make_name(_test_program.absolute_path(), _test_case_name),
-        test_case.get_metadata().execenv_jail()
+        test_case.get_metadata().execenv_jail_params()
     );
 }
 
