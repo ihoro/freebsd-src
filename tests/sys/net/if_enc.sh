@@ -151,7 +151,7 @@ ip4_pfil_in_after_stripping_body()
 	echo $spell | jexec a nc -w3 4.0.0.1 666
 
 	# Expect it to hit host b instead
-	jexec b kill -sKILL $nc_pid
+	jexec b kill -KILL $nc_pid
 	atf_check_equal "$spell" "$(cat ./receiver)"
 }
 ip4_pfil_in_after_stripping_cleanup()
