@@ -289,6 +289,13 @@ enc_hhook(int32_t hhook_type, int32_t hhook_id, void *udata, void *ctx_data,
 #ifdef INET
 	case AF_INET:
 		ph = V_inet_pfil_head;
+		/*
+		 * Both ipfw and pf do not expect the first mbuf being empty,
+		 * as a result they may start reading the outer IP header which
+		 * should be treated as stripped. It makes sense if the
+		 * following is configured:
+		 * sysctl net.enc.in.ipsec_filter_mask=2
+		 */
 		if ((*ctx->mp)->m_len == 0)
 			*ctx->mp = m_pullup(*ctx->mp, sizeof(struct ip));
 		break;
