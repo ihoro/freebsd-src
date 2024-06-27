@@ -1,4 +1,3 @@
-#! /usr/libexec/atf-sh
 #
 # SPDX-License-Identifier: BSD-2-Clause
 #
@@ -27,8 +26,35 @@
 
 . $(atf_get_srcdir)/../common/vnet.subr
 
-# TODO: the diagram and description
-# TODO: add description of host names: agw = a gateway, etc
+#
+# The following network is used as a base for testing.
+#
+#
+#                      ${awan}b |----------| ${bwan}b
+#                       2.0.0.1 | host wan | 3.0.0.1
+#                          ---->| Internet |<----
+#                   A WAN /     |----------|     \ B WAN
+#                         |                      |
+#  Office A side          |                      |            Office B side
+#                         | ${awan}a    ${bwan}a |
+#                         v 2.0.0.22    3.0.0.33 v
+#           ${alan}b |----------|           |----------| ${blan}b
+#            1.0.0.1 | host agw |           | host bgw | 4.0.0.1
+#        ----------->| gateway  | < IPsec > | gateway  |<-----------
+#       / A LAN      |----------|   tunnel  |----------|      B LAN \
+#       |                                                           |
+#       |                                                           |
+#       | ${alan}a                                         ${blan}a |
+#       v 1.0.0.11                                         4.0.0.44 v
+#  |----------|                                                |----------|
+#  |  host a  |                                                |  host b  |
+#  |  client  |                                                |  client  |
+#  |----------|                                                |----------|
+#
+#
+# There is routing between office A clients and office B ones. The traffic is
+# encrypted, i.e. host wan should see IPsec flow (ESP packets).
+#
 
 atf_test_case "ip4_pfil_in_after_stripping" "cleanup"
 ip4_pfil_in_after_stripping_head()
@@ -104,7 +130,7 @@ ip4_pfil_in_after_stripping_body()
 	# Sanity check
 	atf_check -s exit:0 -o ignore jexec a ping -c3 4.0.0.44
 
-	# Configure port forwarding on bgw
+	# Configure port forwarding on host bgw
 	jexec bgw ifconfig enc0 up
 	jexec bgw sysctl net.inet.ipsec.filtertunnel=0
 	jexec bgw sysctl net.enc.in.ipsec_filter_mask=2		# after stripping
@@ -114,16 +140,17 @@ ip4_pfil_in_after_stripping_body()
 		pass
 	' | jexec bgw pfctl -ef-
 
-	# Prepare the catcher on b
+	# Prepare the catcher on host b
 	echo "unexpected" > ./receiver
 	jexec b nc -n4l -N 666 > ./receiver &
 	nc_pid=$!
 	sleep 1
 
-	# Poke it
+	# Poke it from host a to host bgw
 	spell="Ak Ohum Oktay Weez Barsoom."
 	echo $spell | jexec a nc -w3 4.0.0.1 666
 
+	# Expect it to hit host b instead
 	jexec b kill -sKILL $nc_pid
 	atf_check_equal "$spell" "$(cat ./receiver)"
 }
