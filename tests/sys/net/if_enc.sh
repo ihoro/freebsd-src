@@ -32,16 +32,16 @@
 #
 #                      ${awan}b |----------| ${bwan}b
 #                       2.0.0.1 | host wan | 3.0.0.1
-#                          ---->| Internet |<----
-#                   A WAN /     |----------|     \ B WAN
+#                         .---->| Internet |<----.
+#                   A WAN |     |----------|     | B WAN
 #                         |                      |
 #  Office A side          |                      |            Office B side
 #                         | ${awan}a    ${bwan}a |
 #                         v 2.0.0.22    3.0.0.33 v
 #           ${alan}b |----------|           |----------| ${blan}b
 #            1.0.0.1 | host agw |           | host bgw | 4.0.0.1
-#        ----------->| gateway  | < IPsec > | gateway  |<-----------
-#       / A LAN      |----------|   tunnel  |----------|      B LAN \
+#       .----------->| gateway  | < IPsec > | gateway  |<-----------.
+#       | A LAN      |----------|   tunnel  |----------|      B LAN |
 #       |                                                           |
 #       |                                                           |
 #       | ${alan}a                                         ${blan}a |
