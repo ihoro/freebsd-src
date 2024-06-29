@@ -146,14 +146,14 @@ build_test_network()
 	' | jexec bgw setkey -c
 }
 
-atf_test_case "ip4_pfil_in_after_stripping" "cleanup"
-ip4_pfil_in_after_stripping_head()
+atf_test_case "ipfwoff_ip4_pfil_in_after_stripping" "cleanup"
+ipfwoff_ip4_pfil_in_after_stripping_head()
 {
 	atf_set descr 'Test that pf pulls up mbuf if m_len==0 after stripping the outer header'
 	atf_set require.user root
 	atf_set require.progs nc
 }
-ip4_pfil_in_after_stripping_body()
+ipfwoff_ip4_pfil_in_after_stripping_body()
 {
 	local ipfwon
 
@@ -191,7 +191,7 @@ ip4_pfil_in_after_stripping_body()
 	jexec b kill -KILL $nc_pid
 	atf_check_equal "$spell" "$(cat ./receiver)"
 }
-ip4_pfil_in_after_stripping_cleanup()
+ipfwoff_ip4_pfil_in_after_stripping_cleanup()
 {
 	pft_cleanup
 }
@@ -205,7 +205,7 @@ ipfwon_ip4_pfil_in_after_stripping_head()
 }
 ipfwon_ip4_pfil_in_after_stripping_body()
 {
-	ipfwoff_ip4_pfil_in_after_stripping "ipfwon"
+	ipfwoff_ip4_pfil_in_after_stripping_body "ipfwon"
 }
 ipfwon_ip4_pfil_in_after_stripping_cleanup()
 {
