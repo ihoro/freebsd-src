@@ -149,7 +149,7 @@ build_test_network()
 atf_test_case "ipfwoff_ip4_pfil_in_after_stripping" "cleanup"
 ipfwoff_ip4_pfil_in_after_stripping_head()
 {
-	atf_set descr 'Test that pf pulls up mbuf if m_len==0 after stripping the outer header'
+	atf_set descr 'Test that pf pulls up mbuf if m_len==0 after stripping the outer header, with ipfw disabled'
 	atf_set require.user root
 	atf_set require.progs nc
 }
