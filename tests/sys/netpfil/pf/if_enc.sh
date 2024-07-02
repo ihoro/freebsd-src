@@ -188,7 +188,8 @@ ipfwoff_ip4_pfil_in_after_stripping_body()
 	echo $spell | jexec a nc -w3 4.0.0.1 666
 
 	# Expect it to hit host b instead
-	jexec b kill -KILL $nc_pid
+	sleep 1				# let the catcher finish
+	jexec b kill -KILL $nc_pid	# in a fail case the catcher may listen forever
 	atf_check_equal "$spell" "$(cat ./receiver)"
 }
 ipfwoff_ip4_pfil_in_after_stripping_cleanup()
