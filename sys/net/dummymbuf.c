@@ -49,8 +49,8 @@ static char conf[512] = "";
 SYSCTL_STRING(_net_dummymbuf, OID_AUTO, conf, CTLFLAG_RW, conf, sizeof(conf),
     "Configuration");
 
-VNET_DEFINE_STATIC(bool, dmb_pfil_hooked);
-#define V_dmb_pfil_hooked	VNET(dmb_pfil_hooked)
+VNET_DEFINE_STATIC(bool, dmb_pfil_inited);
+#define V_dmb_pfil_inited	VNET(dmb_pfil_inited)
 
 VNET_DEFINE_STATIC(pfil_hook_t, dmb_pfil_inet_hook);
 #define V_dmb_pfil_inet_hook	VNET(dmb_pfil_inet_hook)
@@ -209,7 +209,7 @@ dmb_pfil_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 static void
 dmb_pfil_init(void)
 {
-	if (atomic_load_bool(&V_dmb_pfil_hooked))
+	if (atomic_load_bool(&V_dmb_pfil_inited))
 		return;
 
 	// TODO: which makefiles/options/etc need updating for the module?
@@ -226,20 +226,20 @@ dmb_pfil_init(void)
 	V_dmb_pfil_inet_hook = pfil_add_hook(&pha);
 #endif
 
-	atomic_store_bool(&V_dmb_pfil_hooked, true);
+	atomic_store_bool(&V_dmb_pfil_inited, true);
 }
 
 static void
 dmb_pfil_uninit(void)
 {
-	if (!atomic_load_bool(&V_dmb_pfil_hooked))
+	if (!atomic_load_bool(&V_dmb_pfil_inited))
 		return;
 
 #ifdef INET
 	pfil_remove_hook(V_dmb_pfil_inet_hook);
 #endif
 
-	atomic_store_bool(&V_dmb_pfil_hooked, false);
+	atomic_store_bool(&V_dmb_pfil_inited, false);
 }
 
 static void
