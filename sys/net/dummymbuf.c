@@ -214,8 +214,6 @@ dmb_pfil_init(void)
 	if (atomic_load_bool(&V_dmb_pfil_inited))
 		return;
 
-	// TODO: which makefiles/options/etc need updating for the module?
-	//       opt_dummymbuf.h ?
 #ifdef INET
 	struct pfil_hook_args pha = {
 		.pa_version = PFIL_VERSION,
@@ -285,5 +283,6 @@ static moduledata_t dmb_mod = {
 	NULL
 };
 
+// TODO: conf/options update? opt_dummymbuf.h?
 DECLARE_MODULE(dummymbuf, dmb_mod, SI_SUB_PROTO_PFIL, SI_ORDER_ANY);
 MODULE_VERSION(dummymbuf, 1);
