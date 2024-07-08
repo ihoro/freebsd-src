@@ -25,6 +25,9 @@
  * SUCH DAMAGE.
  */
 
+#include "opt_inet.h"
+#include "opt_inet6.h"
+
 #include <machine/atomic.h>
 
 #include <sys/param.h>
@@ -209,6 +212,9 @@ dmb_pfil_init(void)
 	if (atomic_load_bool(&V_dmb_pfil_hooked))
 		return;
 
+	// TODO: which makefiles/options/etc need updating for the module?
+	//       opt_dummymbuf.h ?
+#ifdef INET
 	struct pfil_hook_args pha = {
 		.pa_version = PFIL_VERSION,
 		.pa_modname = "dummymbuf",
@@ -217,8 +223,8 @@ dmb_pfil_init(void)
 		.pa_mbuf_chk = dmb_pfil_mbuf_chk,
 		.pa_rulname = "default",
 	};
-
 	V_dmb_pfil_inet_hook = pfil_add_hook(&pha);
+#endif
 
 	atomic_store_bool(&V_dmb_pfil_hooked, true);
 }
@@ -229,7 +235,9 @@ dmb_pfil_uninit(void)
 	if (!atomic_load_bool(&V_dmb_pfil_hooked))
 		return;
 
+#ifdef INET
 	pfil_remove_hook(V_dmb_pfil_inet_hook);
+#endif
 
 	atomic_store_bool(&V_dmb_pfil_hooked, false);
 }
