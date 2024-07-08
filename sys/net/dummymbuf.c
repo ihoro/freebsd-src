@@ -180,11 +180,13 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 	bool parsed;
 	struct op op;
 
-	while (m != NULL && (parsed = read_op(&cursor, &op))) {
+	while ((parsed = read_op(&cursor, &op))) {
 		if (op.pfil_type == PFIL_TYPE_IP4 &&
 		    (flags & op.pfil_dir) == op.pfil_dir &&
 		    strcmp(op.ifname, ifp->if_xname) == 0) {
 			m = op.fn(m, &op);
+			if (m == NULL)
+				break;
 		}
 		if (strlen(cursor) == 0)
 			break;
