@@ -187,11 +187,13 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 			m = op.fn(m, &op);
 			if (m == NULL)
 				break;
+			// TODO: increase a stat counter
 		}
 		if (strlen(cursor) == 0)
 			break;
 	}
 	if (!parsed) {
+		// TODO: provide feedback
 		m_freem(m);
 		m = NULL;
 	}
@@ -284,5 +286,7 @@ static moduledata_t dmb_mod = {
 };
 
 // TODO: conf/options update? opt_dummymbuf.h?
+// TODO: inet6 support
+// TODO: ethernet support
 DECLARE_MODULE(dummymbuf, dmb_mod, SI_SUB_PROTO_PFIL, SI_ORDER_ANY);
 MODULE_VERSION(dummymbuf, 1);
