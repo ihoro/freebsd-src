@@ -171,7 +171,7 @@ read_op(char **cur, struct op *op)
 }
 
 static pfil_return_t
-dmb_pfil_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
+dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
     void *ruleset, struct inpcb *inp)
 {
 	// TODO: serialize read/write of the conf
@@ -220,8 +220,8 @@ dmb_pfil_init(void)
 		.pa_modname = "dummymbuf",
 		.pa_type = PFIL_TYPE_IP4,
 		.pa_flags = PFIL_IN | PFIL_OUT,
-		.pa_mbuf_chk = dmb_pfil_mbuf_chk,
-		.pa_rulname = "default",
+		.pa_mbuf_chk = dmb_pfil_inet_mbuf_chk,
+		.pa_rulname = "inet",
 	};
 	V_dmb_pfil_inet_hook = pfil_add_hook(&pha);
 #endif
