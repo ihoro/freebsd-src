@@ -45,11 +45,11 @@
 SYSCTL_NODE(_net, OID_AUTO, dummymbuf, 0, NULL,
     "Dummy mbuf sysctl");
 
-#define CONF_MAXLEN	512
-VNET_DEFINE_STATIC(char, conf[CONF_MAXLEN]) = "";
-#define V_conf	VNET(conf)
-SYSCTL_STRING(_net_dummymbuf, OID_AUTO, conf, CTLFLAG_RW | CTLFLAG_VNET,
-    &VNET_NAME(conf), CONF_MAXLEN,
+#define RULES_MAXLEN	512
+VNET_DEFINE_STATIC(char, rules[RULES_MAXLEN]) = "";
+#define V_rules	VNET(rules)
+SYSCTL_STRING(_net_dummymbuf, OID_AUTO, rules, CTLFLAG_RW | CTLFLAG_VNET,
+    &VNET_NAME(rules), RULES_MAXLEN,
     "{inet | inet6 | ether} {in | out} <ifname> <opname>[ args...];"
     " ...;");
 
@@ -187,9 +187,9 @@ static pfil_return_t
 dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
     void *ruleset, struct inpcb *inp)
 {
-	// TODO: serialize read/write of the conf
+	// TODO: serialize read/write of the rules
 	struct mbuf *m = *mp;
-	const char *cursor = V_conf;
+	const char *cursor = V_rules;
 	bool parsed;
 	struct op op;
 
