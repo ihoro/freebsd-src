@@ -1,4 +1,4 @@
-/*
+/*-
  * SPDX-License-Identifier: BSD-2-Clause
  *
  * Copyright (c) 2024 Igor Ostapenko <pm@igoro.pro>
@@ -45,9 +45,20 @@
 SYSCTL_NODE(_net, OID_AUTO, dummymbuf, 0, NULL,
     "Dummy mbuf sysctl");
 
-static char conf[512] = "";
-SYSCTL_STRING(_net_dummymbuf, OID_AUTO, conf, CTLFLAG_RW, conf, sizeof(conf),
-    "Configuration");
+#define CONF_MAXLEN	512
+VNET_DEFINE_STATIC(char, conf[CONF_MAXLEN]) = "";
+#define V_conf	VNET(conf)
+SYSCTL_STRING(_net_dummymbuf, OID_AUTO, conf, CTLFLAG_RW | CTLFLAG_VNET,
+    &VNET_NAME(conf), CONF_MAXLEN,
+    "{inet | inet6 | ether} {in | out} <ifname> <opname>[ args...];"
+    " ...;");
+
+VNET_DEFINE_STATIC(counter_u64_t, hits);
+#define V_hits	VNET(hits)
+SYSCTL_PROC(_net_dummymbuf, OID_AUTO, hits,
+    CTLTYPE_U64 | CTLFLAG_MPSAFE | CTLFLAG_STATS | CTLFLAG_RW | CTLFLAG_VNET,
+    &VNET_NAME(hits), 0, sysctl_handle_counter_u64,
+    "QU", "Number of times a rule has been applied");
 
 VNET_DEFINE_STATIC(bool, dmb_pfil_inited);
 #define V_dmb_pfil_inited	VNET(dmb_pfil_inited)
@@ -100,10 +111,12 @@ bad:
 }
 
 static bool
-read_op(char **cur, struct op *op)
+read_op(const char **cur, struct op *op)
 {
 	// {inet | inet6 | ether} {in | out} <ifname> <opname>[ args...];
 
+	while (**cur == ' ')
+		(*cur)++;
 	char *delim = strchr(*cur, ';');
 	if (delim == NULL)
 		return (false);
@@ -176,7 +189,7 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 {
 	// TODO: serialize read/write of the conf
 	struct mbuf *m = *mp;
-	char *cursor = conf;
+	const char *cursor = V_conf;
 	bool parsed;
 	struct op op;
 
@@ -185,9 +198,11 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 		    (flags & op.pfil_dir) == op.pfil_dir &&
 		    strcmp(op.ifname, ifp->if_xname) == 0) {
 			m = op.fn(m, &op);
-			if (m == NULL)
+			if (m == NULL) {
+				// TODO: provide feedback
 				break;
-			// TODO: increase a stat counter
+			}
+			counter_u64_add(V_hits, 1);
 		}
 		if (strlen(cursor) == 0)
 			break;
@@ -247,6 +262,7 @@ dmb_pfil_uninit(void)
 static void
 dmb_vnet_init(void *unused __unused)
 {
+	V_hits = counter_u64_alloc(M_WAITOK);
 	dmb_pfil_init();
 }
 VNET_SYSINIT(dmb_vnet_init, SI_SUB_PROTO_PFIL, SI_ORDER_ANY,
@@ -256,6 +272,7 @@ static void
 dmb_vnet_uninit(void *unused __unused)
 {
 	dmb_pfil_uninit();
+	counter_u64_free(V_hits);
 }
 VNET_SYSUNINIT(dmb_vnet_uninit, SI_SUB_PROTO_PFIL, SI_ORDER_ANY,
     dmb_vnet_uninit, NULL);
