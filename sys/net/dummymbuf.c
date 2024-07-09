@@ -77,7 +77,7 @@ struct op {
 };
 
 static struct mbuf *
-dmb_m_head(struct mbuf *m, struct op *op)
+dmb_m_pull_head(struct mbuf *m, struct op *op)
 {
 	struct mbuf *n;
 	int count;
@@ -164,9 +164,9 @@ read_op(const char **cur, struct op *op)
 		(*cur)++;
 
 	// opname
-	if (strstr(*cur, "head") == *cur) {
-		op->fn = dmb_m_head;
-		*cur += strlen("head");
+	if (strstr(*cur, "pull-head") == *cur) {
+		op->fn = dmb_m_pull_head;
+		*cur += strlen("pull-head");
 	} else {
 		return (false);
 	}
