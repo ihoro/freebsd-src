@@ -302,7 +302,7 @@ static moduledata_t dmb_mod = {
 	NULL
 };
 
-// TODO: conf/options update? opt_dummymbuf.h?
+// TODO: conf/options, opt_dummymbuf.h, etc
 // TODO: inet6 support
 // TODO: ethernet support
 // TODO: man 4 dummymbuf
