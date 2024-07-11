@@ -90,8 +90,8 @@ dmb_m_pull_head(struct mbuf *m, struct op *op)
 		goto bad;
 	if (m->m_pkthdr.len <= 0)
 		return (m);
-	if (count >= m->m_pkthdr.len)
-		count = m->m_pkthdr.len - 1;
+	if (count > m->m_pkthdr.len)
+		count = m->m_pkthdr.len;
 
 	if ((n = m_getcl(M_NOWAIT, MT_DATA, M_PKTHDR)) == NULL)
 		goto bad;
