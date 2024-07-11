@@ -305,5 +305,6 @@ static moduledata_t dmb_mod = {
 // TODO: conf/options update? opt_dummymbuf.h?
 // TODO: inet6 support
 // TODO: ethernet support
+// TODO: man 4 dummymbuf
 DECLARE_MODULE(dummymbuf, dmb_mod, SI_SUB_PROTO_PFIL, SI_ORDER_ANY);
 MODULE_VERSION(dummymbuf, 1);
