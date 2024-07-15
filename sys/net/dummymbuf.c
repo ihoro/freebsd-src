@@ -50,7 +50,7 @@ VNET_DEFINE_STATIC(char, rules[RULES_MAXLEN]) = "";
 #define V_rules	VNET(rules)
 SYSCTL_STRING(_net_dummymbuf, OID_AUTO, rules, CTLFLAG_RW | CTLFLAG_VNET,
     &VNET_NAME(rules), RULES_MAXLEN,
-    "{inet | inet6 | ether} {in | out} <ifname> <opname>[ args...];"
+    "{inet | inet6 | ether} {in | out} <ifname> <opname>[ opargs...];"
     " ...;");
 
 VNET_DEFINE_STATIC(counter_u64_t, hits);
@@ -66,23 +66,23 @@ VNET_DEFINE_STATIC(bool, dmb_pfil_inited);
 VNET_DEFINE_STATIC(pfil_hook_t, dmb_pfil_inet_hook);
 #define V_dmb_pfil_inet_hook	VNET(dmb_pfil_inet_hook)
 
-struct op;
-typedef struct mbuf * (*op_fn_t)(struct mbuf *, struct op *);
-struct op {
+struct rule;
+typedef struct mbuf * (*op_t)(struct mbuf *, struct rule *);
+struct rule {
 	int pfil_type;
 	int pfil_dir;
 	char ifname[IFNAMSIZ];
-	op_fn_t fn;
-	const char *args;
+	op_t op;
+	const char *opargs;
 };
 
 static struct mbuf *
-dmb_m_pull_head(struct mbuf *m, struct op *op)
+dmb_m_pull_head(struct mbuf *m, struct rule *rule)
 {
 	struct mbuf *n;
 	int count;
 
-	count = (int)strtol(op->args, NULL, 10);
+	count = (int)strtol(rule->opargs, NULL, 10);
 	if (count < 0 || count > MCLBYTES)
 		goto bad;
 
@@ -111,9 +111,9 @@ bad:
 }
 
 static bool
-read_op(const char **cur, struct op *op)
+read_rule(const char **cur, struct rule *rule)
 {
-	// {inet | inet6 | ether} {in | out} <ifname> <opname>[ args...];
+	// {inet | inet6 | ether} {in | out} <ifname> <opname>[ opargs...];
 
 	while (**cur == ' ')
 		(*cur)++;
@@ -123,13 +123,13 @@ read_op(const char **cur, struct op *op)
 
 	// pfil_type
 	if (strstr(*cur, "inet6") == *cur) {
-		op->pfil_type = PFIL_TYPE_IP6;
+		rule->pfil_type = PFIL_TYPE_IP6;
 		*cur += strlen("inet6");
 	} else if (strstr(*cur, "inet") == *cur) {
-		op->pfil_type = PFIL_TYPE_IP4;
+		rule->pfil_type = PFIL_TYPE_IP4;
 		*cur += strlen("inet");
 	} else if (strstr(*cur, "ethernet")) {
-		op->pfil_type = PFIL_TYPE_ETHERNET;
+		rule->pfil_type = PFIL_TYPE_ETHERNET;
 		*cur += strlen("ethernet");
 	} else {
 		return (false);
@@ -139,10 +139,10 @@ read_op(const char **cur, struct op *op)
 
 	// pfil_dir
 	if (strstr(*cur, "in") == *cur) {
-		op->pfil_dir = PFIL_IN;
+		rule->pfil_dir = PFIL_IN;
 		*cur += strlen("in");
 	} else if (strstr(*cur, "out") == *cur) {
-		op->pfil_dir = PFIL_OUT;
+		rule->pfil_dir = PFIL_OUT;
 		*cur += strlen("out");
 	} else {
 		return (false);
@@ -155,17 +155,17 @@ read_op(const char **cur, struct op *op)
 	if (sp == NULL || sp > delim)
 		return (false);
 	size_t len = sp - *cur;
-	if (len >= sizeof(op->ifname))
+	if (len >= sizeof(rule->ifname))
 		return (false);
-	strncpy(op->ifname, *cur, len);
-	op->ifname[len] = 0;
+	strncpy(rule->ifname, *cur, len);
+	rule->ifname[len] = 0;
 	*cur = sp;
 	while (**cur == ' ')
 		(*cur)++;
 
 	// opname
 	if (strstr(*cur, "pull-head") == *cur) {
-		op->fn = dmb_m_pull_head;
+		rule->op = dmb_m_pull_head;
 		*cur += strlen("pull-head");
 	} else {
 		return (false);
@@ -173,10 +173,10 @@ read_op(const char **cur, struct op *op)
 	while (**cur == ' ')
 		(*cur)++;
 
-	// args
+	// opargs
 	if (*cur > delim)
 		return (false);
-	op->args = *cur;
+	rule->opargs = *cur;
 
 	*cur = delim + 1;
 
@@ -191,13 +191,13 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 	struct mbuf *m = *mp;
 	const char *cursor = V_rules;
 	bool parsed;
-	struct op op;
+	struct rule rule;
 
-	while ((parsed = read_op(&cursor, &op))) {
-		if (op.pfil_type == PFIL_TYPE_IP4 &&
-		    (flags & op.pfil_dir) == op.pfil_dir &&
-		    strcmp(op.ifname, ifp->if_xname) == 0) {
-			m = op.fn(m, &op);
+	while ((parsed = read_rule(&cursor, &rule))) {
+		if (rule.pfil_type == PFIL_TYPE_IP4 &&
+		    rule.pfil_dir == (flags & rule.pfil_dir)  &&
+		    strcmp(rule.ifname, ifp->if_xname) == 0) {
+			m = rule.op(m, &rule);
 			if (m == NULL) {
 				// TODO: provide feedback
 				break;
@@ -302,7 +302,6 @@ static moduledata_t dmb_mod = {
 	NULL
 };
 
-// TODO: conf/options, opt_dummymbuf.h, etc
 // TODO: inet6 support
 // TODO: ethernet support
 // TODO: man 4 dummymbuf
