@@ -69,12 +69,23 @@ VNET_DEFINE_STATIC(pfil_hook_t, dmb_pfil_inet_hook);
 struct rule;
 typedef struct mbuf * (*op_t)(struct mbuf *, struct rule *);
 struct rule {
-	int pfil_type;
-	int pfil_dir;
-	char ifname[IFNAMSIZ];
-	op_t op;
-	const char *opargs;
+	const char	*syntax_begin;
+	int		 syntax_len;
+	int		 pfil_type;
+	int		 pfil_dir;
+	char		 ifname[IFNAMSIZ];
+	op_t		 op;
+	const char	*opargs;
 };
+
+#define FEEDBACK(pfil_type_str, pfil_flags, ifp, rule, msg)	\
+	printf("dummymbuf: %s %b %s: %s: %.*s\n",		\
+	    (pfil_type_str),					\
+	    (pfil_flags), "\20\21PFIL_IN\22PFIL_OUT",		\
+	    (ifp)->if_xname,					\
+	    (msg),						\
+	    (rule).syntax_len, (rule).syntax_begin		\
+	)
 
 static struct mbuf *
 dmb_m_pull_head(struct mbuf *m, struct rule *rule)
@@ -115,11 +126,17 @@ read_rule(const char **cur, struct rule *rule)
 {
 	// {inet | inet6 | ether} {in | out} <ifname> <opname>[ opargs...];
 
+	// syntax_begin
 	while (**cur == ' ')
 		(*cur)++;
+	rule->syntax_begin = *cur;
+
+	// syntax_len
+	rule->syntax_len = 0;
 	char *delim = strchr(*cur, ';');
 	if (delim == NULL)
 		return (false);
+	rule->syntax_len = (int)(delim - *cur + 1);
 
 	// pfil_type
 	if (strstr(*cur, "inet6") == *cur) {
@@ -199,7 +216,8 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 		    strcmp(rule.ifname, ifp->if_xname) == 0) {
 			m = rule.op(m, &rule);
 			if (m == NULL) {
-				// TODO: provide feedback
+				FEEDBACK("PFIL_TYPE_IP4", flags, ifp, rule,
+				    "mbuf operation failed");
 				break;
 			}
 			counter_u64_add(V_hits, 1);
@@ -208,7 +226,8 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 			break;
 	}
 	if (!parsed) {
-		// TODO: provide feedback
+		FEEDBACK("PFIL_TYPE_IP4", flags, ifp, rule,
+		    "rule parsing failed");
 		m_freem(m);
 		m = NULL;
 	}
