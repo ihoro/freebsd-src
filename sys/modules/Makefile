@@ -102,6 +102,7 @@ SUBDIR=	\
 	${_dpdk_lpm6} \
 	${_dpms} \
 	dummynet \
+	dummymbuf \
 	${_dwwdt} \
 	${_e6000sw} \
 	${_efirt} \
