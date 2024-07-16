@@ -50,7 +50,7 @@ VNET_DEFINE_STATIC(char, rules[RULES_MAXLEN]) = "";
 #define V_rules	VNET(rules)
 SYSCTL_STRING(_net_dummymbuf, OID_AUTO, rules, CTLFLAG_RW | CTLFLAG_VNET,
     &VNET_NAME(rules), RULES_MAXLEN,
-    "{inet | inet6 | ether} {in | out} <ifname> <opname>[ opargs...];"
+    "{inet | inet6 | ethernet} {in | out} <ifname> <opname>[ opargs...];"
     " ...;");
 
 VNET_DEFINE_STATIC(counter_u64_t, hits);
@@ -124,7 +124,7 @@ bad:
 static bool
 read_rule(const char **cur, struct rule *rule)
 {
-	// {inet | inet6 | ether} {in | out} <ifname> <opname>[ opargs...];
+	// {inet | inet6 | ethernet} {in | out} <ifname> <opname>[ opargs...];
 
 	// syntax_begin
 	while (**cur == ' ')
