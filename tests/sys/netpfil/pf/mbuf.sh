@@ -33,33 +33,16 @@ dummymbuf_init()
 	fi
 }
 
-ipfw_init()
+atf_test_case "ip4_in_mbuf_len" "cleanup"
+ip4_in_mbuf_len_head()
 {
-	if ! kldstat -q -m ipfw; then
-		atf_skip "This test requires ipfw"
-	fi
-}
-
-assert_ipfw_is_off()
-{
-	if kldstat -q -m ipfw; then
-		atf_skip "This test is for the case when ipfw is not loaded"
-	fi
-}
-
-atf_test_case "ipfwoff_ip4_in_mbuf_len" "cleanup"
-ipfwoff_ip4_in_mbuf_len_head()
-{
-	atf_set descr 'Test that pf can handle the first mbuf with m_len < sizeof(struct ip), with ipfw disabled'
+	atf_set descr 'Test that pf can handle inbound with the first mbuf with m_len < sizeof(struct ip)'
 	atf_set require.user root
 }
-ipfwoff_ip4_in_mbuf_len_body()
+ip4_in_mbuf_len_body()
 {
-	local ipfwon=$1
-
 	pft_init
 	dummymbuf_init
-	test $ipfwon && ipfw_init || assert_ipfw_is_off
 
 	epair=$(vnet_mkepair)
 	ifconfig ${epair}a 192.0.2.1/24 up
@@ -67,63 +50,48 @@ ipfwoff_ip4_in_mbuf_len_body()
 	# Set up a simple jail with one interface
 	vnet_mkjail alcatraz ${epair}b
 	jexec alcatraz ifconfig ${epair}b 192.0.2.2/24 up
-	test $ipfwon && jexec alcatraz ipfw add 65534 allow all from any to any
 
 	# Sanity check
 	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
 
 	# Should be denied
-	echo '
-		block
-	' | jexec alcatraz pfctl -ef-
+	jexec alcatraz pfctl -e
+	pft_set_rules alcatraz \
+		"block"
 	atf_check -s not-exit:0 -o ignore ping -c1 192.0.2.2
 
 	# Should be allowed by from/to addresses
-	echo '
-		block
-		pass in from 192.0.2.1 to 192.0.2.2
-	' | jexec alcatraz pfctl -ef-
+	pft_set_rules alcatraz \
+		"block" \
+		"pass in from 192.0.2.1 to 192.0.2.2"
 	atf_check -s exit:0 -o ignore ping -c1 192.0.2.2
 
 	# Should still work for m_len=0
 	jexec alcatraz pfilctl link -i dummymbuf:inet inet
-	jexec alcatraz sysctl net.dummymbuf.rules='inet in epair0b pull-head 0;'
+	jexec alcatraz sysctl net.dummymbuf.rules="inet in ${epair}b pull-head 0;"
 	atf_check_equal "0" "$(jexec alcatraz sysctl -n net.dummymbuf.hits)"
 	atf_check -s exit:0 -o ignore ping -c1 192.0.2.2
 	atf_check_equal "1" "$(jexec alcatraz sysctl -n net.dummymbuf.hits)"
 
 	# m_len=1
-	jexec alcatraz sysctl net.dummymbuf.rules='inet in epair0b pull-head 1;'
+	jexec alcatraz sysctl net.dummymbuf.rules="inet in ${epair}b pull-head 1;"
+	jexec alcatraz sysctl net.dummymbuf.hits=0
 	atf_check -s exit:0 -o ignore ping -c1 192.0.2.2
-	atf_check_equal "2" "$(jexec alcatraz sysctl -n net.dummymbuf.hits)"
+	atf_check_equal "1" "$(jexec alcatraz sysctl -n net.dummymbuf.hits)"
 
 	# m_len=19
-	jexec alcatraz sysctl net.dummymbuf.rules='inet in epair0b pull-head 19;'
+	# provided IPv4 basic header is 20 bytes long, it should impact the dst addr
+	jexec alcatraz sysctl net.dummymbuf.rules="inet in ${epair}b pull-head 19;"
+	jexec alcatraz sysctl net.dummymbuf.hits=0
 	atf_check -s exit:0 -o ignore ping -c1 192.0.2.2
-	atf_check_equal "3" "$(jexec alcatraz sysctl -n net.dummymbuf.hits)"
+	atf_check_equal "1" "$(jexec alcatraz sysctl -n net.dummymbuf.hits)"
 }
-ipfwoff_ip4_in_mbuf_len_cleanup()
-{
-	pft_cleanup
-}
-
-atf_test_case "ipfwon_ip4_in_mbuf_len" "cleanup"
-ipfwon_ip4_in_mbuf_len_head()
-{
-	atf_set descr 'Test that pf can handle the first mbuf with m_len < sizeof(struct ip), with ipfw enabled'
-	atf_set require.user root
-}
-ipfwon_ip4_in_mbuf_len_body()
-{
-	ipfwoff_ip4_in_mbuf_len_body "ipfwon"
-}
-ipfwon_ip4_in_mbuf_len_cleanup()
+ip4_in_mbuf_len_cleanup()
 {
 	pft_cleanup
 }
 
 atf_init_test_cases()
 {
-	atf_add_test_case "ipfwoff_ip4_in_mbuf_len"
-	atf_add_test_case "ipfwon_ip4_in_mbuf_len"
+	atf_add_test_case "ip4_in_mbuf_len"
 }
