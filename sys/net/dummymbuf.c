@@ -52,21 +52,21 @@ SYSCTL_NODE(_net, OID_AUTO, dummymbuf, 0, NULL,
  * Configuration sysctl
  */
 #define RULES_MAXLEN	512
-VNET_DEFINE_STATIC(char, rules[RULES_MAXLEN]) = "";
-#define V_rules	VNET(rules)
+VNET_DEFINE_STATIC(char, dmb_rules[RULES_MAXLEN]) = "";
+#define V_dmb_rules	VNET(dmb_rules)
 SYSCTL_STRING(_net_dummymbuf, OID_AUTO, rules, CTLFLAG_RW | CTLFLAG_VNET,
-    &VNET_NAME(rules), RULES_MAXLEN,
+    &VNET_NAME(dmb_rules), RULES_MAXLEN,
     "{inet | inet6 | ethernet} {in | out} <ifname> <opname>[ opargs...];"
     " ...;");
 
 /*
  * Statistics sysctl
  */
-VNET_DEFINE_STATIC(counter_u64_t, hits);
-#define V_hits	VNET(hits)
+VNET_DEFINE_STATIC(counter_u64_t, dmb_hits);
+#define V_dmb_hits	VNET(dmb_hits)
 SYSCTL_PROC(_net_dummymbuf, OID_AUTO, hits,
     CTLTYPE_U64 | CTLFLAG_MPSAFE | CTLFLAG_STATS | CTLFLAG_RW | CTLFLAG_VNET,
-    &VNET_NAME(hits), 0, sysctl_handle_counter_u64,
+    &VNET_NAME(dmb_hits), 0, sysctl_handle_counter_u64,
     "QU", "Number of times a rule has been applied");
 
 /*
@@ -223,7 +223,7 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 {
 	// TODO: serialize read/write of the rules
 	struct mbuf *m = *mp;
-	const char *cursor = V_rules;
+	const char *cursor = V_dmb_rules;
 	bool parsed;
 	struct rule rule;
 
@@ -237,7 +237,7 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 				    "mbuf operation failed");
 				break;
 			}
-			counter_u64_add(V_hits, 1);
+			counter_u64_add(V_dmb_hits, 1);
 		}
 		if (strlen(cursor) == 0)
 			break;
@@ -298,7 +298,7 @@ dmb_pfil_uninit(void)
 static void
 dmb_vnet_init(void *unused __unused)
 {
-	V_hits = counter_u64_alloc(M_WAITOK);
+	V_dmb_hits = counter_u64_alloc(M_WAITOK);
 	dmb_pfil_init();
 }
 VNET_SYSINIT(dmb_vnet_init, SI_SUB_PROTO_PFIL, SI_ORDER_ANY,
@@ -308,7 +308,7 @@ static void
 dmb_vnet_uninit(void *unused __unused)
 {
 	dmb_pfil_uninit();
-	counter_u64_free(V_hits);
+	counter_u64_free(V_dmb_hits);
 }
 VNET_SYSUNINIT(dmb_vnet_uninit, SI_SUB_PROTO_PFIL, SI_ORDER_ANY,
     dmb_vnet_uninit, NULL);
