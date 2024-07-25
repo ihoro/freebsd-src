@@ -42,9 +42,15 @@
 #include <net/vnet.h>
 #include <net/pfil.h>
 
+/*
+ * Separate sysctl sub-tree
+ */
 SYSCTL_NODE(_net, OID_AUTO, dummymbuf, 0, NULL,
     "Dummy mbuf sysctl");
 
+/*
+ * Configuration sysctl
+ */
 #define RULES_MAXLEN	512
 VNET_DEFINE_STATIC(char, rules[RULES_MAXLEN]) = "";
 #define V_rules	VNET(rules)
@@ -53,6 +59,9 @@ SYSCTL_STRING(_net_dummymbuf, OID_AUTO, rules, CTLFLAG_RW | CTLFLAG_VNET,
     "{inet | inet6 | ethernet} {in | out} <ifname> <opname>[ opargs...];"
     " ...;");
 
+/*
+ * Statistics sysctl
+ */
 VNET_DEFINE_STATIC(counter_u64_t, hits);
 #define V_hits	VNET(hits)
 SYSCTL_PROC(_net_dummymbuf, OID_AUTO, hits,
@@ -60,12 +69,17 @@ SYSCTL_PROC(_net_dummymbuf, OID_AUTO, hits,
     &VNET_NAME(hits), 0, sysctl_handle_counter_u64,
     "QU", "Number of times a rule has been applied");
 
+/*
+ * pfil(9) context
+ */
 VNET_DEFINE_STATIC(bool, dmb_pfil_inited);
 #define V_dmb_pfil_inited	VNET(dmb_pfil_inited)
-
 VNET_DEFINE_STATIC(pfil_hook_t, dmb_pfil_inet_hook);
 #define V_dmb_pfil_inet_hook	VNET(dmb_pfil_inet_hook)
 
+/*
+ * Internals
+ */
 struct rule;
 typedef struct mbuf * (*op_t)(struct mbuf *, struct rule *);
 struct rule {
@@ -78,6 +92,9 @@ struct rule {
 	const char	*opargs;
 };
 
+/*
+ * Logging
+ */
 #define FEEDBACK(pfil_type_str, pfil_flags, ifp, rule, msg)	\
 	printf("dummymbuf: %s %b %s: %s: %.*s\n",		\
 	    (pfil_type_str),					\
