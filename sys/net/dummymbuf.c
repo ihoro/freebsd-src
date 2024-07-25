@@ -321,11 +321,9 @@ dmb_modevent(module_t mod __unused, int event, void *arg __unused)
 	switch (event) {
 	case MOD_LOAD:
 	case MOD_UNLOAD:
-	case MOD_SHUTDOWN:
-	case MOD_QUIESCE:
 		break;
 	default:
-		error = EINVAL;
+		error = EOPNOTSUPP;
 		break;
 	}
 
