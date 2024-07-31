@@ -57,11 +57,11 @@ MALLOC_DECLARE(M_DUMMYMBUF_RULES);
 MALLOC_DEFINE(M_DUMMYMBUF_RULES, "dummymbuf_rules",
     "dummymbuf rules string buffer");
 
-#define RULES_MAXLEN	1024
-VNET_DEFINE_STATIC(char *, dmb_rules) = NULL;
-#define V_dmb_rules	VNET(dmb_rules)
+#define RULES_MAXLEN		1024
+VNET_DEFINE_STATIC(char *,	dmb_rules) = NULL;
+#define V_dmb_rules		VNET(dmb_rules)
 
-VNET_DEFINE_STATIC(struct sx, dmb_rules_lock);
+VNET_DEFINE_STATIC(struct sx,	dmb_rules_lock);
 #define V_dmb_rules_lock	VNET(dmb_rules_lock)
 
 static int
@@ -104,8 +104,8 @@ SYSCTL_PROC(_net_dummymbuf, OID_AUTO, rules,
  * Statistics
  */
 
-VNET_DEFINE_STATIC(counter_u64_t, dmb_hits);
-#define V_dmb_hits	VNET(dmb_hits)
+VNET_DEFINE_STATIC(counter_u64_t,	dmb_hits);
+#define V_dmb_hits			VNET(dmb_hits)
 SYSCTL_PROC(_net_dummymbuf, OID_AUTO, hits,
     CTLTYPE_U64 | CTLFLAG_MPSAFE | CTLFLAG_STATS | CTLFLAG_RW | CTLFLAG_VNET,
     &VNET_NAME(dmb_hits), 0, sysctl_handle_counter_u64,
@@ -115,14 +115,17 @@ SYSCTL_PROC(_net_dummymbuf, OID_AUTO, hits,
  * pfil(9) context
  */
 
-VNET_DEFINE_STATIC(bool, dmb_pfil_inited);
-#define V_dmb_pfil_inited	VNET(dmb_pfil_inited)
+VNET_DEFINE_STATIC(bool,		dmb_pfil_inited);
+#define V_dmb_pfil_inited		VNET(dmb_pfil_inited)
 
-VNET_DEFINE_STATIC(pfil_hook_t, dmb_pfil_inet_hook);
-#define V_dmb_pfil_inet_hook	VNET(dmb_pfil_inet_hook)
+VNET_DEFINE_STATIC(pfil_hook_t,		dmb_pfil_inet_hook);
+#define V_dmb_pfil_inet_hook		VNET(dmb_pfil_inet_hook)
 
-VNET_DEFINE_STATIC(pfil_hook_t, dmb_pfil_inet6_hook);
-#define V_dmb_pfil_inet6_hook	VNET(dmb_pfil_inet6_hook)
+VNET_DEFINE_STATIC(pfil_hook_t,		dmb_pfil_inet6_hook);
+#define V_dmb_pfil_inet6_hook		VNET(dmb_pfil_inet6_hook)
+
+VNET_DEFINE_STATIC(pfil_hook_t,		dmb_pfil_ethernet_hook);
+#define V_dmb_pfil_ethernet_hook	VNET(dmb_pfil_ethernet_hook)
 
 /*
  * Logging
@@ -321,20 +324,30 @@ static pfil_return_t
 dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
     void *ruleset, struct inpcb *inp)
 {
-	return (dmb_pfil_mbuf_chk(PFIL_TYPE_IP4, mp, ifp, flags, ruleset, inp));
+	return (dmb_pfil_mbuf_chk(PFIL_TYPE_IP4, mp, ifp, flags,
+	    ruleset, inp));
 }
 
 static pfil_return_t
 dmb_pfil_inet6_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
     void *ruleset, struct inpcb *inp)
 {
-	return (dmb_pfil_mbuf_chk(PFIL_TYPE_IP6, mp, ifp, flags, ruleset, inp));
+	return (dmb_pfil_mbuf_chk(PFIL_TYPE_IP6, mp, ifp, flags,
+	    ruleset, inp));
+}
+
+static pfil_return_t
+dmb_pfil_ethernet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
+    void *ruleset, struct inpcb *inp)
+{
+	return (dmb_pfil_mbuf_chk(PFIL_TYPE_ETHERNET, mp, ifp, flags,
+	    ruleset, inp));
 }
 
 static void
 dmb_pfil_init(void)
 {
-	struct pfil_hook_args pha __unused = {
+	struct pfil_hook_args pha = {
 		.pa_version = PFIL_VERSION,
 		.pa_modname = "dummymbuf",
 		.pa_flags = PFIL_IN | PFIL_OUT,
@@ -357,6 +370,11 @@ dmb_pfil_init(void)
 	V_dmb_pfil_inet6_hook = pfil_add_hook(&pha);
 #endif
 
+	pha.pa_type = PFIL_TYPE_ETHERNET;
+	pha.pa_mbuf_chk = dmb_pfil_ethernet_mbuf_chk;
+	pha.pa_rulname = "ethernet";
+	V_dmb_pfil_ethernet_hook = pfil_add_hook(&pha);
+
 	atomic_store_bool(&V_dmb_pfil_inited, true);
 }
 
@@ -373,6 +391,8 @@ dmb_pfil_uninit(void)
 #ifdef INET6
 	pfil_remove_hook(V_dmb_pfil_inet6_hook);
 #endif
+
+	pfil_remove_hook(V_dmb_pfil_ethernet_hook);
 
 	atomic_store_bool(&V_dmb_pfil_inited, false);
 }
@@ -421,7 +441,6 @@ static moduledata_t dmb_mod = {
 	NULL
 };
 
-// TODO: ethernet support
 // TODO: man 4 dummymbuf
 DECLARE_MODULE(dummymbuf, dmb_mod, SI_SUB_PROTO_PFIL, SI_ORDER_ANY);
 MODULE_VERSION(dummymbuf, 1);
