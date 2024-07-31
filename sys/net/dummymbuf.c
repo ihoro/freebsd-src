@@ -185,6 +185,9 @@ read_rule(const char **cur, struct rule *rule)
 {
 	// {inet | inet6 | ethernet} {in | out} <ifname> <opname>[ opargs...];
 
+	if (*cur == NULL)
+		return (false);
+
 	// syntax_begin
 	while (**cur == ' ')
 		(*cur)++;
