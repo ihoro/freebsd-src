@@ -49,18 +49,57 @@ SYSCTL_NODE(_net, OID_AUTO, dummymbuf, 0, NULL,
     "Dummy mbuf sysctl");
 
 /*
- * Configuration sysctl
+ * Rules
  */
-#define RULES_MAXLEN	512
-VNET_DEFINE_STATIC(char, dmb_rules[RULES_MAXLEN]) = "";
+MALLOC_DECLARE(M_DUMMYMBUF_RULES);
+MALLOC_DEFINE(M_DUMMYMBUF_RULES, "dummymbuf_rules",
+    "dummymbuf rules string buffer");
+
+#define RULES_MAXLEN	1024
+VNET_DEFINE_STATIC(char *, dmb_rules) = NULL;
 #define V_dmb_rules	VNET(dmb_rules)
-SYSCTL_STRING(_net_dummymbuf, OID_AUTO, rules, CTLFLAG_RW | CTLFLAG_VNET,
-    &VNET_NAME(dmb_rules), RULES_MAXLEN,
+
+VNET_DEFINE_STATIC(struct sx, dmb_rules_lock);
+#define V_dmb_rules_lock	VNET(dmb_rules_lock)
+
+static int
+dmb_sysctl_handle_rules(SYSCTL_HANDLER_ARGS)
+{
+	int error = 0;
+	char empty = '\0';
+	char **rulesp = (char **)arg1;
+
+	if (req->newptr == NULL) {
+		// read only
+		sx_slock(&V_dmb_rules_lock);
+		arg1 = *rulesp;
+		if (arg1 == NULL) {
+			arg1 = &empty;
+			arg2 = 0;
+		}
+		error = sysctl_handle_string(oidp, arg1, arg2, req);
+		sx_sunlock(&V_dmb_rules_lock);
+	} else {
+		// read and write
+		sx_xlock(&V_dmb_rules_lock);
+		if (*rulesp == NULL)
+			*rulesp = malloc(arg2, M_DUMMYMBUF_RULES, M_WAITOK);
+		arg1 = *rulesp;
+		error = sysctl_handle_string(oidp, arg1, arg2, req);
+		sx_xunlock(&V_dmb_rules_lock);
+	}
+
+	return (error);
+}
+
+SYSCTL_PROC(_net_dummymbuf, OID_AUTO, rules,
+    CTLTYPE_STRING | CTLFLAG_MPSAFE | CTLFLAG_RW | CTLFLAG_VNET,
+    &VNET_NAME(dmb_rules), RULES_MAXLEN, dmb_sysctl_handle_rules, "A",
     "{inet | inet6 | ethernet} {in | out} <ifname> <opname>[ opargs...];"
     " ...;");
 
 /*
- * Statistics sysctl
+ * Statistics
  */
 VNET_DEFINE_STATIC(counter_u64_t, dmb_hits);
 #define V_dmb_hits	VNET(dmb_hits)
@@ -221,12 +260,13 @@ static pfil_return_t
 dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
     void *ruleset, struct inpcb *inp)
 {
-	// TODO: serialize read/write of the rules
 	struct mbuf *m = *mp;
-	const char *cursor = V_dmb_rules;
+	const char *cursor;
 	bool parsed;
 	struct rule rule;
 
+	sx_slock(&V_dmb_rules_lock);
+	cursor = V_dmb_rules;
 	while ((parsed = read_rule(&cursor, &rule))) {
 		if (rule.pfil_type == PFIL_TYPE_IP4 &&
 		    rule.pfil_dir == (flags & rule.pfil_dir)  &&
@@ -248,11 +288,12 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 		m_freem(m);
 		m = NULL;
 	}
+	sx_sunlock(&V_dmb_rules_lock);
+
 	if (m == NULL) {
 		*mp = NULL;
 		return (PFIL_DROPPED);
 	}
-
 	if (m != *mp) {
 		*mp = m;
 		return (PFIL_REALLOCED);
@@ -298,6 +339,7 @@ dmb_pfil_uninit(void)
 static void
 dmb_vnet_init(void *unused __unused)
 {
+	sx_init(&V_dmb_rules_lock, "dummymbuf rules");
 	V_dmb_hits = counter_u64_alloc(M_WAITOK);
 	dmb_pfil_init();
 }
@@ -309,6 +351,8 @@ dmb_vnet_uninit(void *unused __unused)
 {
 	dmb_pfil_uninit();
 	counter_u64_free(V_dmb_hits);
+	sx_destroy(&V_dmb_rules_lock);
+	free(V_dmb_rules, M_DUMMYMBUF_RULES);
 }
 VNET_SYSUNINIT(dmb_vnet_uninit, SI_SUB_PROTO_PFIL, SI_ORDER_ANY,
     dmb_vnet_uninit, NULL);
