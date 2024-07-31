@@ -134,13 +134,16 @@ struct rule {
 /*
  * Logging
  */
-#define FEEDBACK(pfil_type_str, pfil_flags, ifp, rule, msg)	\
-	printf("dummymbuf: %s %b %s: %s: %.*s\n",		\
-	    (pfil_type_str),					\
-	    (pfil_flags), "\20\21PFIL_IN\22PFIL_OUT",		\
-	    (ifp)->if_xname,					\
-	    (msg),						\
-	    (rule).syntax_len, (rule).syntax_begin		\
+#define FEEDBACK(pfil_type, pfil_flags, ifp, rule, msg)			\
+	printf("dummymbuf: %s %b %s: %s: %.*s\n",			\
+	    (pfil_type == PFIL_TYPE_IP4 ?	"PFIL_TYPE_IP4" :	\
+	     pfil_type == PFIL_TYPE_IP6 ?	"PFIL_TYPE_IP6" :	\
+	     pfil_type == PFIL_TYPE_ETHERNET ?	"PFIL_TYPE_ETHERNET" :	\
+						"PFIL_TYPE_UNKNOWN"),	\
+	    (pfil_flags), "\20\21PFIL_IN\22PFIL_OUT",			\
+	    (ifp)->if_xname,						\
+	    (msg),							\
+	    (rule).syntax_len, (rule).syntax_begin			\
 	)
 
 static struct mbuf *
@@ -273,7 +276,7 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 		    strcmp(rule.ifname, ifp->if_xname) == 0) {
 			m = rule.op(m, &rule);
 			if (m == NULL) {
-				FEEDBACK("PFIL_TYPE_IP4", flags, ifp, rule,
+				FEEDBACK(PFIL_TYPE_IP4, flags, ifp, rule,
 				    "mbuf operation failed");
 				break;
 			}
@@ -283,7 +286,7 @@ dmb_pfil_inet_mbuf_chk(struct mbuf **mp, struct ifnet *ifp, int flags,
 			break;
 	}
 	if (!parsed) {
-		FEEDBACK("PFIL_TYPE_IP4", flags, ifp, rule,
+		FEEDBACK(PFIL_TYPE_IP4, flags, ifp, rule,
 		    "rule parsing failed");
 		m_freem(m);
 		m = NULL;
