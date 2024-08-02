@@ -34,7 +34,7 @@
 .Nd "mbuf alteration pfil hooks"
 .Sh SYNOPSIS
 To compile the driver into the kernel,
-place the following lines in the
+place the following line in the
 kernel configuration file:
 .Bd -ragged -offset indent
 .Cd "device dummymbuf"
@@ -184,8 +184,8 @@ pfilctl unlink -o dummymbuf:inet6 inet6
 sysctl net.dummymbuf.rules=""
 .Ed
 .Pp
-If a test case operates within a temporary vnet then explicit cleanup is not
-important, it will vanish along with its vnet instance.
+If a test case operates within a temporary vnet then explicit cleanup can be
+omitted, the things will vanish along with its vnet instance.
 .Sh SEE ALSO
 .Xr jail 2 ,
 .Xr pfilctl 8 ,
