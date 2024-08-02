@@ -134,7 +134,58 @@ Number of times a rule has been applied.
 It is reset to zero upon writing.
 .El
 .Sh EXAMPLES
-TODO
+As it was intended,
+.Nm
+can be found useful for firewall testing.
+A mbuf chain could be altered before it hits a firewall to test that the latter
+can handle a case respectively.
+Thus, it is important to have correct suquence of hooks linked.
+A test case should prepare and enable a firewall first to get its hooks linked.
+After, the
+.Xr pfilctl 8
+should be used to link
+.Nm
+hook(s) to put them in front of a firewall.
+.Pp
+The following links
+.Va dummymbuf:inet6
+hook for inbound and puts it in front of other hooks:
+.Bd -literal -offset indent
+pfilctl link -i dummymbuf:inet6 inet6
+.Ed
+.Pp
+And this does the same for outbound:
+.Bd -literal -offset indent
+pfilctl link -o -a dummymbuf:inet6 inet6
+.Ed
+.Pp
+For instance, we want to test a situation when the very first mbuf in a chain
+has zero m_len, so that a firewall is expected to still read packet data
+correctly.
+The following set of rules does it for inbound and outbound:
+.Bd -literal -offset indent
+sysctl net.dummymbuf.rules="inet6 in em0 pull-head 0; inet6 out em0 pull-head 0;"
+.Ed
+.Pp
+It is encouraged to verify
+.Va net.dummymbuf.hits
+sysctl counter along with other test assertions to make sure that
+.Nm
+really does its work and there is no false positive due to misconfiguration.
+It is a good idea to reset it before the test case:
+.Bd -literal -offset indent
+sysctl net.dummymbuf.hits=0
+.Ed
+.Pp
+It is equally important to cleanup the things after the test case:
+.Bd -literal -offset indent
+pfilctl unlink -i dummymbuf:inet6 inet6
+pfilctl unlink -o dummymbuf:inet6 inet6
+sysctl net.dummymbuf.rules=""
+.Ed
+.Pp
+If a test case operates within a temporary vnet then explicit cleanup is not
+important, it will vanish along with its vnet instance.
 .Sh SEE ALSO
 .Xr jail 2 ,
 .Xr pfilctl 8 ,
