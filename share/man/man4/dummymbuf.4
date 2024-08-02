@@ -1,0 +1,146 @@
+.\"
+.\" SPDX-License-Identifier: BSD-2-Clause
+.\"
+.\" Copyright (c) 2024 Igor Ostapenko <pm@igoro.pro>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\" Note: The date here should be updated whenever a non-trivial
+.\" change is made to the manual page.
+.Dd August 2, 2024
+.Dt DUMMYMBUF 4
+.Os
+.Sh NAME
+.Nm dummymbuf
+.Nd "mbuf alteration pfil hooks"
+.Sh SYNOPSIS
+To compile the driver into the kernel,
+place the following lines in the
+kernel configuration file:
+.Bd -ragged -offset indent
+.Cd "device dummymbuf"
+.Ed
+.Pp
+Alternatively, to load the driver as a
+module at boot time, place the following line in
+.Xr loader.conf 5 :
+.Bd -literal -offset indent
+dummymbuf_load="YES"
+.Ed
+.Sh DESCRIPTION
+The module provides several
+.Xr pfil 9
+hooks, which are listed with
+.Xr pfilctl 8
+as the following:
+.Bd -literal -offset indent
+            Hook                      Type
+       dummymbuf:ethernet         Ethernet
+       dummymbuf:inet6                IPv6
+       dummymbuf:inet                 IPv4
+.Ed
+.Pp
+To get a hook activated it must be linked to the respective
+.Xr pfil 9
+head.
+.Xr pfilctl 8
+can be used for the linking.
+.Pp
+Each time a hook is invoked it reads a single shared set of
+.Sx RULES
+from
+.Va net.dummymbuf.rules
+sysctl.
+The rules are considered sequentially and every matching rule performs the
+specified operation over the mbuf.
+.Pp
+After every successfully applied operation the
+.Va net.dummymbuf.hits
+sysctl counter is increased.
+.Pp
+A hook returns an altered mbuf for further processing, but it drops a packet
+if rules parsing or an operation fails.
+Also, the first mbuf of the original chain may be changed.
+.Pp
+The module is
+.Xr VNET 9
+based, hence every
+.Xr jail 2
+provides its own set of hooks and sysctl variables.
+.Sh RULES
+The set of rules is a semicolon separated list.
+An empty string is treated as a parsing failure.
+A rule conceptually has two parts, filter and operation, with the following
+syntax:
+.Bd -literal -offset indent
+{inet | inet6 | ethernet} {in | out} <ifname> <opname>[ opargs...];
+.Ed
+.Ss Filter
+The first word of a rule matches
+.Xr pfil 9
+type.
+The second matches packet's direction, and the third matches the network
+interface a packet is coming from.
+.Ss Operation
+An operation may have arguments separated from its name by space.
+The available operations are:
+.Bl -tag -width indent
+.It pull-head <number-of-bytes>
+Unconditionally creates a brand new cluster-based mbuf and links it to be the
+first mbuf of the original mbuf chain, with respective packet header moving.
+After, the given number of bytes are pulled from the original mbuf chain.
+.Pp
+If it is asked to pull 0 bytes then the first mbuf of the resulting chain will
+be left empty.
+Asking to pull more than
+.Dv MCLBYTES
+is treated as an operation failure.
+If a mbuf chain has less data than asked then the entire packet is pulled with
+tail mbuf(s) left empty.
+.Pp
+As a result, only the layout of a mbuf chain is altered, its content logically
+is left intact.
+.El
+.Sh SYSCTL VARIABLES
+The following variables are available:
+.Bl -tag -width indent
+.It Va net.dummymbuf.rules
+A string representing a single set of
+.Sx RULES
+shared among all
+.Nm
+hooks.
+.It Va net.dummymbuf.hits
+Number of times a rule has been applied.
+It is reset to zero upon writing.
+.El
+.Sh EXAMPLES
+TODO
+.Sh SEE ALSO
+.Xr jail 2 ,
+.Xr pfilctl 8 ,
+.Xr mbuf 9 ,
+.Xr pfil 9 ,
+.Xr VNET 9
+.Sh AUTHORS
+The module and this manual page were written by
+.An Igor Ostapenko Aq Mt pm@igoro.pro .
