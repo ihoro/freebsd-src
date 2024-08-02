@@ -139,7 +139,7 @@ As it was intended,
 can be found useful for firewall testing.
 A mbuf chain could be altered before it hits a firewall to test that the latter
 can handle a case respectively.
-Thus, it is important to have correct suquence of hooks linked.
+Thus, it is important to have correct suquence of hooks.
 A test case should prepare and enable a firewall first to get its hooks linked.
 After, the
 .Xr pfilctl 8
@@ -172,7 +172,7 @@ It is encouraged to verify
 sysctl counter along with other test assertions to make sure that
 .Nm
 really does its work and there is no false positive due to misconfiguration.
-It is a good idea to reset it before the test case:
+It is a good idea to reset it before the action:
 .Bd -literal -offset indent
 sysctl net.dummymbuf.hits=0
 .Ed
