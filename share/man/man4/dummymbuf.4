@@ -186,6 +186,14 @@ sysctl net.dummymbuf.rules=""
 .Pp
 If a test case operates within a temporary vnet then explicit cleanup can be
 omitted, the things will vanish along with its vnet instance.
+.Sh DIAGNOSTICS
+.Bl -diag
+.It "dummymbuf: <filter match>: rule parsing failed: <the rule in question>"
+If everything looks fine then extra spaces removal may help due to the parser
+is kept very simple.
+.It "dummymbuf: <filter match>: mbuf operation failed: <the rule in question>"
+Incorrect operation argument has been found, mbuf allocation has failed, etc.
+.El
 .Sh SEE ALSO
 .Xr jail 2 ,
 .Xr pfilctl 8 ,
