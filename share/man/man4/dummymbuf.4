@@ -92,7 +92,7 @@ An empty string is treated as a parsing failure.
 A rule conceptually has two parts, filter and operation, with the following
 syntax:
 .Bd -literal -offset indent
-{inet | inet6 | ethernet} {in | out} <ifname> <opname>[ opargs...];
+{inet | inet6 | ethernet} {in | out} <ifname> <opname>[ <opargs>];
 .Ed
 .Ss Filter
 The first word of a rule matches

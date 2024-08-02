@@ -97,7 +97,7 @@ dmb_sysctl_handle_rules(SYSCTL_HANDLER_ARGS)
 SYSCTL_PROC(_net_dummymbuf, OID_AUTO, rules,
     CTLTYPE_STRING | CTLFLAG_MPSAFE | CTLFLAG_RW | CTLFLAG_VNET,
     &VNET_NAME(dmb_rules), RULES_MAXLEN, dmb_sysctl_handle_rules, "A",
-    "{inet | inet6 | ethernet} {in | out} <ifname> <opname>[ opargs...];"
+    "{inet | inet6 | ethernet} {in | out} <ifname> <opname>[ <opargs>];"
     " ...;");
 
 /*
@@ -196,7 +196,7 @@ bad:
 static bool
 read_rule(const char **cur, struct rule *rule)
 {
-	// {inet | inet6 | ethernet} {in | out} <ifname> <opname>[ opargs...];
+	// {inet | inet6 | ethernet} {in | out} <ifname> <opname>[ <opargs>];
 
 	if (*cur == NULL)
 		return (false);
