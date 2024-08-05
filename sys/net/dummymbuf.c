@@ -198,6 +198,9 @@ read_rule(const char **cur, struct rule *rule)
 {
 	// {inet | inet6 | ethernet} {in | out} <ifname> <opname>[ <opargs>];
 
+	rule->syntax_begin = NULL;
+	rule->syntax_len = 0;
+
 	if (*cur == NULL)
 		return (false);
 
@@ -207,7 +210,6 @@ read_rule(const char **cur, struct rule *rule)
 	rule->syntax_begin = *cur;
 
 	// syntax_len
-	rule->syntax_len = 0;
 	char *delim = strchr(*cur, ';');
 	if (delim == NULL)
 		return (false);
