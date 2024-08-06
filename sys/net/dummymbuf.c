@@ -61,6 +61,11 @@ VNET_DEFINE_STATIC(char *,	dmb_rules) = NULL;
 VNET_DEFINE_STATIC(struct sx,	dmb_rules_lock);
 #define V_dmb_rules_lock	VNET(dmb_rules_lock)
 
+#define DMB_RULES_SLOCK()	sx_slock(&V_dmb_rules_lock)
+#define DMB_RULES_SUNLOCK()	sx_sunlock(&V_dmb_rules_lock)
+#define DMB_RULES_XLOCK()	sx_xlock(&V_dmb_rules_lock)
+#define DMB_RULES_XUNLOCK()	sx_xunlock(&V_dmb_rules_lock)
+
 static int
 dmb_sysctl_handle_rules(SYSCTL_HANDLER_ARGS)
 {
@@ -70,22 +75,22 @@ dmb_sysctl_handle_rules(SYSCTL_HANDLER_ARGS)
 
 	if (req->newptr == NULL) {
 		// read only
-		sx_slock(&V_dmb_rules_lock);
+		DMB_RULES_SLOCK();
 		arg1 = *rulesp;
 		if (arg1 == NULL) {
 			arg1 = &empty;
 			arg2 = 0;
 		}
 		error = sysctl_handle_string(oidp, arg1, arg2, req);
-		sx_sunlock(&V_dmb_rules_lock);
+		DMB_RULES_SUNLOCK();
 	} else {
 		// read and write
-		sx_xlock(&V_dmb_rules_lock);
+		DMB_RULES_XLOCK();
 		if (*rulesp == NULL)
 			*rulesp = malloc(arg2, M_DUMMYMBUF_RULES, M_WAITOK);
 		arg1 = *rulesp;
 		error = sysctl_handle_string(oidp, arg1, arg2, req);
-		sx_xunlock(&V_dmb_rules_lock);
+		DMB_RULES_XUNLOCK();
 	}
 
 	return (error);
@@ -280,7 +285,7 @@ dmb_pfil_mbuf_chk(int pfil_type, struct mbuf **mp, struct ifnet *ifp,
 	bool parsed;
 	struct rule rule;
 
-	sx_slock(&V_dmb_rules_lock);
+	DMB_RULES_SLOCK();
 	cursor = V_dmb_rules;
 	while ((parsed = read_rule(&cursor, &rule))) {
 		if (rule.pfil_type == pfil_type &&
@@ -302,7 +307,7 @@ dmb_pfil_mbuf_chk(int pfil_type, struct mbuf **mp, struct ifnet *ifp,
 		m_freem(m);
 		m = NULL;
 	}
-	sx_sunlock(&V_dmb_rules_lock);
+	DMB_RULES_SUNLOCK();
 
 	if (m == NULL) {
 		*mp = NULL;
