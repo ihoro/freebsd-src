@@ -47,11 +47,13 @@ module at boot time, place the following line in
 dummymbuf_load="YES"
 .Ed
 .Sh DESCRIPTION
-The module provides several
+This module is intended to test networking code in the face of unusual mbuf
+layouts.
+The special
 .Xr pfil 9
-hooks, which are listed with
+hooks are provided for mbuf alteration and can be listed with
 .Xr pfilctl 8
-as the following:
+as follows:
 .Bd -literal -offset indent
             Hook                      Type
        dummymbuf:ethernet         Ethernet
@@ -59,7 +61,7 @@ as the following:
        dummymbuf:inet                 IPv4
 .Ed
 .Pp
-To get a hook activated it must be linked to the respective
+To activate a hook it must be linked to the respective
 .Xr pfil 9
 head.
 .Xr pfilctl 8
@@ -70,7 +72,7 @@ Each time a hook is invoked it reads a single shared set of
 from
 .Va net.dummymbuf.rules
 sysctl.
-The rules are considered sequentially and every matching rule performs the
+The rules are evaluated sequentially and each matching rule performs the
 specified operation over the mbuf.
 .Pp
 After every successfully applied operation the
@@ -139,7 +141,7 @@ As it was intended,
 can be found useful for firewall testing.
 A mbuf chain could be altered before it hits a firewall to test that the latter
 can handle a case respectively.
-Thus, it is important to have correct suquence of hooks.
+Thus, it is important to have correct sequence of hooks.
 A test case should prepare and enable a firewall first to get its hooks linked.
 After, the
 .Xr pfilctl 8
@@ -159,9 +161,9 @@ And this does the same for outbound:
 pfilctl link -o -a dummymbuf:inet6 inet6
 .Ed
 .Pp
-For instance, we want to test a situation when the very first mbuf in a chain
-has zero m_len, so that a firewall is expected to still read packet data
-correctly.
+For instance, we want to test a scenario in which the very first mbuf in a
+chain has zero m_len, to verify that a firewall can correctly read the
+packet data despite that.
 The following set of rules does it for inbound and outbound:
 .Bd -literal -offset indent
 sysctl net.dummymbuf.rules="inet6 in em0 pull-head 0; inet6 out em0 pull-head 0;"
@@ -185,7 +187,9 @@ sysctl net.dummymbuf.rules=""
 .Ed
 .Pp
 If a test case operates within a temporary vnet then explicit cleanup can be
-omitted, the things will vanish along with its vnet instance.
+omitted, the
+.Nm
+facilities will vanish along with its vnet instance.
 .Sh DIAGNOSTICS
 .Bl -diag
 .It "dummymbuf: <filter match>: rule parsing failed: <the rule in question>"
