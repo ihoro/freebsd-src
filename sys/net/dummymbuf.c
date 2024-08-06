@@ -28,8 +28,6 @@
 #include "opt_inet.h"
 #include "opt_inet6.h"
 
-#include <machine/atomic.h>
-
 #include <sys/param.h>
 #include <sys/kernel.h>
 #include <sys/mbuf.h>
@@ -113,9 +111,6 @@ SYSCTL_PROC(_net_dummymbuf, OID_AUTO, hits,
 /*
  * pfil(9) context
  */
-
-VNET_DEFINE_STATIC(bool,		dmb_pfil_inited);
-#define V_dmb_pfil_inited		VNET(dmb_pfil_inited)
 
 VNET_DEFINE_STATIC(pfil_hook_t,		dmb_pfil_inet_hook);
 #define V_dmb_pfil_inet_hook		VNET(dmb_pfil_inet_hook)
@@ -354,9 +349,6 @@ dmb_pfil_init(void)
 		.pa_flags = PFIL_IN | PFIL_OUT,
 	};
 
-	if (atomic_load_bool(&V_dmb_pfil_inited))
-		return;
-
 #ifdef INET
 	pha.pa_type = PFIL_TYPE_IP4;
 	pha.pa_mbuf_chk = dmb_pfil_inet_mbuf_chk;
@@ -375,16 +367,11 @@ dmb_pfil_init(void)
 	pha.pa_mbuf_chk = dmb_pfil_ethernet_mbuf_chk;
 	pha.pa_rulname = "ethernet";
 	V_dmb_pfil_ethernet_hook = pfil_add_hook(&pha);
-
-	atomic_store_bool(&V_dmb_pfil_inited, true);
 }
 
 static void
 dmb_pfil_uninit(void)
 {
-	if (!atomic_load_bool(&V_dmb_pfil_inited))
-		return;
-
 #ifdef INET
 	pfil_remove_hook(V_dmb_pfil_inet_hook);
 #endif
@@ -394,8 +381,6 @@ dmb_pfil_uninit(void)
 #endif
 
 	pfil_remove_hook(V_dmb_pfil_ethernet_hook);
-
-	atomic_store_bool(&V_dmb_pfil_inited, false);
 }
 
 static void
