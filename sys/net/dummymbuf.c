@@ -53,8 +53,7 @@ SYSCTL_NODE(_net, OID_AUTO, dummymbuf, 0, NULL,
  * Rules
  */
 
-MALLOC_DECLARE(M_DUMMYMBUF_RULES);
-MALLOC_DEFINE(M_DUMMYMBUF_RULES, "dummymbuf_rules",
+static MALLOC_DEFINE(M_DUMMYMBUF_RULES, "dummymbuf_rules",
     "dummymbuf rules string buffer");
 
 #define RULES_MAXLEN		1024
