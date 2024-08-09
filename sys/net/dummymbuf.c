@@ -389,25 +389,25 @@ dmb_pfil_uninit(void)
 }
 
 static void
-dmb_vnet_init(void *unused __unused)
+vnet_dmb_init(void *unused __unused)
 {
 	sx_init(&V_dmb_rules_lock, "dummymbuf rules");
 	V_dmb_hits = counter_u64_alloc(M_WAITOK);
 	dmb_pfil_init();
 }
-VNET_SYSINIT(dmb_vnet_init, SI_SUB_PROTO_PFIL, SI_ORDER_ANY,
-    dmb_vnet_init, NULL);
+VNET_SYSINIT(vnet_dmb_init, SI_SUB_PROTO_PFIL, SI_ORDER_ANY,
+    vnet_dmb_init, NULL);
 
 static void
-dmb_vnet_uninit(void *unused __unused)
+vnet_dmb_uninit(void *unused __unused)
 {
 	dmb_pfil_uninit();
 	counter_u64_free(V_dmb_hits);
 	sx_destroy(&V_dmb_rules_lock);
 	free(V_dmb_rules, M_DUMMYMBUF_RULES);
 }
-VNET_SYSUNINIT(dmb_vnet_uninit, SI_SUB_PROTO_PFIL, SI_ORDER_ANY,
-    dmb_vnet_uninit, NULL);
+VNET_SYSUNINIT(vnet_dmb_uninit, SI_SUB_PROTO_PFIL, SI_ORDER_ANY,
+    vnet_dmb_uninit, NULL);
 
 static int
 dmb_modevent(module_t mod __unused, int event, void *arg __unused)
