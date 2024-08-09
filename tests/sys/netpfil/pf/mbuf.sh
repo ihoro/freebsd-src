@@ -33,13 +33,13 @@ dummymbuf_init()
 	fi
 }
 
-atf_test_case "ip4_in_mbuf_len" "cleanup"
-ip4_in_mbuf_len_head()
+atf_test_case "inet_in_mbuf_len" "cleanup"
+inet_in_mbuf_len_head()
 {
 	atf_set descr 'Test that pf can handle inbound with the first mbuf with m_len < sizeof(struct ip)'
 	atf_set require.user root
 }
-ip4_in_mbuf_len_body()
+inet_in_mbuf_len_body()
 {
 	pft_init
 	dummymbuf_init
@@ -52,13 +52,13 @@ ip4_in_mbuf_len_body()
 	jexec alcatraz ifconfig ${epair}b 192.0.2.2/24 up
 
 	# Sanity check
-	atf_check -s exit:0 -o ignore ping -c3 192.0.2.2
+	atf_check -s exit:0 -o ignore ping -c1 192.0.2.2
 
 	# Should be denied
 	jexec alcatraz pfctl -e
 	pft_set_rules alcatraz \
 		"block"
-	atf_check -s not-exit:0 -o ignore ping -c1 192.0.2.2
+	atf_check -s not-exit:0 -o ignore ping -c1 -t1 192.0.2.2
 
 	# Should be allowed by from/to addresses
 	pft_set_rules alcatraz \
@@ -86,12 +86,12 @@ ip4_in_mbuf_len_body()
 	atf_check -s exit:0 -o ignore ping -c1 192.0.2.2
 	atf_check_equal "1" "$(jexec alcatraz sysctl -n net.dummymbuf.hits)"
 }
-ip4_in_mbuf_len_cleanup()
+inet_in_mbuf_len_cleanup()
 {
 	pft_cleanup
 }
 
 atf_init_test_cases()
 {
-	atf_add_test_case "ip4_in_mbuf_len"
+	atf_add_test_case "inet_in_mbuf_len"
 }
