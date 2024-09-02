@@ -40,7 +40,7 @@
 #include <net/vnet.h>
 #include <net/pfil.h>
 
-static int verify_rules(const char *);
+static int validate_rules(const char *);
 
 /*
  * Logging
@@ -113,7 +113,7 @@ dmb_sysctl_handle_rules(SYSCTL_HANDLER_ARGS)
 		DMB_RULES_XLOCK();
 		arg1 = malloc(arg2, M_DUMMYMBUF_RULES, M_WAITOK | M_ZERO);
 		error = sysctl_handle_string(oidp, arg1, arg2, req);
-		if (error == 0 && (error = verify_rules(arg1)) == 0) {
+		if (error == 0 && (error = validate_rules(arg1)) == 0) {
 			free(*rulesp, M_DUMMYMBUF_RULES);
 			*rulesp = arg1;
 			arg1 = NULL;
@@ -298,7 +298,7 @@ read_rule(const char **cur, struct rule *rule, bool *eof)
 }
 
 static int
-verify_rules(const char *rules)
+validate_rules(const char *rules)
 {
 	const char *cursor = rules;
 	bool parsed;
