@@ -307,7 +307,9 @@ validate_rules(const char *rules)
 
 	DMB_RULES_LOCK_ASSERT();
 
-	while (!eof && (parsed = read_rule(&cursor, &rule, &eof))) {}
+	while (!eof && (parsed = read_rule(&cursor, &rule, &eof))) {
+		/* noop */
+	}
 
 	if (!parsed) {
 		FEEDBACK_RULE(rule, "rule parsing failed");
