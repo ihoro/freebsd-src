@@ -43,28 +43,6 @@
 static int validate_rules(const char *);
 
 /*
- * Logging
- */
-
-#define FEEDBACK_RULE(rule, msg)					\
-	printf("dummymbuf: %s: %.*s\n",					\
-	    (msg),							\
-	    (rule).syntax_len, (rule).syntax_begin			\
-	)
-
-#define FEEDBACK_PFIL(pfil_type, pfil_flags, ifp, rule, msg)		\
-	printf("dummymbuf: %s %b %s: %s: %.*s\n",			\
-	    (pfil_type == PFIL_TYPE_IP4 ?	"PFIL_TYPE_IP4" :	\
-	     pfil_type == PFIL_TYPE_IP6 ?	"PFIL_TYPE_IP6" :	\
-	     pfil_type == PFIL_TYPE_ETHERNET ?	"PFIL_TYPE_ETHERNET" :	\
-						"PFIL_TYPE_UNKNOWN"),	\
-	    (pfil_flags), "\20\21PFIL_IN\22PFIL_OUT",			\
-	    (ifp)->if_xname,						\
-	    (msg),							\
-	    (rule).syntax_len, (rule).syntax_begin			\
-	)
-
-/*
  * Separate sysctl sub-tree
  */
 
@@ -157,6 +135,28 @@ VNET_DEFINE_STATIC(pfil_hook_t,		dmb_pfil_inet6_hook);
 
 VNET_DEFINE_STATIC(pfil_hook_t,		dmb_pfil_ethernet_hook);
 #define V_dmb_pfil_ethernet_hook	VNET(dmb_pfil_ethernet_hook)
+
+/*
+ * Logging
+ */
+
+#define FEEDBACK_RULE(rule, msg)					\
+	printf("dummymbuf: %s: %.*s\n",					\
+	    (msg),							\
+	    (rule).syntax_len, (rule).syntax_begin			\
+	)
+
+#define FEEDBACK_PFIL(pfil_type, pfil_flags, ifp, rule, msg)		\
+	printf("dummymbuf: %s %b %s: %s: %.*s\n",			\
+	    (pfil_type == PFIL_TYPE_IP4 ?	"PFIL_TYPE_IP4" :	\
+	     pfil_type == PFIL_TYPE_IP6 ?	"PFIL_TYPE_IP6" :	\
+	     pfil_type == PFIL_TYPE_ETHERNET ?	"PFIL_TYPE_ETHERNET" :	\
+						"PFIL_TYPE_UNKNOWN"),	\
+	    (pfil_flags), "\20\21PFIL_IN\22PFIL_OUT",			\
+	    (ifp)->if_xname,						\
+	    (msg),							\
+	    (rule).syntax_len, (rule).syntax_begin			\
+	)
 
 /*
  * Internals
