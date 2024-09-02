@@ -223,12 +223,12 @@ read_rule(const char **cur, struct rule *rule, bool *eof)
 	while (**cur == ' ')
 		(*cur)++;
 	rule->syntax_begin = *cur;
-	rule->syntax_len = strlen(rule->syntax_begin);
 
 	// syntax_len
 	char *delim = strchr(*cur, ';');
 	if (delim == NULL)
 		return (false);
+	rule->syntax_len = (int)(delim - *cur + 1);
 
 	// pfil_type
 	if (strstr(*cur, "inet6") == *cur) {
