@@ -40,6 +40,23 @@
 namespace model {
 
 
+/// Total number of test result types.
+const size_t test_result_type_count = 5;
+
+
+/// Test result type metadata.
+struct test_result_type_desc {
+    enum test_result_type id;
+    std::string name;
+    bool is_run;
+    bool is_good;
+};
+
+
+/// Description of each test result type.
+extern const struct test_result_type_desc test_result_types[];
+
+
 /// Representation of a single test result.
 ///
 /// A test result is a simple pair of (type, reason).  The type indicates the

@@ -130,11 +130,12 @@ public:
 
         const auto type = model::test_result_types[result.type()];
         type_count[type.id]++;
-        if (type.is_run)
+        if (type.is_run) {
             if (type.is_good)
                 good_count++;
             else
                 bad_count++;
+        }
     }
 };
 
