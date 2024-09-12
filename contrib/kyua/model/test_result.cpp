@@ -74,17 +74,7 @@ model::test_result::reason(void) const
 bool
 model::test_result::good(void) const
 {
-    switch (_type) {
-    case test_result_expected_failure:
-    case test_result_passed:
-    case test_result_skipped:
-        return true;
-
-    case test_result_broken:
-    case test_result_failed:
-        return false;
-    }
-    UNREACHABLE;
+    return test_result_types[_type].is_good;
 }
 
 

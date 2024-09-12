@@ -32,6 +32,8 @@
 #if !defined(MODEL_TEST_RESULT_FWD_HPP)
 #define MODEL_TEST_RESULT_FWD_HPP
 
+#include <string>
+
 namespace model {
 
 
@@ -42,6 +44,21 @@ enum test_result_type {
     test_result_failed,
     test_result_passed,
     test_result_skipped,
+};
+
+const size_t test_result_type_count = 5;
+
+const struct {
+    enum test_result_type id;
+    std::string name;
+    bool is_run;
+    bool is_good;
+} test_result_types[test_result_type_count] = {
+    { test_result_broken,           "broken",  true,  false, },
+    { test_result_expected_failure, "xfail",   true,  true,  },
+    { test_result_failed,           "failed",  true,  false, },
+    { test_result_passed,           "passed",  true,  true,  },
+    { test_result_skipped,          "skipped", false, true, },
 };
 
 

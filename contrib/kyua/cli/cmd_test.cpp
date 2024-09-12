@@ -64,6 +64,12 @@ class print_hooks : public drivers::run_tests::base_hooks {
     bool _parallel;
 
 public:
+    /// The amount of all test results.
+    unsigned long total_count;
+
+    /// The amount of test results per type.
+    unsigned long type_count[model::test_result_type_count];
+
     /// The amount of positive test results found so far.
     unsigned long good_count;
 
@@ -77,9 +83,12 @@ public:
     print_hooks(cmdline::ui* ui_, const bool parallel_) :
         _ui(ui_),
         _parallel(parallel_),
+        total_count(0),
         good_count(0),
         bad_count(0)
     {
+        for (size_t i = 0; i < model::test_result_type_count; i++)
+            type_count[i] = 0;
     }
 
     /// Called when the processing of a test case begins.
@@ -116,10 +125,16 @@ public:
         }
         _ui->out(F("%s  [%s]") % cli::format_result(result) %
             cli::format_delta(duration));
-        if (result.good())
-            good_count++;
-        else
-            bad_count++;
+
+        total_count++;
+
+        const auto type = model::test_result_types[result.type()];
+        type_count[type.id]++;
+        if (type.is_run)
+            if (type.is_good)
+                good_count++;
+            else
+                bad_count++;
     }
 };
 
@@ -160,7 +175,7 @@ cmd_test::run(cmdline::ui* ui, const cmdline::parsed_cmdline& cmdline,
         parse_filters(cmdline.arguments()), user_config, hooks);
 
     int exit_code;
-    if (hooks.good_count > 0 || hooks.bad_count > 0) {
+    if (hooks.total_count > 0) {
         ui->out("");
         if (!results.first.empty()) {
             ui->out(F("Results file id is %s") % results.first);
@@ -168,8 +183,16 @@ cmd_test::run(cmdline::ui* ui, const cmdline::parsed_cmdline& cmdline,
         ui->out(F("Results saved to %s") % results.second);
         ui->out("");
 
-        ui->out(F("%s/%s passed (%s failed)") % hooks.good_count %
-                (hooks.good_count + hooks.bad_count) % hooks.bad_count);
+        ui->out(F("%s/%s passed (") % hooks.good_count % hooks.total_count, false);
+        for (size_t i = 0; i < model::test_result_type_count; i++) {
+            const auto type = model::test_result_types[i];
+            if (!type.is_run || !type.is_good) {
+                if (i > 0)
+                    ui->out(", ", false);
+                ui->out(F("%s %s") % hooks.type_count[i] % type.name, false);
+            }
+        }
+        ui->out(")");
 
         exit_code = (hooks.bad_count == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
     } else {
