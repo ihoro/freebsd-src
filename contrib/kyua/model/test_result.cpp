@@ -40,7 +40,7 @@ const struct model::test_result_type_desc model::test_result_types[] = {
     { test_result_expected_failure, "xfail",   true,  true,  },
     { test_result_failed,           "failed",  true,  false, },
     { test_result_passed,           "passed",  true,  true,  },
-    { test_result_skipped,          "skipped", false, true, },
+    { test_result_skipped,          "skipped", false, true,  },
 };
 
 
