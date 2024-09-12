@@ -184,7 +184,8 @@ cmd_test::run(cmdline::ui* ui, const cmdline::parsed_cmdline& cmdline,
         ui->out(F("Results saved to %s") % results.second);
         ui->out("");
 
-        ui->out(F("%s/%s passed (") % hooks.good_count % hooks.total_count, false);
+        ui->out(F("%s/%s passed (") % hooks.good_count % hooks.total_count,
+            false);
         for (size_t i = 0; i < model::test_result_type_count; i++) {
             const auto type = model::test_result_types[i];
             if (!type.is_run || !type.is_good) {
