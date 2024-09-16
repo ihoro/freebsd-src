@@ -65,7 +65,7 @@ class print_hooks : public drivers::run_tests::base_hooks {
 
 public:
     /// The amount of test results per type.
-    unsigned long type_count[model::test_result_type_count];
+    std::map<enum model::test_result_type, unsigned long> type_count;
 
     /// Constructor for the hooks.
     ///
@@ -75,8 +75,8 @@ public:
         _ui(ui_),
         _parallel(parallel_)
     {
-        for (size_t i = 0; i < model::test_result_type_count; i++)
-            type_count[i] = 0;
+        for (const auto& pair : model::test_result_types)
+            type_count[pair.first] = 0;
     }
 
     /// Called when the processing of a test case begins.
@@ -157,10 +157,10 @@ cmd_test::run(cmdline::ui* ui, const cmdline::parsed_cmdline& cmdline,
     unsigned long total = 0;
     unsigned long good = 0;
     unsigned long bad = 0;
-    for (size_t i = 0; i < model::test_result_type_count; i++) {
-        const auto count = hooks.type_count[i];
+    for (const auto& pair : model::test_result_types) {
+        const auto& type = pair.second;
+        const auto count = hooks.type_count[type.id];
         total += count;
-        const auto type = model::test_result_types[i];
         if (type.is_run && type.is_good)
             good += count;
         if (!type.is_good)
@@ -177,12 +177,14 @@ cmd_test::run(cmdline::ui* ui, const cmdline::parsed_cmdline& cmdline,
         ui->out("");
 
         ui->out(F("%s/%s passed (") % good % total, false);
-        for (size_t i = 0; i < model::test_result_type_count; i++) {
-            const auto type = model::test_result_types[i];
+        const auto& types = model::test_result_types;
+        for (auto it = types.begin(); it != types.end(); it++) {
+            const auto& type = it->second;
             if (!type.is_run || !type.is_good) {
-                if (i > 0)
+                if (it != types.begin())
                     ui->out(", ", false);
-                ui->out(F("%s %s") % hooks.type_count[i] % type.name, false);
+                ui->out(F("%s %s") % hooks.type_count[type.id] % type.name,
+                    false);
             }
         }
         ui->out(")");

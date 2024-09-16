@@ -34,14 +34,11 @@
 
 #include "model/test_result_fwd.hpp"
 
+#include <map>
 #include <ostream>
 #include <string>
 
 namespace model {
-
-
-/// Total number of test result types.
-const size_t test_result_type_count = 5;
 
 
 /// Test result type metadata.
@@ -54,7 +51,8 @@ struct test_result_type_desc {
 
 
 /// Description of each test result type.
-extern const struct test_result_type_desc test_result_types[];
+extern const std::map<enum test_result_type,
+    const struct test_result_type_desc> test_result_types;
 
 
 /// Representation of a single test result.

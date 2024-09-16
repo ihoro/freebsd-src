@@ -35,12 +35,39 @@
 namespace text = utils::text;
 
 
-const struct model::test_result_type_desc model::test_result_types[] = {
-    { test_result_broken,           "broken",  true,  false, },
-    { test_result_expected_failure, "xfail",   true,  true,  },
-    { test_result_failed,           "failed",  true,  false, },
-    { test_result_passed,           "passed",  true,  true,  },
-    { test_result_skipped,          "skipped", false, true,  },
+const std::map<enum model::test_result_type,
+               const struct model::test_result_type_desc>
+    model::test_result_types =
+{
+    { test_result_broken,
+        { .id =      test_result_broken,
+          .name =    "broken",
+          .is_run =  true,
+          .is_good = false, } },
+
+    { test_result_expected_failure,
+        { .id =      test_result_expected_failure,
+          .name =    "xfail",
+          .is_run =  true,
+          .is_good = true, } },
+
+    { test_result_failed,
+        { .id =      test_result_failed,
+          .name =    "failed",
+          .is_run =  true,
+          .is_good = false, } },
+
+    { test_result_passed,
+        { .id =      test_result_passed,
+          .name =    "passed",
+          .is_run =  true,
+          .is_good = true, } },
+
+    { test_result_skipped,
+        { .id =      test_result_skipped,
+          .name =    "skipped",
+          .is_run =  false,
+          .is_good = true, } },
 };
 
 
@@ -83,7 +110,7 @@ model::test_result::reason(void) const
 bool
 model::test_result::good(void) const
 {
-    return test_result_types[_type].is_good;
+    return test_result_types.at(_type).is_good;
 }
 
 
