@@ -116,6 +116,16 @@
 #include <machine/in_cksum.h>
 #include <security/mac/mac_framework.h>
 
+#undef mtod
+#define mtod(m, t) (							\
+	KASSERTE(m->m_len >= sizeof(*((t)((m)->m_data))),		\
+	    ("%s: mtod(): m_len=%d < %zu of expected data len @ %s:%d",	\
+	    __func__, m->m_len, sizeof(*((t)((m)->m_data))),		\
+	    __FILE__, __LINE__))					\
+	,								\
+	((t)((m)->m_data))						\
+)
+
 #define	DPFPRINTF(n, x)	if (V_pf_status.debug >= (n)) printf x
 
 SDT_PROVIDER_DEFINE(pf);
