@@ -2001,7 +2001,7 @@ pf_isforlocal(struct mbuf *m, int af)
 	switch (af) {
 #ifdef INET
 	case AF_INET: {
-		struct ip *ip = mtod(m, struct ip *);
+		struct ip *ip = mtod_(m, struct ip *);
 
 		return (in_localip(ip->ip_dst));
 	}
@@ -2010,7 +2010,7 @@ pf_isforlocal(struct mbuf *m, int af)
 	case AF_INET6: {
 		struct ip6_hdr *ip6;
 		struct in6_ifaddr *ia;
-		ip6 = mtod(m, struct ip6_hdr *);
+		ip6 = mtod_(m, struct ip6_hdr *);
 		ia = in6ifa_ifwithaddr(&ip6->ip6_dst, 0 /* XXX */, false);
 		if (ia == NULL)
 			return (false);
@@ -3409,7 +3409,7 @@ pf_build_tcp(const struct pf_krule *r, sa_family_t af,
 	switch (af) {
 #ifdef INET
 	case AF_INET:
-		h = mtod(m, struct ip *);
+		h = mtod_(m, struct ip *);
 
 		/* IP header fields included in the TCP checksum */
 		h->ip_p = IPPROTO_TCP;
@@ -3422,7 +3422,7 @@ pf_build_tcp(const struct pf_krule *r, sa_family_t af,
 #endif /* INET */
 #ifdef INET6
 	case AF_INET6:
-		h6 = mtod(m, struct ip6_hdr *);
+		h6 = mtod_(m, struct ip6_hdr *);
 
 		/* IP header fields included in the TCP checksum */
 		h6->ip6_nxt = IPPROTO_TCP;
@@ -3676,13 +3676,13 @@ pf_return(struct pf_krule *r, struct pf_krule *nr, struct pf_pdesc *pd,
 		switch (af) {
 #ifdef INET
 		case AF_INET:
-			h4 = mtod(m, struct ip *);
+			h4 = mtod_(m, struct ip *);
 			len = ntohs(h4->ip_len) - off;
 			break;
 #endif
 #ifdef INET6
 		case AF_INET6:
-			h6 = mtod(m, struct ip6_hdr *);
+			h6 = mtod_(m, struct ip6_hdr *);
 			len = ntohs(h6->ip6_plen) - (off - sizeof(*h6));
 			break;
 #endif
@@ -7694,7 +7694,7 @@ pf_pull_hdr(const struct mbuf *m, int off, void *p, int len,
 	switch (af) {
 #ifdef INET
 	case AF_INET: {
-		const struct ip	*h = mtod(m, struct ip *);
+		const struct ip	*h = mtod_(m, struct ip *);
 		u_int16_t	 fragoff = (ntohs(h->ip_off) & IP_OFFMASK) << 3;
 
 		if (fragoff) {
@@ -7717,7 +7717,7 @@ pf_pull_hdr(const struct mbuf *m, int off, void *p, int len,
 #endif /* INET */
 #ifdef INET6
 	case AF_INET6: {
-		const struct ip6_hdr	*h = mtod(m, struct ip6_hdr *);
+		const struct ip6_hdr	*h = mtod_(m, struct ip6_hdr *);
 
 		if (m->m_pkthdr.len < off + len ||
 		    (ntohs(h->ip6_plen) + sizeof(struct ip6_hdr)) <
@@ -7853,7 +7853,7 @@ pf_route(struct mbuf **m, struct pf_krule *r, struct ifnet *oifp,
 		m0 = *m;
 	}
 
-	ip = mtod(m0, struct ip *);
+	ip = mtod_(m0, struct ip *);
 
 	bzero(&dst, sizeof(dst));
 	dst.sin_family = AF_INET;
@@ -7911,7 +7911,7 @@ pf_route(struct mbuf **m, struct pf_krule *r, struct ifnet *oifp,
 			    ("%s: m0->m_len < sizeof(struct ip)\n", __func__));
 			goto bad;
 		}
-		ip = mtod(m0, struct ip *);
+		ip = mtod_(m0, struct ip *);
 	}
 
 	if (ifp->if_flags & IFF_LOOPBACK)
@@ -8101,7 +8101,7 @@ pf_route6(struct mbuf **m, struct pf_krule *r, struct ifnet *oifp,
 		m0 = *m;
 	}
 
-	ip6 = mtod(m0, struct ip6_hdr *);
+	ip6 = mtod_(m0, struct ip6_hdr *);
 
 	bzero(&dst, sizeof(dst));
 	dst.sin6_family = AF_INET6;
@@ -8162,7 +8162,7 @@ pf_route6(struct mbuf **m, struct pf_krule *r, struct ifnet *oifp,
 			    __func__));
 			goto bad;
 		}
-		ip6 = mtod(m0, struct ip6_hdr *);
+		ip6 = mtod_(m0, struct ip6_hdr *);
 	}
 
 	if (ifp->if_flags & IFF_LOOPBACK)
@@ -8249,7 +8249,7 @@ pf_check_proto_cksum(struct mbuf *m, int off, int len, u_int8_t p, sa_family_t a
 			if (m->m_pkthdr.csum_flags & CSUM_PSEUDO_HDR) {
 				sum = m->m_pkthdr.csum_data;
 			} else {
-				ip = mtod(m, struct ip *);
+				ip = mtod_(m, struct ip *);
 				sum = in_pseudo(ip->ip_src.s_addr,
 				ip->ip_dst.s_addr, htonl((u_short)len +
 				m->m_pkthdr.csum_data + IPPROTO_TCP));
@@ -8263,7 +8263,7 @@ pf_check_proto_cksum(struct mbuf *m, int off, int len, u_int8_t p, sa_family_t a
 			if (m->m_pkthdr.csum_flags & CSUM_PSEUDO_HDR) {
 				sum = m->m_pkthdr.csum_data;
 			} else {
-				ip = mtod(m, struct ip *);
+				ip = mtod_(m, struct ip *);
 				sum = in_pseudo(ip->ip_src.s_addr,
 				ip->ip_dst.s_addr, htonl((u_short)len +
 				m->m_pkthdr.csum_data + IPPROTO_UDP));
@@ -8676,7 +8676,7 @@ pf_test(int dir, int pflags, struct ifnet *ifp, struct mbuf **m0,
 		goto done;
 	}
 	m = *m0;	/* pf_normalize messes with m0 */
-	h = mtod(m, struct ip *);
+	h = mtod_(m, struct ip *);
 
 	off = h->ip_hl << 2;
 	if (off < (int)sizeof(struct ip)) {
@@ -9252,7 +9252,7 @@ pf_test6(int dir, int pflags, struct ifnet *ifp, struct mbuf **m0, struct inpcb 
 		goto done;
 	}
 	m = *m0;	/* pf_normalize messes with m0 */
-	h = mtod(m, struct ip6_hdr *);
+	h = mtod_(m, struct ip6_hdr *);
 	off = ((caddr_t)h - m->m_data) + sizeof(struct ip6_hdr);
 
 	/*
