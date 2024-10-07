@@ -319,7 +319,7 @@ coalesce_check(struct mbuf *m, void *arg)
 	struct coalesce_info *ci = arg;
 
 	if ((m->m_next != NULL) ||
-	    ((mtod(m, vm_offset_t) & PAGE_MASK) + m->m_len > PAGE_SIZE))
+	    ((((vm_offset_t)m->m_data) & PAGE_MASK) + m->m_len > PAGE_SIZE))
 		ci->noncoal = 1;
 
 	if ((ci->count == 0) || (ci->noncoal == 0 && (ci->count < 7) &&
@@ -2629,11 +2629,11 @@ t3_rx_eth(struct adapter *adap, struct mbuf *m, int ethpad)
 	m->m_data += (sizeof(*cpl) + ethpad);
 
 	if (!cpl->fragment && cpl->csum_valid && cpl->csum == 0xffff) {
-		struct ether_header *eh = mtod(m, void *);
+		struct ether_header *eh = (void *)m->m_data;
 		uint16_t eh_type;
 
 		if (eh->ether_type == htons(ETHERTYPE_VLAN)) {
-			struct ether_vlan_header *evh = mtod(m, void *);
+			struct ether_vlan_header *evh = (void *)m->m_data;
 
 			eh_type = evh->evl_proto;
 		} else
@@ -2698,7 +2698,7 @@ get_packet(adapter_t *adap, unsigned int drop_thres, struct sge_qset *qs,
 	    sopeop == RSPQ_SOP_EOP) {
 		if ((m = m_gethdr(M_NOWAIT, MT_DATA)) == NULL)
 			goto skip_recycle;
-		cl = mtod(m, void *);
+		cl = (void *)m->m_data;
 		memcpy(cl, sd->rxsd_cl, len);
 		recycle_rx_buf(adap, fl, fl->cidx);
 		m->m_pkthdr.len = m->m_len = len;

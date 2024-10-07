@@ -963,7 +963,7 @@ _mb_unmapped_to_ext(struct mbuf *m)
 	}
 
 	/* Skip over any data removed from the front. */
-	off = mtod(m, vm_offset_t);
+	off = (vm_offset_t)m->m_data;
 
 	top = NULL;
 	if (m->m_epg_hdrlen != 0) {
@@ -980,7 +980,7 @@ _mb_unmapped_to_ext(struct mbuf *m)
 				goto fail;
 			m_new->m_len = seglen;
 			prev = top = m_new;
-			memcpy(mtod(m_new, void *), &m->m_epg_hdr[segoff],
+			memcpy((void *)m_new->m_data, &m->m_epg_hdr[segoff],
 			    seglen);
 		}
 	}
@@ -1032,7 +1032,7 @@ _mb_unmapped_to_ext(struct mbuf *m)
 		else
 			prev->m_next = m_new;
 		m_new->m_len = len;
-		memcpy(mtod(m_new, void *), &m->m_epg_trail[off], len);
+		memcpy((void *)m_new->m_data, &m->m_epg_trail[off], len);
 	}
 
 	if (ref_inc != 0) {

@@ -2498,7 +2498,7 @@ m_advance(struct mbuf **pm, int *poffset, int len)
 	for (;;) {
 		if (offset + len < m->m_len) {
 			offset += len;
-			p = mtod(m, uintptr_t) + offset;
+			p = (uintptr_t)m->m_data + offset;
 			break;
 		}
 		len -= m->m_len - offset;
@@ -2520,7 +2520,7 @@ count_mbuf_ext_pgs(struct mbuf *m, int skip, vm_paddr_t *nextaddr)
 	int nsegs = 0;
 
 	M_ASSERTEXTPG(m);
-	off = mtod(m, vm_offset_t);
+	off = (vm_offset_t)m->m_data;
 	len = m->m_len;
 	off += skip;
 	len -= skip;
@@ -2605,7 +2605,7 @@ count_mbuf_nsegs(struct mbuf *m, int skip, uint8_t *cflags)
 			skip = 0;
 			continue;
 		}
-		va = mtod(m, vm_offset_t) + skip;
+		va = (vm_offset_t)m->m_data + skip;
 		len -= skip;
 		skip = 0;
 		paddr = pmap_kextract(va);
@@ -5704,7 +5704,7 @@ save_l2hdr(struct txpkts *txp, struct mbuf *m)
 {
 	MPASS(m->m_len >= VM_TX_L2HDR_LEN);
 
-	memcpy(&txp->ethmacdst[0], mtod(m, const void *), VM_TX_L2HDR_LEN);
+	memcpy(&txp->ethmacdst[0], (const void *)m->m_data, VM_TX_L2HDR_LEN);
 }
 
 static int
@@ -6749,7 +6749,7 @@ write_ethofld_wr(struct cxgbe_rate_tag *cst, struct fw_eth_tx_eo_wr *wr,
 			}
 			if (m0->m_flags & M_EXTPG)
 				sglist_append_mbuf_epg(&sg, m0,
-				    mtod(m0, vm_offset_t), m0->m_len);
+				    (vm_offset_t)m0->m_data, m0->m_len);
                         else
 				sglist_append(&sg, mtod(m0, char *) + immhdrs,
 				    m0->m_len - immhdrs);

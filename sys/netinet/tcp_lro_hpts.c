@@ -382,7 +382,7 @@ do_bpf_strip_and_compress(struct tcpcb *tp, struct lro_ctrl *lc,
 		goto done;
 
 	/* Lets get the TOS/traffic class field */
-	l3.ptr = mtod(m, void *);
+	l3.ptr = (void *)m->m_data;
 	switch (lro_type) {
 	case LRO_TYPE_IPV4_TCP:
 		iptos = l3.ip4->ip_tos;

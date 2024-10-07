@@ -3515,14 +3515,14 @@ tcp_dropwithreset(struct mbuf *m, struct tcphdr *th, struct tcpcb *tp,
 
 	/* tcp_respond consumes the mbuf chain. */
 	if (tcp_get_flags(th) & TH_ACK) {
-		tcp_respond(tp, mtod(m, void *), th, m, (tcp_seq)0,
+		tcp_respond(tp, (void *)m->m_data, th, m, (tcp_seq)0,
 		    th->th_ack, TH_RST);
 	} else {
 		if (tcp_get_flags(th) & TH_SYN)
 			tlen++;
 		if (tcp_get_flags(th) & TH_FIN)
 			tlen++;
-		tcp_respond(tp, mtod(m, void *), th, m, th->th_seq+tlen,
+		tcp_respond(tp, (void *)m->m_data, th, m, th->th_seq+tlen,
 		    (tcp_seq)0, TH_RST|TH_ACK);
 	}
 	return;

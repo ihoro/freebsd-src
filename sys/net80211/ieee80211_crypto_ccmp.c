@@ -169,7 +169,7 @@ ccmp_encap(struct ieee80211_key *k, struct mbuf *m)
 	int hdrlen;
 	int is_mgmt;
 
-	hdrlen = ieee80211_hdrspace(ic, mtod(m, void *));
+	hdrlen = ieee80211_hdrspace(ic, (void *)m->m_data);
 	wh = mtod(m, const struct ieee80211_frame *);
 	is_mgmt = IEEE80211_IS_MGMT(wh);
 
@@ -287,7 +287,7 @@ finish:
 	 * Copy up 802.11 header and strip crypto bits.
 	 */
 	if (! ((rxs != NULL) && (rxs->c_pktflags & IEEE80211_RX_F_IV_STRIP))) {
-		ovbcopy(mtod(m, void *), mtod(m, uint8_t *) + ccmp.ic_header,
+		ovbcopy((void *)m->m_data, mtod(m, uint8_t *) + ccmp.ic_header,
 		    hdrlen);
 		m_adj(m, ccmp.ic_header);
 	}

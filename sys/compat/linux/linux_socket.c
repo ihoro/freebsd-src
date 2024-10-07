@@ -1428,7 +1428,7 @@ linux_sendmsg_common(struct thread *td, l_int s, struct l_msghdr *msghdr,
 		error = ENOBUFS;
 		control = m_get(M_WAITOK, MT_CONTROL);
 		MCLGET(control, M_WAITOK);
-		data = mtod(control, void *);
+		data = (void *)control->m_data;
 		datalen = 0;
 
 		ptr_cmsg = PTRIN(linux_msghdr.msg_control);

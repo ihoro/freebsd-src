@@ -622,7 +622,7 @@ sbtls_recover_record(struct mbuf *mb, int wait, uint32_t tcp_old, uint32_t *ptcp
 	}
 
 	/* get unmapped data offset */
-	offset = mtod(mb->m_next, uintptr_t);
+	offset = (uintptr_t)mb->m_next->m_data;
 
 	/* check if we don't need to re-transmit anything */
 	if (offset == 0) {

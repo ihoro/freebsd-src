@@ -722,7 +722,7 @@ static int
 do_tls_data(struct sge_iq *iq, const struct rss_header *rss, struct mbuf *m)
 {
 	struct adapter *sc = iq->adapter;
-	const struct cpl_tls_data *cpl = mtod(m, const void *);
+	const struct cpl_tls_data *cpl = (const void *)m->m_data;
 	unsigned int tid = GET_TID(cpl);
 	struct toepcb *toep = lookup_tid(sc, tid);
 	struct inpcb *inp = toep->inp;
@@ -783,7 +783,7 @@ static int
 do_rx_tls_cmp(struct sge_iq *iq, const struct rss_header *rss, struct mbuf *m)
 {
 	struct adapter *sc = iq->adapter;
-	const struct cpl_rx_tls_cmp *cpl = mtod(m, const void *);
+	const struct cpl_rx_tls_cmp *cpl = (const void *)m->m_data;
 	struct tlsrx_hdr_pkt *tls_hdr_pkt;
 	unsigned int tid = GET_TID(cpl);
 	struct toepcb *toep = lookup_tid(sc, tid);
@@ -846,7 +846,7 @@ do_rx_tls_cmp(struct sge_iq *iq, const struct rss_header *rss, struct mbuf *m)
 	 */
 	KASSERT(m->m_len >= sizeof(*tls_hdr_pkt),
 	    ("%s: payload too small", __func__));
-	tls_hdr_pkt = mtod(m, void *);
+	tls_hdr_pkt = (void *)m->m_data;
 
 	tls_data = mbufq_dequeue(&toep->ulp_pdu_reclaimq);
 	if (tls_data != NULL) {

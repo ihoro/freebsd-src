@@ -740,7 +740,7 @@ rt2860_alloc_rx_ring(struct rt2860_softc *sc, struct rt2860_rx_ring *ring)
 		}
 
 		error = bus_dmamap_load(ring->data_dmat, data->map,
-		    mtod(data->m, void *), MCLBYTES, rt2860_dma_map_addr,
+		    (void *)data->m->m_data, MCLBYTES, rt2860_dma_map_addr,
 		    &physaddr, 0);
 		if (error != 0) {
 			device_printf(sc->sc_dev,
@@ -1229,14 +1229,14 @@ rt2860_rx_intr(struct rt2860_softc *sc)
 		bus_dmamap_unload(sc->rxq.data_dmat, data->map);
 
 		error = bus_dmamap_load(sc->rxq.data_dmat, data->map,
-		    mtod(m1, void *), MCLBYTES, rt2860_dma_map_addr,
+		    (void *)m1->m_data, MCLBYTES, rt2860_dma_map_addr,
 		    &physaddr, 0);
 		if (__predict_false(error != 0)) {
 			m_freem(m1);
 
 			/* try to reload the old mbuf */
 			error = bus_dmamap_load(sc->rxq.data_dmat, data->map,
-			    mtod(data->m, void *), MCLBYTES,
+			    (void *)data->m->m_data, MCLBYTES,
 			    rt2860_dma_map_addr, &physaddr, 0);
 			if (__predict_false(error != 0)) {
 				panic("%s: could not load old rx mbuf",

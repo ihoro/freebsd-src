@@ -2159,7 +2159,7 @@ rt_ieee80211msg(struct ifnet *ifp, int what, void *data, size_t data_len)
 				m_freem(m);
 				return;
 			}
-			bcopy(data, mtod(n, void *), data_len);
+			bcopy(data, (void *)n->m_data, data_len);
 			n->m_len = data_len;
 			m->m_next = n;
 		} else if (data_len > 0) {

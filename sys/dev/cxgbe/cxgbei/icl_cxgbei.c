@@ -792,7 +792,7 @@ icl_cxgbei_conn_pdu_append_data(struct icl_conn *ic, struct icl_pdu *ip,
 	src = (const char *)addr;
 	for (; m != NULL; m = m->m_next) {
 		m->m_len = min(len, M_SIZE(m));
-		memcpy(mtod(m, void *), src, m->m_len);
+		memcpy((void *)m->m_data, src, m->m_len);
 		src += m->m_len;
 		len -= m->m_len;
 	}

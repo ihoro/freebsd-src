@@ -1557,7 +1557,7 @@ ng_ppp_mp_recv(node_p node, item_p item, uint16_t proto, uint16_t linkNum)
 		if (m->m_len < 2 && (m = m_pullup(m, 2)) == NULL)
 			ERROUT(ENOBUFS);
 
-		shdr = be16dec(mtod(m, void *));
+		shdr = be16dec((void *)m->m_data);
 		frag->seq = MP_SHORT_EXTEND(shdr);
 		frag->first = (shdr & MP_SHORT_FIRST_FLAG) != 0;
 		frag->last = (shdr & MP_SHORT_LAST_FLAG) != 0;
@@ -1574,7 +1574,7 @@ ng_ppp_mp_recv(node_p node, item_p item, uint16_t proto, uint16_t linkNum)
 		if (m->m_len < 4 && (m = m_pullup(m, 4)) == NULL)
 			ERROUT(ENOBUFS);
 
-		lhdr = be32dec(mtod(m, void *));
+		lhdr = be32dec((void *)m->m_data);
 		frag->seq = MP_LONG_EXTEND(lhdr);
 		frag->first = (lhdr & MP_LONG_FIRST_FLAG) != 0;
 		frag->last = (lhdr & MP_LONG_LAST_FLAG) != 0;

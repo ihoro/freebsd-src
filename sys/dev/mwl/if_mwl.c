@@ -1835,7 +1835,7 @@ mwl_beacon_setup(struct ieee80211vap *vap)
 	m = ieee80211_beacon_alloc(ni);
 	if (m == NULL)
 		return ENOBUFS;
-	mwl_hal_setbeacon(hvap, mtod(m, const void *), m->m_len);
+	mwl_hal_setbeacon(hvap, (const void *)m->m_data, m->m_len);
 	m_free(m);
 
 	return 0;

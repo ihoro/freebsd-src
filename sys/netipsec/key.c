@@ -857,7 +857,7 @@ key_mget(u_int len)
 	m = m_get2(len, M_NOWAIT, MT_DATA, M_PKTHDR);
 	if (m == NULL)
 		return (NULL);
-	memset(mtod(m, void *), 0, len);
+	memset((void *)m->m_data, 0, len);
 	return (m);
 }
 

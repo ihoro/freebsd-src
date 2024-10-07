@@ -329,7 +329,7 @@ ktls_set_tcb_fields(struct tlspcb *tlsp, struct tcpcb *tp, struct sge_txq *txq)
 	m->m_pkthdr.csum_flags |= CSUM_SND_TAG;
 
 	/* FW_ULPTX_WR */
-	wr = mtod(m, void *);
+	wr = (void *)m->m_data;
 	wr->op_to_compl = htobe32(V_FW_WR_OP(FW_ULPTX_WR));
 	wr->flowid_len16 = htobe32(F_FW_ULPTX_WR_DATA |
 	    V_FW_WR_LEN16(len / 16));
@@ -613,7 +613,7 @@ ktls_setup_keys(struct tlspcb *tlsp, const struct ktls_session *tls,
 	}
 	m->m_pkthdr.snd_tag = m_snd_tag_ref(&tlsp->com);
 	m->m_pkthdr.csum_flags |= CSUM_SND_TAG;
-	kwr = mtod(m, void *);
+	kwr = (void *)m->m_data;
 	memset(kwr, 0, TLS_KEY_WR_SZ);
 
 	t4_write_tlskey_wr(tls, KTLS_TX, tlsp->tid, 0, tlsp->tx_key_addr, kwr);
@@ -668,7 +668,7 @@ ktls_tcp_payload_length(struct tlspcb *tlsp, struct mbuf *m_tls)
 	 * What range of the TLS record is the mbuf requesting to be
 	 * sent.
 	 */
-	mlen = mtod(m_tls, vm_offset_t) + m_tls->m_len;
+	mlen = (vm_offset_t)m_tls->m_data + m_tls->m_len;
 
 	/* Always send complete records. */
 	if (mlen == TLS_HEADER_LENGTH + plen)
@@ -718,10 +718,10 @@ ktls_payload_offset(struct tlspcb *tlsp, struct mbuf *m_tls)
 	hdr = (void *)m_tls->m_epg_hdr;
 	plen = ntohs(hdr->tls_length);
 #ifdef INVARIANTS
-	mlen = mtod(m_tls, vm_offset_t) + m_tls->m_len;
+	mlen = (vm_offset_t)m_tls->m_data + m_tls->m_len;
 	MPASS(mlen < TLS_HEADER_LENGTH + plen);
 #endif
-	if (mtod(m_tls, vm_offset_t) <= m_tls->m_epg_hdrlen)
+	if ((vm_offset_t)m_tls->m_data <= m_tls->m_epg_hdrlen)
 		return (0);
 	if (tlsp->enc_mode == SCMD_CIPH_MODE_AES_GCM) {
 		/*
@@ -732,7 +732,7 @@ ktls_payload_offset(struct tlspcb *tlsp, struct mbuf *m_tls)
 		 * the offset at the last byte of the record payload
 		 * to send the last cipher block.
 		 */
-		offset = min(mtod(m_tls, vm_offset_t) - m_tls->m_epg_hdrlen,
+		offset = min((vm_offset_t)m_tls->m_data - m_tls->m_epg_hdrlen,
 		    (plen - TLS_HEADER_LENGTH - m_tls->m_epg_trllen) - 1);
 		return (rounddown(offset, AES_BLOCK_LEN));
 	}
@@ -1280,7 +1280,7 @@ ktls_write_tunnel_packet(struct sge_txq *txq, void *dst, struct mbuf *m,
 	/* Set sequence number in TCP header. */
 	tcp = (void *)((char *)eh + m->m_pkthdr.l2hlen + m->m_pkthdr.l3hlen);
 	newtcp = *tcp;
-	newtcp.th_seq = htonl(tcp_seqno + mtod(m_tls, vm_offset_t));
+	newtcp.th_seq = htonl(tcp_seqno + (vm_offset_t)m_tls->m_data);
 	copy_to_txd(&txq->eq, (caddr_t)&newtcp, &out, sizeof(newtcp));
 
 	/* Copy rest of TCP header. */
@@ -1289,7 +1289,7 @@ ktls_write_tunnel_packet(struct sge_txq *txq, void *dst, struct mbuf *m,
 
 	/* Copy the subset of the TLS header requested. */
 	copy_to_txd(&txq->eq, (char *)m_tls->m_epg_hdr +
-	    mtod(m_tls, vm_offset_t), &out, m_tls->m_len);
+	    (vm_offset_t)m_tls->m_data, &out, m_tls->m_len);
 	txq->imm_wrs++;
 
 	txq->txpkt_wrs++;
@@ -1421,7 +1421,7 @@ ktls_write_tls_wr(struct tlspcb *tlsp, struct sge_txq *txq, void *dst,
 	 * block.  To handle this, always begin transmission at the
 	 * start of the current AES block.
 	 */
-	tx_max_offset = mtod(m_tls, vm_offset_t);
+	tx_max_offset = (vm_offset_t)m_tls->m_data;
 	if (tx_max_offset > TLS_HEADER_LENGTH + ntohs(hdr->tls_length) -
 	    m_tls->m_epg_trllen) {
 		/* Always send the full trailer. */
@@ -1495,7 +1495,7 @@ ktls_write_tls_wr(struct tlspcb *tlsp, struct sge_txq *txq, void *dst,
 	 * record or if this is a retransmit,
 	 * reset SND_UNA_RAW to 0 so that SND_UNA == TX_MAX.
 	 */
-	if (tlsp->prev_seq != tx_max || mtod(m_tls, vm_offset_t) != 0) {
+	if (tlsp->prev_seq != tx_max || (vm_offset_t)m_tls->m_data != 0) {
 		KASSERT(m->m_next == m_tls,
 		    ("trying to clear SND_UNA_RAW for subsequent TLS WR"));
 #ifdef VERBOSE_TRACES
@@ -1705,7 +1705,7 @@ ktls_write_tls_wr(struct tlspcb *tlsp, struct sge_txq *txq, void *dst,
 		sec_pdu->seqno_numivs = tlsp->scmd0.seqno_numivs;
 		sec_pdu->ivgen_hdrlen = tlsp->scmd0.ivgen_hdrlen;
 
-		if (mtod(m_tls, vm_offset_t) == 0)
+		if ((vm_offset_t)m_tls->m_data == 0)
 			txq->kern_tls_full++;
 		else
 			txq->kern_tls_partial++;
@@ -1828,12 +1828,12 @@ ktls_write_tls_wr(struct tlspcb *tlsp, struct sge_txq *txq, void *dst,
 	MPASS(ndesc <= available);
 
 	txq->kern_tls_records++;
-	txq->kern_tls_octets += tlen - mtod(m_tls, vm_offset_t);
-	if (mtod(m_tls, vm_offset_t) != 0) {
+	txq->kern_tls_octets += tlen - (vm_offset_t)m_tls->m_data;
+	if ((vm_offset_t)m_tls->m_data != 0) {
 		if (offset == 0)
-			txq->kern_tls_waste += mtod(m_tls, vm_offset_t);
+			txq->kern_tls_waste += (vm_offset_t)m_tls->m_data;
 		else
-			txq->kern_tls_waste += mtod(m_tls, vm_offset_t) -
+			txq->kern_tls_waste += (vm_offset_t)m_tls->m_data -
 			    (m_tls->m_epg_hdrlen + offset);
 	}
 
@@ -2028,11 +2028,11 @@ t6_ktls_write_wr(struct sge_txq *txq, void *dst, struct mbuf *m,
 		tsopt = NULL;
 		if (m_tls == m->m_next) {
 			tcp_seqno = ntohl(tcp->th_seq) -
-			    mtod(m_tls, vm_offset_t);
+			    (vm_offset_t)m_tls->m_data;
 			if (tlsp->using_timestamps)
 				tsopt = ktls_find_tcp_timestamps(tcp);
 		} else {
-			MPASS(mtod(m_tls, vm_offset_t) == 0);
+			MPASS((vm_offset_t)m_tls->m_data == 0);
 			tcp_seqno = tlsp->prev_seq;
 		}
 

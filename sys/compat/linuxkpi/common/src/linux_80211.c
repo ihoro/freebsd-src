@@ -3742,7 +3742,7 @@ lkpi_80211_txq_tx_one(struct lkpi_sta *lsta, struct mbuf *m)
 	M_ASSERTPKTHDR(m);
 #ifdef LINUXKPI_DEBUG_80211
 	if (linuxkpi_debug_80211 & D80211_TRACE_TX_DUMP)
-		hexdump(mtod(m, const void *), m->m_len, "RAW TX (plain) ", 0);
+		hexdump((void *)m->m_data, m->m_len, "RAW TX (plain) ", 0);
 #endif
 
 	ni = lsta->ni;
@@ -5114,7 +5114,7 @@ linuxkpi_ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
 		    m, m->m_pkthdr.len, m->m_len, is_beacon ? " beacon" : "");
 
 	if (linuxkpi_debug_80211 & D80211_TRACE_RX_DUMP)
-		hexdump(mtod(m, const void *), m->m_len, "RX (raw) ", 0);
+		hexdump((const void *)m->m_data, m->m_len, "RX (raw) ", 0);
 
 	/* Implement a dump_rxcb() !!! */
 	if (linuxkpi_debug_80211 & D80211_TRACE_RX)

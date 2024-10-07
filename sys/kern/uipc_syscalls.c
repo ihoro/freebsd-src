@@ -1476,7 +1476,7 @@ sockargs(struct mbuf **mp, char *buf, socklen_t buflen, int type)
 	}
 	m = m_get2(buflen, M_WAITOK, type, 0);
 	m->m_len = buflen;
-	error = copyin(buf, mtod(m, void *), buflen);
+	error = copyin(buf, (void *)m->m_data, buflen);
 	if (error != 0)
 		(void) m_free(m);
 	else {

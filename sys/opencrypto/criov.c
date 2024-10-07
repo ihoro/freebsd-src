@@ -261,7 +261,7 @@ m_epg_segment(struct mbuf *m, size_t offset, size_t *len)
 {
 	u_int i, pglen, pgoff;
 
-	offset += mtod(m, vm_offset_t);
+	offset += (vm_offset_t)m->m_data;
 	if (offset < m->m_epg_hdrlen) {
 		*len = m->m_epg_hdrlen - offset;
 		return (m->m_epg_hdr + offset);

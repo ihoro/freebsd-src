@@ -584,9 +584,9 @@ write_tx_sgl(void *dst, struct mbuf *start, struct mbuf *stop, int nsegs, int n)
 	for (m = start; m != stop; m = m->m_next) {
 		if (m->m_flags & M_EXTPG)
 			rc = sglist_append_mbuf_epg(&sg, m,
-			    mtod(m, vm_offset_t), m->m_len);
+			    (vm_offset_t)m->m_data, m->m_len);
 		else
-			rc = sglist_append(&sg, mtod(m, void *), m->m_len);
+			rc = sglist_append(&sg, (void *)m->m_data, m->m_len);
 		if (__predict_false(rc != 0))
 			panic("%s: sglist_append %d", __func__, rc);
 
@@ -718,9 +718,9 @@ t4_push_frames(struct adapter *sc, struct toepcb *toep, int drop)
 				}
 #endif
 				n = sglist_count_mbuf_epg(m,
-				    mtod(m, vm_offset_t), m->m_len);
+				    (vm_offset_t)m->m_data, m->m_len);
 			} else
-				n = sglist_count(mtod(m, void *), m->m_len);
+				n = sglist_count((void *)m->m_data, m->m_len);
 
 			nsegs += n;
 			plen += m->m_len;
@@ -1004,10 +1004,10 @@ write_iscsi_mbuf_wr(struct toepcb *toep, struct mbuf *sndptr)
 		int n;
 
 		if (m->m_flags & M_EXTPG)
-			n = sglist_count_mbuf_epg(m, mtod(m, vm_offset_t),
+			n = sglist_count_mbuf_epg(m, (vm_offset_t)m->m_data,
 			    m->m_len);
 		else
-			n = sglist_count(mtod(m, void *), m->m_len);
+			n = sglist_count((void *)m->m_data, m->m_len);
 
 		nsegs += n;
 		plen += m->m_len;
@@ -1641,7 +1641,7 @@ static int
 do_rx_data(struct sge_iq *iq, const struct rss_header *rss, struct mbuf *m)
 {
 	struct adapter *sc = iq->adapter;
-	const struct cpl_rx_data *cpl = mtod(m, const void *);
+	const struct cpl_rx_data *cpl = (const void *)m->m_data;
 	unsigned int tid = GET_TID(cpl);
 	struct toepcb *toep = lookup_tid(sc, tid);
 	struct inpcb *inp = toep->inp;

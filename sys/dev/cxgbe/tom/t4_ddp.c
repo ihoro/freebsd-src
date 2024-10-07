@@ -2512,7 +2512,7 @@ sbcopy:
 		int error;
 #endif
 
-		iov[0].iov_base = mtod(m, void *);
+		iov[0].iov_base = (void *)m->m_data;
 		iov[0].iov_len = m->m_len;
 		if (iov[0].iov_len > resid)
 			iov[0].iov_len = resid;

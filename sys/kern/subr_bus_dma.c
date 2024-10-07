@@ -162,7 +162,7 @@ _bus_dmamap_load_mbuf_epg(bus_dma_tag_t dmat, bus_dmamap_t map,
 	error = 0;
 
 	/* Skip over any data removed from the front. */
-	off = mtod(m, vm_offset_t);
+	off = (vm_offset_t)m->m_data;
 
 	if (m->m_epg_hdrlen != 0) {
 		if (off >= m->m_epg_hdrlen) {

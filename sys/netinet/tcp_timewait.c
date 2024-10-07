@@ -243,14 +243,14 @@ tcp_twcheck(struct inpcb *inp, struct tcpopt *to, struct tcphdr *th,
 	 */
 	if (tp->t_port != m->m_pkthdr.tcp_tun_port) {
 		if (tcp_get_flags(th) & TH_ACK) {
-			tcp_respond(tp, mtod(m, void *), th, m,
+			tcp_respond(tp, (void *)m->m_data, th, m,
 			    (tcp_seq)0, th->th_ack, TH_RST);
 		} else {
 			if (tcp_get_flags(th) & TH_SYN)
 				tlen++;
 			if (tcp_get_flags(th) & TH_FIN)
 				tlen++;
-			tcp_respond(tp, mtod(m, void *), th, m,
+			tcp_respond(tp, (void *)m->m_data, th, m,
 			    th->th_seq+tlen, (tcp_seq)0, TH_RST|TH_ACK);
 		}
 		INP_UNLOCK(inp);
@@ -292,7 +292,7 @@ tcp_twcheck(struct inpcb *inp, struct tcpopt *to, struct tcphdr *th,
 	if (thflags != TH_ACK || tlen != 0 ||
 	    th->th_seq != tp->rcv_nxt || th->th_ack != tp->snd_nxt) {
 		TCP_PROBE5(receive, NULL, NULL, m, NULL, th);
-		tcp_respond(tp, mtod(m, void *), th, m, tp->rcv_nxt,
+		tcp_respond(tp, (void *)m->m_data, th, m, tp->rcv_nxt,
 		    tp->snd_nxt, TH_ACK);
 		INP_UNLOCK(inp);
 		TCPSTAT_INC(tcps_tw_responds);

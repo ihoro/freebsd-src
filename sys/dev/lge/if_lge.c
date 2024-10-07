@@ -1104,7 +1104,7 @@ lge_encap(struct lge_softc *sc, struct mbuf *m_head, u_int32_t *txidx)
 			tot_len += m->m_len;
 			f = &cur_tx->lge_frags[frag];
 			f->lge_fraglen = m->m_len;
-			f->lge_fragptr_lo = vtophys(mtod(m, vm_offset_t));
+			f->lge_fragptr_lo = vtophys((vm_offset_t)m->m_data);
 			f->lge_fragptr_hi = 0;
 			frag++;
 		}

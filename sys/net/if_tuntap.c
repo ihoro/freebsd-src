@@ -1732,7 +1732,7 @@ tunread(struct cdev *dev, struct uio *uio, int flag)
 	while (m && uio->uio_resid > 0 && error == 0) {
 		len = min(uio->uio_resid, m->m_len);
 		if (len != 0)
-			error = uiomove(mtod(m, void *), len, uio);
+			error = uiomove((void *)m->m_data, len, uio);
 		m = m_free(m);
 	}
 

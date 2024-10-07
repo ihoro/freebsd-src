@@ -1233,7 +1233,7 @@ uipc_sosend_dgram(struct socket *so, struct sockaddr *addr, struct uio *uio,
 		from = &sun_noname;
 	f->m_len = from->sa_len;
 	MPASS(from->sa_len <= MLEN);
-	bcopy(from, mtod(f, void *), from->sa_len);
+	bcopy(from, (void *)m->m_data, from->sa_len);
 	ctl += f->m_len;
 
 	/*

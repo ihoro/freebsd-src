@@ -2212,7 +2212,7 @@ tcp_send_challenge_ack(struct tcpcb *tp, struct tcphdr *th, struct mbuf *m)
 		}
 	}
 	if (send_challenge_ack) {
-		tcp_respond(tp, mtod(m, void *), th, m, tp->rcv_nxt,
+		tcp_respond(tp, (void *)m->m_data, th, m, tp->rcv_nxt,
 		    tp->snd_nxt, TH_ACK);
 		tp->last_ack_sent = tp->rcv_nxt;
 	}

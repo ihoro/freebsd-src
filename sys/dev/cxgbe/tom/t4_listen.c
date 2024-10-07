@@ -1137,7 +1137,7 @@ static void
 pass_accept_req_to_protohdrs(struct adapter *sc, const struct mbuf *m,
     struct in_conninfo *inc, struct tcphdr *th, uint8_t *iptos)
 {
-	const struct cpl_pass_accept_req *cpl = mtod(m, const void *);
+	const struct cpl_pass_accept_req *cpl = (const void *)m->m_data;
 	const struct ether_header *eh;
 	unsigned int hlen = be32toh(cpl->hdr_len);
 	uintptr_t l3hdr;
@@ -1298,7 +1298,7 @@ do_pass_accept_req(struct sge_iq *iq, const struct rss_header *rss,
 	struct adapter *sc = iq->adapter;
 	struct tom_data *td = sc->tom_softc;
 	struct toedev *tod;
-	const struct cpl_pass_accept_req *cpl = mtod(m, const void *);
+	const struct cpl_pass_accept_req *cpl = (const void *)m->m_data;
 	unsigned int stid = G_PASS_OPEN_TID(be32toh(cpl->tos_stid));
 	unsigned int tid = GET_TID(cpl);
 	struct listen_ctx *lctx = lookup_stid(sc, stid);

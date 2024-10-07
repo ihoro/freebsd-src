@@ -182,7 +182,7 @@ rtwn_pci_alloc_rx_list(struct rtwn_softc *sc)
 		}
 
 		error = bus_dmamap_load(rx_ring->data_dmat, rx_data->map,
-		    mtod(rx_data->m, void *), MJUMPAGESIZE,
+		    (void *)rx_data->m->m_data, MJUMPAGESIZE,
 		    rtwn_pci_dma_map_addr, &rx_data->paddr, BUS_DMA_NOWAIT);
 		if (error != 0) {
 			device_printf(sc->sc_dev,

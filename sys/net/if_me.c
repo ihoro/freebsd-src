@@ -621,7 +621,7 @@ me_transmit(struct ifnet *ifp, struct mbuf *m)
 		error = ENOBUFS;
 		goto drop;
 	}
-	memmove(mtod(m, void *), mtodo(m, hlen), sizeof(struct ip));
+	memmove((void *)m->m_data, mtodo(m, hlen), sizeof(struct ip));
 	ip = mtod(m, struct ip *);
 	ip->ip_len = htons(m->m_pkthdr.len);
 	ip->ip_p = IPPROTO_MOBILE;
