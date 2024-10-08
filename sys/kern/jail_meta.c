@@ -37,39 +37,47 @@
 
 static u_int jm_osd_slot;
 
-#define JAILMETAMAXLEN 1024
+#define JAILMETAMAXLEN 4096
 
 SYSCTL_JAIL_PARAM_STRING(, meta, CTLFLAG_RW, JAILMETAMAXLEN, "Jail meta info");
 
 static void
-jm_osd_destructor(void *value)
+jm_osd_destructor(void *osd_addr)
 {
-	free(value, M_PRISON);
+	free(osd_addr, M_PRISON);
 }
 
+/* TODO: it looks we should do nothing on create phase, anyway set is called
+ * right after create.
+ * The only useful thing could be to pre-allocate osd slot, probably.
+ * But be ready for a case if a jail was created before the module loaded. */
 static int
 jm_osd_method_create(void *obj, void *data)
 {
 	struct prison *pr = obj;
 	struct vfsoptlist *opts = data;
-	char *opt_meta;
-	int len;
-	char *osd_meta;
+	char *opt_addr;
+	int opt_len; /* TODO: is it provided w/o NULL char? */
+	char *osd_addr;
 	void **rsv;
+	int error;
 
-	/* TODO: error = */ vfs_getopt(opts, "meta", (void **)&opt_meta, &len);
-	printf("_create: opt_meta=%s, len=%d | ", opt_meta, len);
+	error = vfs_getopt(opts, "meta", (void **)&opt_addr, &opt_len);
+	if (error != 0)
+		return (0);
+	/* printf("_create: opt_meta=%s, len=%d | ", opt_meta, len); */
 
-	osd_meta = malloc(JAILMETAMAXLEN, M_PRISON, M_WAITOK);
-	osd_meta[0] = '\0';
+	/* TODO: check for JAILMETAMAXLEN */
+
+	osd_addr = malloc(opt_len + 1, M_PRISON, M_WAITOK);
+	memcpy(osd_addr, opt_addr, opt_len);
+	osd_addr[opt_len] = '\0';
+
 	rsv = osd_reserve(jm_osd_slot);
 	/* TODO: what if rsv is NULL? */
-
 	mtx_lock(&pr->pr_mtx);
-	(void) osd_jail_set_reserved(pr, jm_osd_slot, rsv, osd_meta);
-	memcpy(osd_meta, opt_meta, len);
-	osd_meta[len] = '\0';
-	printf("_create: osd_meta=%s | ", osd_meta);
+	(void) osd_jail_set_reserved(pr, jm_osd_slot, rsv, osd_addr);
+	/* printf("_create: osd_meta=%s | ", osd_meta); */
 	mtx_unlock(&pr->pr_mtx);
 
 	/* TODO: remember about osd_free_reserved() */
@@ -78,20 +86,60 @@ jm_osd_method_create(void *obj, void *data)
 }
 
 static int
+jm_osd_method_set(void *obj, void *data)
+{
+	struct prison *pr = obj;
+	struct vfsoptlist *opts = data;
+	int opt_len; /* TODO: is it provided w/o NULL char? */
+	char *osd_addr;
+	char *osd_addr_old;
+	int error;
+
+	/* TODO: is there a better way? */
+	error = vfs_getopt(opts, "meta", NULL, &opt_len);
+	if (error != 0)
+		return (0);
+
+	/* TODO: check for JAILMETAMAXLEN */
+
+	osd_addr = malloc(opt_len + 1, M_PRISON, M_WAITOK);
+	error = vfs_copyopt(opts, "meta", osd_addr, opt_len);
+	if (error != 0) {
+		free(osd_addr, M_PRISON);
+		return (error);
+	}
+	osd_addr[opt_len] = '\0';
+
+	mtx_lock(&pr->pr_mtx);
+	osd_addr_old = osd_jail_get(pr, jm_osd_slot);
+	/* TODO: consider a case if kldload jail_meta is done after a jail is created
+	 * let's do _reserve each time? */
+	error = osd_jail_set(pr, jm_osd_slot, osd_addr);
+	mtx_unlock(&pr->pr_mtx);
+
+	if (error != 0)
+		osd_addr_old = osd_addr;
+
+	free(osd_addr_old, M_PRISON);
+
+	return (error);
+}
+
+static int
 jm_osd_method_get(void *obj, void *data)
 {
 	struct prison *pr = obj;
 	struct vfsoptlist *opts = data;
-	char *osd_meta;
+	char *osd_addr;
 	char empty = '\0';
 
 	mtx_lock(&pr->pr_mtx);
-	osd_meta = osd_jail_get(pr, jm_osd_slot);
-	printf("_get: osd_meta=%s | ", osd_meta);
-	if (osd_meta == NULL)
+	osd_addr = osd_jail_get(pr, jm_osd_slot);
+	/* printf("_get: osd_meta=%s | ", osd_addr); */
+	if (osd_addr == NULL)
 		/* TODO: error = */ vfs_setopts(opts, "meta", &empty);
 	else
-		/* TODO: error = */ vfs_setopts(opts, "meta", osd_meta);
+		/* TODO: error = */ vfs_setopts(opts, "meta", osd_addr);
 	mtx_unlock(&pr->pr_mtx);
 
 	return (0);
@@ -102,14 +150,14 @@ jm_osd_method_check(void *obj __unused, void *data)
 {
 	struct vfsoptlist *opts = data;
 	char *meta;
-	int error;
+	int error __unused;
 	int len;
 
 	error = vfs_getopt(opts, "meta", (void **)&meta, &len);
 
-	/* TODO: check max len */
+	/* TODO: check max len, return error if bad */
 
-	return (error);
+	return (0);
 }
 
 static int
@@ -117,8 +165,8 @@ jm_mod_load(void *arg __unused)
 {
 	osd_method_t methods[PR_MAXMETHOD] = {
 		[PR_METHOD_CREATE] = jm_osd_method_create,
+		[PR_METHOD_SET] = jm_osd_method_set,
 		[PR_METHOD_GET] = jm_osd_method_get,
-		//[PR_METHOD_SET] = jm_osd_method_set,
 		[PR_METHOD_CHECK] = jm_osd_method_check,
 	};
 
