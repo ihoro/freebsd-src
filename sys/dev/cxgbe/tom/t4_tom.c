@@ -697,7 +697,7 @@ static int
 do_get_tcb_rpl(struct sge_iq *iq, const struct rss_header *rss, struct mbuf *m)
 {
 	struct adapter *sc = iq->adapter;
-	const struct cpl_get_tcb_rpl *cpl = mtod(m, const void *);
+	const struct cpl_get_tcb_rpl *cpl = (const void *)m->m_data;
 	const uint64_t *tcb = (const uint64_t *)(const void *)(cpl + 1);
 	struct tcb_histent *te;
 	const u_int tid = GET_TID(cpl);

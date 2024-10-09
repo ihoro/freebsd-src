@@ -1379,7 +1379,7 @@ m_apply_extpg_one(struct mbuf *m, int off, int len,
 
 	KASSERT(PMAP_HAS_DMAP,
 	    ("m_apply_extpg_one does not support unmapped mbufs"));
-	off += mtod(m, vm_offset_t);
+	off += (vm_offset_t)m->m_data;
 	if (off < m->m_epg_hdrlen) {
 		count = min(m->m_epg_hdrlen - off, len);
 		rval = f(arg, m->m_epg_hdr + off, count);
@@ -2029,7 +2029,7 @@ mc_uiotomc(struct mchain *mc, struct uio *uio, u_int length, u_int lspace,
 		u_int mlen;
 
 		mlen = min(M_TRAILINGSPACE(mb), total - mc->mc_len);
-		error = uiomove(mtod(mb, void *), mlen, uio);
+		error = uiomove((void *)mb->m_data, mlen, uio);
 		if (__predict_false(error)) {
 			mc_freem(mc);
 			return (error);
@@ -2055,7 +2055,7 @@ m_unmapped_uiomove(const struct mbuf *m, int m_off, struct uio *uio, int len)
 	error = 0;
 
 	/* Skip over any data removed from the front. */
-	off = mtod(m, vm_offset_t);
+	off = (vm_offset_t)m->m_data;
 
 	off += m_off;
 	if (m->m_epg_hdrlen != 0) {
@@ -2119,7 +2119,7 @@ m_mbuftouio(struct uio *uio, const struct mbuf *m, int len)
 		if ((m->m_flags & M_EXTPG) != 0)
 			error = m_unmapped_uiomove(m, 0, uio, length);
 		else
-			error = uiomove(mtod(m, void *), length, uio);
+			error = uiomove((void *)m->m_data, length, uio);
 		if (error)
 			return (error);
 

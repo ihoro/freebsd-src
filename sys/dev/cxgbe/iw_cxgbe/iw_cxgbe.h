@@ -79,7 +79,7 @@ do { \
 
 static inline void *cplhdr(struct mbuf *m)
 {
-	return mtod(m, void*);
+	return (void *)m->m_data;
 }
 
 #define PBL_OFF(rdev_p, a) ((a) - (rdev_p)->adap->vres.pbl.start)

@@ -2636,7 +2636,7 @@ soreceive_rcvoob(struct socket *so, struct uio *uio, int flags)
 	if (error)
 		goto bad;
 	do {
-		error = uiomove(mtod(m, void *),
+		error = uiomove((void *)m->m_data,
 		    (int) min(uio->uio_resid, m->m_len), uio);
 		m = m_free(m);
 	} while (uio->uio_resid && error == 0 && m);

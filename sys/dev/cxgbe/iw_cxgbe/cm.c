@@ -1092,7 +1092,7 @@ static int
 terminate(struct sge_iq *iq, const struct rss_header *rss, struct mbuf *m)
 {
 	struct adapter *sc = iq->adapter;
-	const struct cpl_rdma_terminate *cpl = mtod(m, const void *);
+	const struct cpl_rdma_terminate *cpl = (const void *)m->m_data;
 	unsigned int tid = GET_TID(cpl);
 	struct toepcb *toep = lookup_tid(sc, tid);
 	struct socket *so;

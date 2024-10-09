@@ -1424,7 +1424,7 @@ qla_get_mbuf(qla_host_t *ha, qla_rx_buf_t *rxb, struct mbuf *nmp,
 	 * machinery to arrange the memory mapping.
 	 */
 	ret = bus_dmamap_load(ha->rx_tag, rxb->map,
-				mtod(mp, void *), mp->m_len,
+				(void *)mp->m_data, mp->m_len,
 				qla_dmamap_callback, &rxb->paddr,
 				BUS_DMA_NOWAIT);
 	if (ret || !rxb->paddr) {

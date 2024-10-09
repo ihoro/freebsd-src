@@ -789,7 +789,7 @@ ctf_challenge_ack(struct mbuf *m, struct tcphdr *th, struct tcpcb *tp, uint8_t i
 	} else {
 		tcp_ecn_input_syn_sent(tp, tcp_get_flags(th), iptos);
 		/* Send challenge ACK. */
-		tcp_respond(tp, mtod(m, void *), th, m, tp->rcv_nxt,
+		tcp_respond(tp, (void *)m->m_data, th, m, tp->rcv_nxt,
 		    tp->snd_nxt, TH_ACK);
 		tp->last_ack_sent = tp->rcv_nxt;
 		m = NULL;

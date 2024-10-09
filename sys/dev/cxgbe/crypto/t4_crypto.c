@@ -2657,7 +2657,7 @@ do_cpl6_fw_pld(struct sge_iq *iq, const struct rss_header *rss,
 	int error;
 
 	if (m != NULL)
-		cpl = mtod(m, const void *);
+		cpl = (const void *)m->m_data;
 	else
 		cpl = (const void *)(rss + 1);
 

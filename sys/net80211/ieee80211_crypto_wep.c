@@ -185,7 +185,7 @@ wep_encap(struct ieee80211_key *k, struct mbuf *m)
 	int hdrlen;
 	int is_mgmt;
 
-	hdrlen = ieee80211_hdrspace(ic, mtod(m, void *));
+	hdrlen = ieee80211_hdrspace(ic, (void *)m->m_data);
 	wh = mtod(m, struct ieee80211_frame *);
 	is_mgmt = IEEE80211_IS_MGMT(wh);
 
@@ -267,7 +267,7 @@ wep_decap(struct ieee80211_key *k, struct mbuf *m, int hdrlen)
 	/*
 	 * Copy up 802.11 header and strip crypto bits.
 	 */
-	ovbcopy(mtod(m, void *), mtod(m, uint8_t *) + wep.ic_header, hdrlen);
+	ovbcopy((void *)m->m_data, mtod(m, uint8_t *) + wep.ic_header, hdrlen);
 	m_adj(m, wep.ic_header);
 
 finish:

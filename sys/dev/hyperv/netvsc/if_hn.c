@@ -3458,7 +3458,7 @@ hn_rxpkt(struct hn_rx_ring *rxr)
 			if_inc_counter(hn_ifp, IFCOUNTER_IQDROPS, 1);
 			return (0);
 		}
-		memcpy(mtod(m_new, void *), rxr->rsc.frag_data[0],
+		memcpy((void *)m_new->m_data, rxr->rsc.frag_data[0],
 		    rxr->rsc.frag_len[0]);
 		m_new->m_pkthdr.len = m_new->m_len = rxr->rsc.frag_len[0];
 	} else {

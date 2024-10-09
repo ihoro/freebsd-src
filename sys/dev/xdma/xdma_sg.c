@@ -503,7 +503,7 @@ _xdma_load_data(xdma_channel_t *xchan, struct xdma_request *xr,
 				    (void *)xr->buf.vaddr);
 			seg[0].ds_addr = (bus_addr_t)xr->buf.paddr;
 		} else if (xchan->caps & XCHAN_CAP_IOMMU) {
-			addr = mtod(m, bus_addr_t);
+			addr = (bus_addr_t)m->m_data;
 			pa = vtophys(addr);
 
 			if (xr->direction == XDMA_MEM_TO_DEV)
@@ -524,7 +524,7 @@ _xdma_load_data(xdma_channel_t *xchan, struct xdma_request *xr,
 				xr->dst_addr = va;
 			seg[0].ds_addr = va;
 		} else
-			seg[0].ds_addr = mtod(m, bus_addr_t);
+			seg[0].ds_addr = (bus_addr_t)m->m_data;
 		seg[0].ds_len = m->m_pkthdr.len;
 		break;
 	case XR_TYPE_BIO:

@@ -689,7 +689,7 @@ ipw_dma_alloc(struct ipw_softc *sc)
 		}
 
 		error = bus_dmamap_load(sc->rxbuf_dmat, sbuf->map,
-		    mtod(sbuf->m, void *), MCLBYTES, ipw_dma_map_addr,
+		    (void *)sbuf->m->m_data, MCLBYTES, ipw_dma_map_addr,
 		    &physaddr, 0);
 		if (error != 0) {
 			device_printf(sc->sc_dev,
@@ -1185,14 +1185,14 @@ ipw_rx_data_intr(struct ipw_softc *sc, struct ipw_status *status,
 	bus_dmamap_sync(sc->rxbuf_dmat, sbuf->map, BUS_DMASYNC_POSTREAD);
 	bus_dmamap_unload(sc->rxbuf_dmat, sbuf->map);
 
-	error = bus_dmamap_load(sc->rxbuf_dmat, sbuf->map, mtod(mnew, void *),
+	error = bus_dmamap_load(sc->rxbuf_dmat, sbuf->map, (void *)mnew->m_data,
 	    MCLBYTES, ipw_dma_map_addr, &physaddr, 0);
 	if (error != 0) {
 		m_freem(mnew);
 
 		/* try to reload the old mbuf */
 		error = bus_dmamap_load(sc->rxbuf_dmat, sbuf->map,
-		    mtod(sbuf->m, void *), MCLBYTES, ipw_dma_map_addr,
+		    (void *)sbuf->m->m_data, MCLBYTES, ipw_dma_map_addr,
 		    &physaddr, 0);
 		if (error != 0) {
 			/* very unlikely that it will fail... */

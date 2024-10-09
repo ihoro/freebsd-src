@@ -473,7 +473,7 @@ debugnet_ip_output(struct debugnet_pcb *pcb, struct mbuf *m)
 		return (ENOBUFS);
 	}
 
-	ip = mtod(m, void *);
+	ip = (void *)m->m_data;
 	udp = (void *)(ip + 1);
 
 	memset(ip, 0, offsetof(struct ip, ip_p));

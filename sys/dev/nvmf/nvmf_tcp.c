@@ -287,7 +287,7 @@ nvmf_tcp_report_error(struct nvmf_tcp_qpair *qp, uint16_t fes, uint32_t fei,
 
 	m = m_get2(sizeof(*hdr) + hlen, M_WAITOK, MT_DATA, 0);
 	m->m_len = sizeof(*hdr) + hlen;
-	hdr = mtod(m, void *);
+	hdr = (void *)m->m_data;
 	memset(hdr, 0, sizeof(*hdr));
 	hdr->common.pdu_type = qp->qp.nq_controller ?
 	    NVME_TCP_PDU_TYPE_C2H_TERM_REQ : NVME_TCP_PDU_TYPE_H2C_TERM_REQ;
@@ -457,7 +457,7 @@ nvmf_tcp_construct_pdu(struct nvmf_tcp_qpair *qp, void *hdr, size_t hlen,
 
 	top = m_get2(mlen, M_WAITOK, MT_DATA, 0);
 	top->m_len = mlen;
-	ch = mtod(top, void *);
+	ch = (void *)top->m_data;
 	memcpy(ch, hdr, hlen);
 	ch->hlen = hlen;
 	if (qp->header_digests)
@@ -492,7 +492,7 @@ nvmf_tcp_construct_pdu(struct nvmf_tcp_qpair *qp, void *hdr, size_t hlen,
 
 			data->m_next = m_get(M_WAITOK, MT_DATA);
 			data->m_next->m_len = sizeof(digest);
-			memcpy(mtod(data->m_next, void *), &digest,
+			memcpy((void *)data->m_next->m_data, &digest,
 			    sizeof(digest));
 		}
 	}
@@ -1028,7 +1028,7 @@ pullup_pdu_hdr(struct mbuf *m, int len)
 
 	n = m_get2(len, M_WAITOK, MT_DATA, 0);
 	n->m_len = len;
-	m_copydata(m, 0, len, mtod(n, void *));
+	m_copydata(m, 0, len, (void *)n->m_data);
 
 	while (m != NULL && m->m_len <= len) {
 		p = m->m_next;
@@ -1050,7 +1050,7 @@ nvmf_tcp_dispatch_pdu(struct nvmf_tcp_qpair *qp,
 {
 	/* Ensure the PDU header is contiguous. */
 	pdu->m = pullup_pdu_hdr(pdu->m, ch->hlen);
-	pdu->hdr = mtod(pdu->m, const void *);
+	pdu->hdr = (const void *)pdu->m->m_data;
 
 	switch (ch->pdu_type) {
 	default:

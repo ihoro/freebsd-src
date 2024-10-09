@@ -450,7 +450,7 @@ sglist_append_mbuf(struct sglist *sg, struct mbuf *m0)
 		if (m->m_len > 0) {
 			if ((m->m_flags & M_EXTPG) != 0)
 				error = sglist_append_mbuf_epg(sg, m,
-				    mtod(m, vm_offset_t), m->m_len);
+				    (vm_offset_t)m->m_data, m->m_len);
 			else
 				error = sglist_append(sg, m->m_data,
 				    m->m_len);
@@ -473,7 +473,7 @@ sglist_append_single_mbuf(struct sglist *sg, struct mbuf *m)
 {
 	if ((m->m_flags & M_EXTPG) != 0)
 		return (sglist_append_mbuf_epg(sg, m,
-		    mtod(m, vm_offset_t), m->m_len));
+		    (vm_offset_t)m->m_data, m->m_len));
 	else
 		return (sglist_append(sg, m->m_data, m->m_len));
 }

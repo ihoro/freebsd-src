@@ -139,7 +139,7 @@ netgdb_rx(struct mbuf *m)
 	while (rlen > 0) {
 		MPASS(m != NULL && m->m_len >= 0);
 		count = min((uint32_t)m->m_len, rlen);
-		(void)sbuf_bcat(&netgdb_rxsb, mtod(m, const void *), count);
+		(void)sbuf_bcat(&netgdb_rxsb, (const void *)m->m_data, count);
 		rlen -= count;
 		m = m->m_next;
 	}

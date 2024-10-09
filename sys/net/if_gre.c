@@ -719,7 +719,7 @@ gre_transmit(struct ifnet *ifp, struct mbuf *m)
 		error = ENOBUFS;
 		goto drop;
 	}
-	bcopy(sc->gre_hdr, mtod(m, void *), sc->gre_hlen);
+	bcopy(sc->gre_hdr, (void *)m->m_data, sc->gre_hlen);
 	/* Determine GRE proto */
 	switch (af) {
 #ifdef INET

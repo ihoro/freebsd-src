@@ -184,7 +184,7 @@ newnfs_realign(struct mbuf **pm, int how)
 
 	++nfs_realign_test;
 	while ((m = *pm) != NULL) {
-		if ((m->m_len & 0x3) || (mtod(m, intptr_t) & 0x3)) {
+		if ((m->m_len & 0x3) || (((intptr_t)m->m_data) & 0x3)) {
 			/*
 			 * NB: we can't depend on m_pkthdr.len to help us
 			 * decide what to do here.  May not be worth doing

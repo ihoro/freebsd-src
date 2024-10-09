@@ -1190,7 +1190,7 @@ xn_alloc_rx_buffers(struct netfront_rxq *rxq)
 		    ("reserved grant references exhuasted"));
 		rxq->grant_ref[id] = ref;
 
-		pfn = atop(vtophys(mtod(m, vm_offset_t)));
+		pfn = atop(vtophys((vm_offset_t)m->m_data));
 		req = RING_GET_REQUEST(&rxq->ring, req_prod);
 
 		gnttab_grant_foreign_access_ref(ref,
@@ -1995,7 +1995,7 @@ xn_rebuild_rx_bufs(struct netfront_rxq *rxq)
 		ref = rxq->grant_ref[requeue_idx] = xn_get_rx_ref(rxq, i);
 
 		req = RING_GET_REQUEST(&rxq->ring, requeue_idx);
-		pfn = vtophys(mtod(m, vm_offset_t)) >> PAGE_SHIFT;
+		pfn = vtophys((vm_offset_t)m->m_data) >> PAGE_SHIFT;
 
 		gnttab_grant_foreign_access_ref(ref,
 		    xenbus_get_otherend_id(rxq->info->xbdev),

@@ -639,7 +639,7 @@ emac_start_locked(if_t ifp)
 	 * Emac controller wants 4 byte aligned TX buffers.
 	 * We have to copy pretty much all the time.
 	 */
-	if (m->m_next != NULL || (mtod(m, uintptr_t) & 3) != 0) {
+	if (m->m_next != NULL || (((uintptr_t)m->m_data) & 3) != 0) {
 		m0 = m_defrag(m, M_NOWAIT);
 		if (m0 == NULL) {
 			m_freem(m);

@@ -207,7 +207,7 @@ tkip_encap(struct ieee80211_key *k, struct mbuf *m)
 	if ((! is_mgmt) && (k->wk_flags & IEEE80211_KEY_NOIV))
 		return 1;
 
-	hdrlen = ieee80211_hdrspace(ic, mtod(m, void *));
+	hdrlen = ieee80211_hdrspace(ic, (void *)m->m_data);
 
 	/*
 	 * Copy down 802.11 header and add the IV, KeyID, and ExtIV.
@@ -361,7 +361,7 @@ finish:
 	 * are required to.
 	 */
 	if (! ((rxs != NULL) && (rxs->c_pktflags & IEEE80211_RX_F_IV_STRIP))) {
-		memmove(mtod(m, uint8_t *) + tkip.ic_header, mtod(m, void *),
+		memmove(mtod(m, uint8_t *) + tkip.ic_header, (void *)m->m_data,
 		    hdrlen);
 		m_adj(m, tkip.ic_header);
 	}

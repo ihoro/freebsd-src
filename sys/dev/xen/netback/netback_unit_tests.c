@@ -1142,9 +1142,9 @@ xnb_txpkt2gnttab_short(char *buffer, size_t buflen)
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].source.offset == req->offset);
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].source.domid == DOMID_SELF);
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].dest.offset == virt_to_offset(
-	      mtod(pMbuf, vm_offset_t)));
+	      (vm_offset_t)pMbuf->m_data));
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].dest.u.gmfn ==
-		virt_to_mfn(mtod(pMbuf, vm_offset_t)));
+		virt_to_mfn((vm_offset_t)pMbuf->m_data));
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].dest.domid == DOMID_FIRST_RESERVED);
 	safe_m_freem(&pMbuf);
 }
@@ -1187,11 +1187,11 @@ xnb_txpkt2gnttab_2req(char *buffer, size_t buflen)
 	XNB_ASSERT(n_entries == 2);
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].len == 1400);
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].dest.offset == virt_to_offset(
-	      mtod(pMbuf, vm_offset_t)));
+	      (vm_offset_t)pMbuf->m_data));
 
 	XNB_ASSERT(xnb_unit_pvt.gnttab[1].len == 500);
 	XNB_ASSERT(xnb_unit_pvt.gnttab[1].dest.offset == virt_to_offset(
-	      mtod(pMbuf, vm_offset_t) + 1400));
+	      (vm_offset_t)pMbuf->m_data + 1400));
 	safe_m_freem(&pMbuf);
 }
 
@@ -1231,19 +1231,19 @@ xnb_txpkt2gnttab_2cluster(char *buffer, size_t buflen)
 		XNB_ASSERT(xnb_unit_pvt.gnttab[0].len == MCLBYTES);
 		XNB_ASSERT(
 		    xnb_unit_pvt.gnttab[0].dest.offset == virt_to_offset(
-		      mtod(pMbuf, vm_offset_t)));
+		      (vm_offset_t)pMbuf->m_data));
 		XNB_ASSERT(xnb_unit_pvt.gnttab[0].source.offset == 0);
 
 		XNB_ASSERT(xnb_unit_pvt.gnttab[1].len == MCLBYTES);
 		XNB_ASSERT(
 		    xnb_unit_pvt.gnttab[1].dest.offset == virt_to_offset(
-		      mtod(pMbuf->m_next, vm_offset_t)));
+		      (vm_offset_t)pMbuf->m_next->m_data));
 		XNB_ASSERT(xnb_unit_pvt.gnttab[1].source.offset == MCLBYTES);
 
 		XNB_ASSERT(xnb_unit_pvt.gnttab[2].len == 1);
 		XNB_ASSERT(
 		    xnb_unit_pvt.gnttab[2].dest.offset == virt_to_offset(
-		      mtod(pMbuf->m_next, vm_offset_t)));
+		      (vm_offset_t)pMbuf->m_next->m_data));
 		XNB_ASSERT(xnb_unit_pvt.gnttab[2].source.offset == 2 *
 			    MCLBYTES);
 	} else if (M_TRAILINGSPACE(pMbuf) == 2 * MCLBYTES) {
@@ -1252,13 +1252,13 @@ xnb_txpkt2gnttab_2cluster(char *buffer, size_t buflen)
 		XNB_ASSERT(xnb_unit_pvt.gnttab[0].len == 2 * MCLBYTES);
 		XNB_ASSERT(
 		    xnb_unit_pvt.gnttab[0].dest.offset == virt_to_offset(
-		      mtod(pMbuf, vm_offset_t)));
+		      (vm_offset_t)pMbuf->m_data));
 		XNB_ASSERT(xnb_unit_pvt.gnttab[0].source.offset == 0);
 
 		XNB_ASSERT(xnb_unit_pvt.gnttab[1].len == 1);
 		XNB_ASSERT(
 		    xnb_unit_pvt.gnttab[1].dest.offset == virt_to_offset(
-		      mtod(pMbuf->m_next, vm_offset_t)));
+		      (vm_offset_t)pMbuf->m_next->m_data));
 		XNB_ASSERT(
 		    xnb_unit_pvt.gnttab[1].source.offset == 2 * MCLBYTES);
 
@@ -1681,9 +1681,9 @@ xnb_rxpkt2gnttab_short(char *buffer, size_t buflen) {
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].dest.offset == 0);
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].source.domid == DOMID_SELF);
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].source.offset == virt_to_offset(
-		   mtod(mbuf, vm_offset_t)));
+		   (vm_offset_t)mbuf->m_data));
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].source.u.gmfn ==
-		   virt_to_mfn(mtod(mbuf, vm_offset_t)));
+		   virt_to_mfn((vm_offset_t)mbuf->m_data));
 	XNB_ASSERT(xnb_unit_pvt.gnttab[0].dest.domid == DOMID_FIRST_RESERVED);
 
 	safe_m_freem(&mbuf);
@@ -2118,13 +2118,13 @@ xnb_add_mbuf_cksum_arp(char *buffer, size_t buflen)
 				CSUM_DATA_VALID | CSUM_PSEUDO_HDR;
 
 	/* Make a backup copy of the packet */
-	bcopy(mtod(mbufc, const void*), pkt_orig, pkt_len);
+	bcopy((const void*)mbufc->m_data, pkt_orig, pkt_len);
 
 	/* Function under test */
 	xnb_add_mbuf_cksum(mbufc);
 
 	/* Verify that the packet's data did not change */
-	XNB_ASSERT(bcmp(mtod(mbufc, const void*), pkt_orig, pkt_len) == 0);
+	XNB_ASSERT(bcmp((const void*)mbufc->m_data, pkt_orig, pkt_len) == 0);
 	m_freem(mbufc);
 }
 
@@ -2222,7 +2222,7 @@ xnb_add_mbuf_cksum_icmp(char *buffer, size_t buflen)
 	mbufc->m_pkthdr.csum_flags = CSUM_IP_CHECKED | CSUM_IP_VALID   |
 				CSUM_DATA_VALID | CSUM_PSEUDO_HDR;
 
-	bcopy(mtod(mbufc, const void*), pkt_orig, icmp_len);
+	bcopy((const void*)mbufc->m_data, pkt_orig, icmp_len);
 	/* Function under test */
 	xnb_add_mbuf_cksum(mbufc);
 

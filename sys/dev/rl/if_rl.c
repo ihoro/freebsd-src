@@ -1558,7 +1558,7 @@ rl_encap(struct rl_softc *sc, struct mbuf **m_head)
 	 * TX buffers, plus we can only have one fragment buffer
 	 * per packet. We have to copy pretty much all the time.
 	 */
-	if (m->m_next != NULL || (mtod(m, uintptr_t) & 3) != 0 ||
+	if (m->m_next != NULL || (((uintptr_t)m->m_data) & 3) != 0 ||
 	    (padlen > 0 && M_TRAILINGSPACE(m) < padlen)) {
 		m = m_defrag(*m_head, M_NOWAIT);
 		if (m == NULL) {

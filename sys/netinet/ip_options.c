@@ -531,12 +531,12 @@ ip_insertoptions(struct mbuf *m, struct mbuf *opt, int *phlen)
 		m = n;
 		m->m_len = optlen + sizeof(struct ip);
 		m->m_data += max_linkhdr;
-		bcopy(ip, mtod(m, void *), sizeof(struct ip));
+		bcopy(ip, (void *)m->m_data, sizeof(struct ip));
 	} else {
 		m->m_data -= optlen;
 		m->m_len += optlen;
 		m->m_pkthdr.len += optlen;
-		bcopy(ip, mtod(m, void *), sizeof(struct ip));
+		bcopy(ip, (void *)m->m_data, sizeof(struct ip));
 	}
 	ip = mtod(m, struct ip *);
 	bcopy(p->ipopt_list, ip + 1, optlen);
@@ -631,8 +631,8 @@ ip_pcbopts(struct inpcb *inp, int optname, struct mbuf *m)
 	cnt = m->m_len;
 	m->m_len += sizeof(struct in_addr);
 	cp = mtod(m, u_char *) + sizeof(struct in_addr);
-	bcopy(mtod(m, void *), cp, (unsigned)cnt);
-	bzero(mtod(m, void *), sizeof(struct in_addr));
+	bcopy((void *)m->m_data, cp, (unsigned)cnt);
+	bzero((void *)m->m_data, sizeof(struct in_addr));
 
 	for (; cnt > 0; cnt -= optlen, cp += optlen) {
 		opt = cp[IPOPT_OPTVAL];

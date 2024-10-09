@@ -709,7 +709,7 @@ mbuf_subchain(struct mbuf *m0, size_t offset, size_t len,
 		m->m_data = m0->m_data + offset;
 		mb_dupcl(m, m0);
 	} else
-		memcpy(mtod(m, void *), mtodo(m0, offset), m->m_len);
+		memcpy((void *)m->m_data, mtodo(m0, offset), m->m_len);
 
 	tail = m;
 	m0 = m0->m_next;
@@ -731,7 +731,7 @@ mbuf_subchain(struct mbuf *m0, size_t offset, size_t len,
 			tail->m_data = m0->m_data;
 			mb_dupcl(tail, m0);
 		} else
-			memcpy(mtod(tail, void *), mtod(m0, void *),
+			memcpy((void *)tail->m_data, (void *)m0->m_data,
 			    tail->m_len);
 
 		totlen += tail->m_len;

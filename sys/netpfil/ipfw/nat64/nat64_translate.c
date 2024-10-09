@@ -552,7 +552,7 @@ nat64_fragment6(struct nat64_counters *stats, struct ip6_hdr *ip6,
 			NAT64STAT_INC(stats, nomem);
 			return (ENOMEM);
 		}
-		bcopy(ip6, mtod(m, void *), hlen);
+		bcopy(ip6, (void *)m->m_data, hlen);
 		if (mbufq_enqueue(mq, m) != 0) {
 			m_freem(m);
 			NAT64STAT_INC(stats, dropped);
@@ -598,7 +598,7 @@ nat64_fragment6(struct nat64_counters *stats, struct ip6_hdr *ip6,
 		M_PREPEND(m, hlen, M_NOWAIT);
 		if (m == NULL)
 			goto fail;
-		bcopy(ip6, mtod(m, void *), sizeof(struct ip6_hdr));
+		bcopy(ip6, (void *)m->m_data, sizeof(struct ip6_hdr));
 		bcopy(&ip6f, mtodo(m, sizeof(struct ip6_hdr)),
 		    sizeof(struct ip6_frag));
 		if (mbufq_enqueue(mq, m) != 0)
@@ -1540,7 +1540,7 @@ nat64_handle_icmp6(struct mbuf *m, int hlen, uint32_t aaddr, uint16_t aport,
 		ip6i->ip6_hlim += IPV6_HLIMDEC;
 	nat64_init_ip4hdr(ip6i, ip6f, plen, proto, &ip);
 	m_adj(m, hlen - sizeof(struct ip));
-	bcopy(&ip, mtod(m, void *), sizeof(ip));
+	bcopy(&ip, (void *)m->m_data, sizeof(ip));
 	nat64_icmp_reflect(m, type, code, (uint16_t)mtu, &cfg->stats,
 	    logdata);
 	return (NAT64RETURN);
@@ -1713,7 +1713,7 @@ nat64_do_handle_ip6(struct mbuf *m, uint32_t aaddr, uint16_t aport,
 	};
 
 	m_adj(m, hlen - sizeof(ip));
-	bcopy(&ip, mtod(m, void *), sizeof(ip));
+	bcopy(&ip, (void *)m->m_data, sizeof(ip));
 	if (V_nat64out->output(nh->nh_ifp, m, (struct sockaddr *)&dst,
 	    &cfg->stats, logdata) == 0)
 		NAT64STAT_INC(&cfg->stats, opcnt64);

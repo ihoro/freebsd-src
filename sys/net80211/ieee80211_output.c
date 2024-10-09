@@ -4146,7 +4146,7 @@ ieee80211_ff_encap1(struct ieee80211vap *vap, struct mbuf *m,
 		vap->iv_stats.is_tx_nobuf++;
 		return NULL;
 	}
-	ETHER_HEADER_COPY(mtod(m, void *), eh);
+	ETHER_HEADER_COPY((void *)m->m_data, eh);
 	mtod(m, struct ether_header *)->ether_type = htons(payload);
 	return m;
 }

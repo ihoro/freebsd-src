@@ -611,7 +611,7 @@ err1:
 	/* Install header */
 	M_PREPEND(m, MPPC_HDRLEN, M_NOWAIT);
 	if (m != NULL)
-		be16enc(mtod(m, void *), header);
+		be16enc((void *)m->m_data, header);
 
 	*datap = m;
 	return (*datap == NULL ? ENOBUFS : 0);
@@ -640,7 +640,7 @@ ng_mppc_decompress(node_p node, struct mbuf **datap)
 		m_freem(m);
 		return (EINVAL);
 	}
-	header = be16dec(mtod(m, void *));
+	header = be16dec((void *)m->m_data);
 	cc = (header & MPPC_CCOUNT_MASK);
 	m_adj(m, MPPC_HDRLEN);
 

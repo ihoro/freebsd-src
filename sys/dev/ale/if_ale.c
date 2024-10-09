@@ -1629,7 +1629,7 @@ ale_encap(struct ale_softc *sc, struct mbuf **m_head)
 		 */
 		if ((sc->ale_flags & ALE_FLAG_TXCSUM_BUG) != 0 &&
 		    (m->m_pkthdr.csum_flags & ALE_CSUM_FEATURES) != 0 &&
-		    (mtod(m, intptr_t) & 3) != 0) {
+		    (((intptr_t)m->m_data) & 3) != 0) {
 			m = m_defrag(*m_head, M_NOWAIT);
 			if (m == NULL) {
 				m_freem(*m_head);

@@ -1131,7 +1131,7 @@ bwn_pio_tx_start(struct bwn_mac *mac, struct ieee80211_node *ni,
 		    (const uint8_t *)&txhdr, BWN_HDRSIZE(mac));
 		/* send BODY */
 		ctl32 = bwn_pio_write_multi_4(mac, tq, ctl32,
-		    mtod(m_new, const void *), m_new->m_pkthdr.len);
+		    (const void *)m_new->m_data, m_new->m_pkthdr.len);
 		bwn_pio_write_4(mac, tq, BWN_PIO_TXCTL,
 		    ctl32 | BWN_PIO8_TXCTL_EOF);
 	} else {

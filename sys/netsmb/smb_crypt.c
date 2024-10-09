@@ -249,7 +249,7 @@ smb_rq_sign(struct smb_rq *rqp)
 	MD5Init(&md5);
 	MD5Update(&md5, vcp->vc_mackey, vcp->vc_mackeylen);
 	for (mb = mbp->mb_top; mb != NULL; mb = mb->m_next)
-		MD5Update(&md5, mtod(mb, void *), mb->m_len);
+		MD5Update(&md5, (void *)mb->m_data, mb->m_len);
 	MD5Final(digest, &md5);
 	bcopy(digest, rqp->sr_rqsig, 8);
 
@@ -287,13 +287,13 @@ smb_rq_verify(struct smb_rq *rqp)
 	KASSERT(mb->m_len >= SMB_HDRLEN, ("forgot to m_pullup"));
 	MD5Init(&md5);
 	MD5Update(&md5, vcp->vc_mackey, vcp->vc_mackeylen);
-	MD5Update(&md5, mtod(mb, void *), 14);
+	MD5Update(&md5, (void *)mb->m_data, 14);
 	*(u_int32_t *)sigbuf = htole32(rqp->sr_rseqno);
 	*(u_int32_t *)(sigbuf + 4) = 0;
 	MD5Update(&md5, sigbuf, 8);
 	MD5Update(&md5, mtod(mb, u_char *) + 22, mb->m_len - 22);
 	for (mb = mb->m_next; mb != NULL; mb = mb->m_next)
-		MD5Update(&md5, mtod(mb, void *), mb->m_len);
+		MD5Update(&md5, (void *)mb->m_data, mb->m_len);
 	MD5Final(digest, &md5);
 
 	/*

@@ -133,13 +133,13 @@ rtwn_pci_rx_frame(struct rtwn_pci_softc *pc)
 	bus_dmamap_sync(ring->data_dmat, rx_data->map, BUS_DMASYNC_POSTREAD);
 	bus_dmamap_unload(ring->data_dmat, rx_data->map);
 
-	error = bus_dmamap_load(ring->data_dmat, rx_data->map, mtod(m1, void *),
+	error = bus_dmamap_load(ring->data_dmat, rx_data->map, (void *)m1->m_data,
 	    MJUMPAGESIZE, rtwn_pci_dma_map_addr, &rx_data->paddr, 0);
 	if (error != 0) {
 		m_freem(m1);
 
 		error = bus_dmamap_load(ring->data_dmat, rx_data->map,
-		    mtod(rx_data->m, void *), MJUMPAGESIZE,
+		    (void *)rx_data->m->m_data, MJUMPAGESIZE,
 		    rtwn_pci_dma_map_addr, &rx_data->paddr, BUS_DMA_NOWAIT);
 		if (error != 0)
 			panic("%s: could not load old RX mbuf",
@@ -205,7 +205,7 @@ rtwn_pci_rx_buf_copy(struct rtwn_pci_softc *pc)
 	}
 
 	bus_dmamap_sync(ring->data_dmat, rx_data->map, BUS_DMASYNC_POSTREAD);
-	memcpy(pc->pc_rx_buf + desc_size, mtod(rx_data->m, void *), pktlen);
+	memcpy(pc->pc_rx_buf + desc_size, (void *)rx_data->m->m_data, pktlen);
 
 	return (desc_size + pktlen);
 }

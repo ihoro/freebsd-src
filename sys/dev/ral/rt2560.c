@@ -664,7 +664,7 @@ rt2560_alloc_rx_ring(struct rt2560_softc *sc, struct rt2560_rx_ring *ring,
 		}
 
 		error = bus_dmamap_load(ring->data_dmat, data->map,
-		    mtod(data->m, void *), MCLBYTES, rt2560_dma_map_addr,
+		    (void *)data->m->m_data, MCLBYTES, rt2560_dma_map_addr,
 		    &physaddr, 0);
 		if (error != 0) {
 			device_printf(sc->sc_dev,
@@ -1137,14 +1137,14 @@ rt2560_decryption_intr(struct rt2560_softc *sc)
 		bus_dmamap_unload(sc->rxq.data_dmat, data->map);
 
 		error = bus_dmamap_load(sc->rxq.data_dmat, data->map,
-		    mtod(mnew, void *), MCLBYTES, rt2560_dma_map_addr,
+		    (void *)mnew->m_data, MCLBYTES, rt2560_dma_map_addr,
 		    &physaddr, 0);
 		if (error != 0) {
 			m_freem(mnew);
 
 			/* try to reload the old mbuf */
 			error = bus_dmamap_load(sc->rxq.data_dmat, data->map,
-			    mtod(data->m, void *), MCLBYTES,
+			    (void *)data->m->m_data, MCLBYTES,
 			    rt2560_dma_map_addr, &physaddr, 0);
 			if (error != 0) {
 				/* very unlikely that it will fail... */

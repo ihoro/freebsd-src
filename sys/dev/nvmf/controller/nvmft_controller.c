@@ -519,7 +519,7 @@ m_zero(struct mbuf *m, u_int offset, u_int len)
 		todo = m->m_len;
 		if (todo > len)
 			todo = len;
-		memset(mtod(m, void *), 0, todo);
+		memset((void *)m->m_data, 0, todo);
 		m = m->m_next;
 		len -= todo;
 	}

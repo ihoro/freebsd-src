@@ -1622,7 +1622,7 @@ freebsd32_copyin_control(struct mbuf **mp, caddr_t buf, u_int buflen)
 		goto out;
 	}
 	m->m_len = outlen;
-	md = mtod(m, void *);
+	md = (void *)m->m_data;
 
 	/*
 	 * Make a second pass over input messages, copying them into the output

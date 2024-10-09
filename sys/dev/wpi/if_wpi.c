@@ -1044,7 +1044,7 @@ wpi_alloc_rx_ring(struct wpi_softc *sc)
 		}
 
 		error = bus_dmamap_load(ring->data_dmat, data->map,
-		    mtod(data->m, void *), MJUMPAGESIZE, wpi_dma_map_addr,
+		    (void *)data->m->m_data, MJUMPAGESIZE, wpi_dma_map_addr,
 		    &paddr, BUS_DMA_NOWAIT);
 		if (error != 0 && error != EFBIG) {
 			device_printf(sc->sc_dev,
@@ -1958,7 +1958,7 @@ wpi_rx_done(struct wpi_softc *sc, struct wpi_rx_desc *desc,
 	}
 	bus_dmamap_unload(ring->data_dmat, data->map);
 
-	error = bus_dmamap_load(ring->data_dmat, data->map, mtod(m1, void *),
+	error = bus_dmamap_load(ring->data_dmat, data->map, (void *)m1->m_data,
 	    MJUMPAGESIZE, wpi_dma_map_addr, &paddr, BUS_DMA_NOWAIT);
 	if (__predict_false(error != 0 && error != EFBIG)) {
 		device_printf(sc->sc_dev,
@@ -1967,7 +1967,7 @@ wpi_rx_done(struct wpi_softc *sc, struct wpi_rx_desc *desc,
 
 		/* Try to reload the old mbuf. */
 		error = bus_dmamap_load(ring->data_dmat, data->map,
-		    mtod(data->m, void *), MJUMPAGESIZE, wpi_dma_map_addr,
+		    (void *)data->m->m_data, MJUMPAGESIZE, wpi_dma_map_addr,
 		    &paddr, BUS_DMA_NOWAIT);
 		if (error != 0 && error != EFBIG) {
 			panic("%s: could not load old RX mbuf", __func__);
