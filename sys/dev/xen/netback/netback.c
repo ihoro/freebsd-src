@@ -1727,9 +1727,9 @@ xnb_txpkt2gnttab(const struct xnb_pkt *pkt, struct mbuf *mbufc,
 		gnttab[gnt_idx].source.domid = otherend_id;
 		gnttab[gnt_idx].source.offset = txq->offset + r_ofs;
 		gnttab[gnt_idx].dest.u.gmfn = virt_to_mfn(
-		    mtod(mbuf, vm_offset_t) + m_ofs);
+		    (vm_offset_t)mbuf->m_data + m_ofs);
 		gnttab[gnt_idx].dest.offset = virt_to_offset(
-		    mtod(mbuf, vm_offset_t) + m_ofs);
+		    (vm_offset_t)mbuf->m_data + m_ofs);
 		gnttab[gnt_idx].dest.domid = DOMID_SELF;
 		gnttab[gnt_idx].len = space;
 		gnttab[gnt_idx].flags = GNTCOPY_source_gref;
@@ -1981,9 +1981,9 @@ xnb_rxpkt2gnttab(const struct xnb_pkt *pkt, const struct mbuf *mbufc,
 		gnttab[gnt_idx].dest.domid = otherend_id;
 		gnttab[gnt_idx].dest.offset = r_ofs;
 		gnttab[gnt_idx].source.u.gmfn = virt_to_mfn(
-		    mtod(mbuf, vm_offset_t) + m_ofs);
+		    (vm_offset_t)mbuf->m_data + m_ofs);
 		gnttab[gnt_idx].source.offset = virt_to_offset(
-		    mtod(mbuf, vm_offset_t) + m_ofs);
+		    (vm_offset_t)mbuf->m_data + m_ofs);
 		gnttab[gnt_idx].source.domid = DOMID_SELF;
 		gnttab[gnt_idx].len = space;
 		gnttab[gnt_idx].flags = GNTCOPY_dest_gref;

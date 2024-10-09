@@ -146,7 +146,7 @@ sfxge_map_mbuf_fast(bus_dma_tag_t tag, bus_dmamap_t map,
 		    struct mbuf *m, bus_dma_segment_t *seg)
 {
 #if defined(__i386__) || defined(__amd64__)
-	seg->ds_addr = pmap_kextract(mtod(m, vm_offset_t));
+	seg->ds_addr = pmap_kextract((vm_offset_t)m->m_data);
 	seg->ds_len = m->m_len;
 #else
 	int nsegstmp;

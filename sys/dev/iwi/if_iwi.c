@@ -776,7 +776,7 @@ iwi_alloc_rx_ring(struct iwi_softc *sc, struct iwi_rx_ring *ring, int count)
 		}
 
 		error = bus_dmamap_load(ring->data_dmat, data->map,
-		    mtod(data->m, void *), MCLBYTES, iwi_dma_map_addr,
+		    (void *)data->m->m_data, MCLBYTES, iwi_dma_map_addr,
 		    &data->physaddr, 0);
 		if (error != 0) {
 			device_printf(sc->sc_dev,
@@ -1220,14 +1220,14 @@ iwi_frame_intr(struct iwi_softc *sc, struct iwi_rx_data *data, int i,
 	bus_dmamap_unload(sc->rxq.data_dmat, data->map);
 
 	error = bus_dmamap_load(sc->rxq.data_dmat, data->map,
-	    mtod(mnew, void *), MCLBYTES, iwi_dma_map_addr, &data->physaddr,
+	    (void *)mnew->m_data, MCLBYTES, iwi_dma_map_addr, &data->physaddr,
 	    0);
 	if (error != 0) {
 		m_freem(mnew);
 
 		/* try to reload the old mbuf */
 		error = bus_dmamap_load(sc->rxq.data_dmat, data->map,
-		    mtod(data->m, void *), MCLBYTES, iwi_dma_map_addr,
+		    (void *)data->m->m_data, MCLBYTES, iwi_dma_map_addr,
 		    &data->physaddr, 0);
 		if (error != 0) {
 			/* very unlikely that it will fail... */
