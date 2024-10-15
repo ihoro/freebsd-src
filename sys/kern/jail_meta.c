@@ -29,7 +29,7 @@
 
 #include <sys/param.h>
 #include <sys/kernel.h>
-#include <sys/module.h>
+// #include <sys/module.h>
 #include <sys/mount.h>
 #include <sys/malloc.h>
 #include <sys/jail.h>
@@ -161,7 +161,7 @@ jm_osd_method_check(void *obj __unused, void *data)
 }
 
 static int
-jm_mod_load(void *arg __unused)
+jm_sysinit(void *arg __unused)
 {
 	osd_method_t methods[PR_MAXMETHOD] = {
 		[PR_METHOD_CREATE] = jm_osd_method_create,
@@ -176,13 +176,18 @@ jm_mod_load(void *arg __unused)
 }
 
 static int
-jm_mod_unload(void *arg __unused)
+jm_sysuninit(void *arg __unused)
 {
 	osd_jail_deregister(jm_osd_slot);
 
 	return (0);
 }
 
+/* TODO: which system should be used? */
+SYSINIT(jail_meta, SI_SUB_DRIVERS, SI_ORDER_ANY, jm_sysinit, NULL);
+SYSUNINIT(jail_meta, SI_SUB_DRIVERS, SI_ORDER_ANY, jm_sysuninit, NULL);
+
+/*
 static int
 jm_modevent(module_t mod __unused, int event, void *arg)
 {
@@ -208,6 +213,7 @@ static moduledata_t jm_mod = {
 	jm_modevent,
 	NULL
 };
+*/
 
-DECLARE_MODULE(jail_meta, jm_mod, SI_SUB_DRIVERS, SI_ORDER_ANY); /* TODO: which system should be used? */
-MODULE_VERSION(jail_meta, 1);
+// DECLARE_MODULE(jail_meta, jm_mod, SI_SUB_DRIVERS, SI_ORDER_ANY); /* TODO: which system should be used? */
+// MODULE_VERSION(jail_meta, 1);
