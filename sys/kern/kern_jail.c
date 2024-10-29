@@ -4513,11 +4513,11 @@ sysctl_jail_children(SYSCTL_HANDLER_ARGS)
 }
 
 SYSCTL_PROC(_security_jail_children, OID_AUTO, max,
-    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_MPSAFE,
+    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_MPSAFE | CTLFLAG_PRISON,
     NULL, offsetof(struct prison, pr_childmax), sysctl_jail_children,
     "I", "Maximum number of child jails");
 SYSCTL_PROC(_security_jail_children, OID_AUTO, cur,
-    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_MPSAFE,
+    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_MPSAFE | CTLFLAG_PRISON,
     NULL, offsetof(struct prison, pr_childcount), sysctl_jail_children,
     "I", "Current number of child jails");
 
