@@ -4427,7 +4427,7 @@ sysctl_jail_default_allow(SYSCTL_HANDLER_ARGS)
 	if (arg1 != NULL)
 		i ^= arg2;
 	/*
-	 * The sysctls don't have CTLFLAGS_PRISON, so assume prison0
+	 * The sysctls don't have CTLFLAG_PRISON, so assume prison0
 	 * for writing.
 	 */
 	mtx_lock(&prison0.pr_mtx);
