@@ -23,7 +23,7 @@
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
 .\"
-.Dd September 1, 2020
+.Dd November 7, 2024
 .Dt SYSCTL 9
 .Os
 .Sh NAME
@@ -901,7 +901,13 @@ A process in capability mode can write to this sysctl.
 This sysctl can be written to only if the effective securelevel of the
 process is \[<=] 0.
 .It Dv CTLFLAG_PRISON
-This sysctl can be written to by processes in
+It flags that this sysctl variable is allocated per
+.Xr jail 2 .
+All such variables can be listed using
+.Fl J
+option of
+.Xr sysctl 8 .
+Also, if it is not read-only then it can be written to by processes in
 .Xr jail 2 .
 .It Dv CTLFLAG_SKIP
 When iterating the sysctl name space, do not list this sysctl.
