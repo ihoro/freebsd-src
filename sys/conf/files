@@ -3764,7 +3764,6 @@ kern/imgact_elf32.c		optional compat_freebsd32
 kern/imgact_shell.c		standard
 kern/init_main.c		standard
 kern/init_sysent.c		standard
-kern/jail_meta.c		standard
 kern/ksched.c			optional _kposix_priority_scheduling
 kern/kern_acct.c		standard
 kern/kern_alq.c			optional alq
@@ -3793,6 +3792,7 @@ kern/kern_hhook.c		standard
 kern/kern_idle.c		standard
 kern/kern_intr.c		standard
 kern/kern_jail.c		standard
+kern/kern_jailmeta.c		standard
 kern/kern_kcov.c		optional kcov			\
 	compile-with "${NOSAN_C} ${MSAN_CFLAGS}"
 kern/kern_khelp.c		standard
