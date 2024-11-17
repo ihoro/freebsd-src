@@ -31,6 +31,7 @@
 #include <sys/malloc.h>
 #include <sys/jail.h>
 #include <sys/osd.h>
+#include <sys/proc.h>
 
 
 /* New jail parameter announcement */
@@ -140,6 +141,53 @@ jm_osd_destructor(void *osd_addr)
 {
 	free(osd_addr, M_PRISON);
 }
+
+
+/* A jail can read its own meta */
+
+static int
+jm_sysctl_security_jail_meta(SYSCTL_HANDLER_ARGS)
+{
+	struct prison *pr;
+	char empty = '\0';
+	char *tmpbuf;
+	size_t outlen;
+	int error = 0;
+
+	pr = req->td->td_ucred->cr_prison;
+
+	mtx_lock(&pr->pr_mtx);
+	arg1 = osd_jail_get(pr, jm_osd_slot);
+	if (arg1 == NULL) {
+		tmpbuf = &empty;
+		outlen = 1;
+	} else {
+		outlen = strlen(arg1) + 1 /* '\0' */;
+		if (req->oldptr != NULL) {
+			tmpbuf = malloc(outlen, M_PRISON, M_NOWAIT);
+			error = (tmpbuf == NULL) ? ENOMEM : 0;
+			if (error == 0)
+				memcpy(tmpbuf, arg1, outlen);
+		}
+	}
+	mtx_unlock(&pr->pr_mtx);
+
+	if (error != 0)
+		return (error);
+
+	if (req->oldptr == NULL)
+		SYSCTL_OUT(req, NULL, outlen);
+	else {
+		SYSCTL_OUT(req, tmpbuf, outlen);
+		if (tmpbuf != &empty)
+			free(tmpbuf, M_PRISON);
+	}
+
+	return (error);
+}
+SYSCTL_PROC(_debug, OID_AUTO, meta,
+    CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_MPSAFE,
+    0, 0, jm_sysctl_security_jail_meta, "A", "Jail meta info");
 
 
 /* Setup and tear down */
