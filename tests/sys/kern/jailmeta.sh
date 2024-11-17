@@ -245,8 +245,6 @@ maxbufsize_head()
 {
 	atf_set descr 'Test that meta buffer maximum size can be changed via sysctl from prison0'
 	atf_set require.user root
-	# TODO: atf_set execenv host-prison0
-	# TODO: atf_set is.exclusive true
 }
 maxbufsize_body()
 {
