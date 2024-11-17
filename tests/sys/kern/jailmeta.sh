@@ -226,6 +226,55 @@ flua_modify_cleanup()
 	return 0
 }
 
+atf_test_case "maxbufsize" "cleanup"
+maxbufsize_head()
+{
+	atf_set descr 'Test that meta buffer maximum size can be changed via sysctl from prison0'
+	atf_set execenv host
+	# TODO: atf_set execenv host-prison0
+	# TODO: atf_set is.exclusive true
+}
+maxbufsize_body()
+{
+	setup
+
+	jn=jailmeta_maxbufsize
+
+	atf_check -s not-exit:0 -e match:"not found" -o ignore \
+	    jls -j $jn
+
+	origmax=$(sysctl -n security.jail.meta_maxbufsize)
+	echo $origmax
+
+	# must be fine with current max
+	atf_check -s exit:0 \
+	    jail -c name=$jn persist meta="$(printf %$((origmax-1))s)"
+	atf_check -s exit:0 -o inline:"${origmax}\n" \
+	    jls -j $jn meta | wc -c
+
+	# should not allow exceeding current max
+	atf_check -s not-exit:0 -e match:"too large" \
+	    jail -m name=$jn meta="$(printf %${origmax}s)"
+
+	# should allow the same size with increased max
+	max=$((origmax + 1))
+	sysctl security.jail.meta_maxbufsize=$max
+	atf_check -s exit:0 \
+	    jail -m name=$jn meta="$(printf %${origmax}s)"
+	atf_check -s exit:0 -o inline:"${max}\n" \
+	    jls -j $jn meta | wc -c
+
+	# get back to the original maximum
+	sysctl security.jail.meta_maxbufsize=$origmax
+	atf_check -s not-exit:0 -e match:"too large" \
+	    jail -m name=$jn meta="$(printf %${origmax}s)"
+}
+maxbufsize_cleanup()
+{
+	jail -r jailmeta_maxbufsize
+	return 0
+}
+
 atf_init_test_cases()
 {
 	atf_add_test_case "jail_create"
@@ -237,7 +286,6 @@ atf_init_test_cases()
 
 	atf_add_test_case "flua_create"
 	atf_add_test_case "flua_modify"
-#
-#	atf_add_test_case "inc_maxbufsize"
-#	atf_add_test_case "dec_maxbufsize"
+
+	atf_add_test_case "maxbufsize"
 }
