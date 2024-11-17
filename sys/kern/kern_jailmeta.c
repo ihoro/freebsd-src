@@ -53,69 +53,70 @@ static u_int jm_osd_slot;
  * right after create.
  * The only useful thing could be to pre-allocate osd slot, probably.
  * But be ready for a case if a jail was created before the module loaded. */
-static int
-jm_osd_method_create(void *obj, void *data)
-{
-	struct prison *pr = obj;
-	struct vfsoptlist *opts = data;
-	char *opt_addr;
-	int opt_len; /* TODO: is it provided w/o NULL char? */
-	char *osd_addr;
-	void **rsv;
-	int error;
-
-	error = vfs_getopt(opts, "meta", (void **)&opt_addr, &opt_len);
-	if (error != 0)
-		return (0);
-	/* printf("_create: opt_meta=%s, len=%d | ", opt_meta, len); */
-
-	/* TODO: check for JAILMETA_BUF_MAXLEN */
-
-	osd_addr = malloc(opt_len + 1, M_PRISON, M_WAITOK);
-	memcpy(osd_addr, opt_addr, opt_len);
-	osd_addr[opt_len] = '\0';
-
-	rsv = osd_reserve(jm_osd_slot);
-	/* TODO: what if rsv is NULL? */
-	mtx_lock(&pr->pr_mtx);
-	(void) osd_jail_set_reserved(pr, jm_osd_slot, rsv, osd_addr);
-	/* printf("_create: osd_meta=%s | ", osd_meta); */
-	mtx_unlock(&pr->pr_mtx);
-
-	/* TODO: remember about osd_free_reserved() */
-
-	return (0);
-}
+//static int
+//jm_osd_method_create(void *obj, void *data)
+//{
+//	struct prison *pr = obj;
+//	struct vfsoptlist *opts = data;
+//	char *opt_addr;
+//	int opt_len; /* TODO: is it provided w/o NULL char? */
+//	char *osd_addr;
+//	void **rsv;
+//	int error;
+//
+//	error = vfs_getopt(opts, "meta", (void **)&opt_addr, &opt_len);
+//	if (error != 0)
+//		return (0);
+//	/* printf("_create: opt_meta=%s, len=%d | ", opt_meta, len); */
+//
+//	/* TODO: check for JAILMETA_BUF_MAXLEN */
+//
+//	osd_addr = malloc(opt_len + 1, M_PRISON, M_WAITOK);
+//	memcpy(osd_addr, opt_addr, opt_len);
+//	osd_addr[opt_len] = '\0';
+//
+//	rsv = osd_reserve(jm_osd_slot);
+//	/* TODO: what if rsv is NULL? */
+//	mtx_lock(&pr->pr_mtx);
+//	(void) osd_jail_set_reserved(pr, jm_osd_slot, rsv, osd_addr);
+//	/* printf("_create: osd_meta=%s | ", osd_meta); */
+//	mtx_unlock(&pr->pr_mtx);
+//
+//	/* TODO: remember about osd_free_reserved() */
+//
+//	return (0);
+//}
 
 static int
 jm_osd_method_set(void *obj, void *data)
 {
 	struct prison *pr = obj;
 	struct vfsoptlist *opts = data;
-	int opt_len; /* TODO: is it provided w/o NULL char? */
+	int len = 0;
 	char *osd_addr;
 	char *osd_addr_old;
 	int error;
 
-	/* TODO: is there a better way? */
-	error = vfs_getopt(opts, "meta", NULL, &opt_len);
+	/* Check the option presence and its len before buf allocation */
+	error = vfs_getopt(opts, "meta", NULL, &len);
 	if (error != 0)
 		return (0);
+	if (len > JAILMETA_BUF_MAXLEN) /* len includes '\0' char */
+		return (EFBIG);
+	if (len < 1)
+		return (EINVAL);
 
-	/* TODO: check for JAILMETA_BUF_MAXLEN */
-
-	osd_addr = malloc(opt_len + 1, M_PRISON, M_WAITOK);
-	error = vfs_copyopt(opts, "meta", osd_addr, opt_len);
+	/* Prepare a new buf */
+	osd_addr = malloc(len, M_PRISON, M_WAITOK);
+	error = vfs_copyopt(opts, "meta", osd_addr, len);
 	if (error != 0) {
 		free(osd_addr, M_PRISON);
 		return (error);
 	}
-	osd_addr[opt_len] = '\0';
 
+	/* Swap bufs */
 	mtx_lock(&pr->pr_mtx);
 	osd_addr_old = osd_jail_get(pr, jm_osd_slot);
-	/* TODO: consider a case if kldload jail_meta is done after a jail is created
-	 * let's do _reserve each time? */
 	error = osd_jail_set(pr, jm_osd_slot, osd_addr);
 	mtx_unlock(&pr->pr_mtx);
 
@@ -170,7 +171,7 @@ jm_osd_method_check(void *obj __unused, void *data)
 }
 
 
-/* Initialization */
+/* Setup and tear down */
 
 static void
 jm_osd_destructor(void *osd_addr)
@@ -182,7 +183,7 @@ static int
 jm_sysinit(void *arg __unused)
 {
 	osd_method_t methods[PR_MAXMETHOD] = {
-		[PR_METHOD_CREATE] = jm_osd_method_create,
+		//[PR_METHOD_CREATE] = jm_osd_method_create, // TODO: it looks we could remove this
 		[PR_METHOD_SET] = jm_osd_method_set,
 		[PR_METHOD_GET] = jm_osd_method_get,
 		[PR_METHOD_CHECK] = jm_osd_method_check,
