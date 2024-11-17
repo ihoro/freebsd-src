@@ -44,9 +44,6 @@ SYSCTL_JAIL_PARAM_STRING(, meta, CTLFLAG_RW, JM_BUF_MAXLEN, "Jail meta info");
 
 static u_int jm_osd_slot;
 
-
-/* OSD_JAIL methods */
-
 static int
 jm_osd_method_set(void *obj, void *data)
 {
@@ -138,14 +135,14 @@ jm_osd_method_check(void *obj __unused, void *data)
 	return (0);
 }
 
-
-/* Setup and tear down */
-
 static void
 jm_osd_destructor(void *osd_addr)
 {
 	free(osd_addr, M_PRISON);
 }
+
+
+/* Setup and tear down */
 
 static int
 jm_sysinit(void *arg __unused)
