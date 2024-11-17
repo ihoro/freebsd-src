@@ -1,7 +1,10 @@
 /*-
  * SPDX-License-Identifier: BSD-2-Clause
  *
- * Copyright (c) 2024 Igor Ostapenko <pm@igoro.pro>
+ * Copyright (c) 2024 SkunkWerks GmbH
+ *
+ * This software was developed by Igor Ostapenko <igoro@FreeBSD.org>
+ * under sponsorship from SkunkWerks GmbH.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
