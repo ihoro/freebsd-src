@@ -38,6 +38,8 @@ atf_test_case "jail_create" "cleanup"
 jail_create_head()
 {
 	atf_set descr 'Test that meta can be set upon jail creation with jail(8)'
+	atf_set require.user root
+	atf_set execenv jail
 }
 jail_create_body()
 {
@@ -62,6 +64,8 @@ atf_test_case "jail_modify" "cleanup"
 jail_modify_head()
 {
 	atf_set descr 'Test that meta can be modified after jail creation with jail(8)'
+	atf_set require.user root
+	atf_set execenv jail
 }
 jail_modify_body()
 {
@@ -92,6 +96,8 @@ atf_test_case "jail_add" "cleanup"
 jail_add_head()
 {
 	atf_set descr 'Test that meta can be added to an existing jail with jail(8)'
+	atf_set require.user root
+	atf_set execenv jail
 }
 jail_add_body()
 {
@@ -122,6 +128,8 @@ atf_test_case "jail_reset" "cleanup"
 jail_reset_head()
 {
 	atf_set descr 'Test that meta can be reset to an empty string with jail(8)'
+	atf_set require.user root
+	atf_set execenv jail
 }
 jail_reset_body()
 {
@@ -152,6 +160,8 @@ atf_test_case "jls_libxo" "cleanup"
 jls_libxo_head()
 {
 	atf_set descr 'Test that meta can be read with jls(8) using libxo'
+	atf_set require.user root
+	atf_set execenv jail
 }
 jls_libxo_body()
 {
@@ -176,6 +186,8 @@ atf_test_case "flua_create" "cleanup"
 flua_create_head()
 {
 	atf_set descr 'Test that meta can be set upon jail creation with flua'
+	atf_set require.user root
+	atf_set execenv jail
 }
 flua_create_body()
 {
@@ -200,6 +212,8 @@ atf_test_case "flua_modify" "cleanup"
 flua_modify_head()
 {
 	atf_set descr 'Test that meta can be changed with flua after jail creation'
+	atf_set require.user root
+	atf_set execenv jail
 }
 flua_modify_body()
 {
@@ -230,7 +244,7 @@ atf_test_case "maxbufsize" "cleanup"
 maxbufsize_head()
 {
 	atf_set descr 'Test that meta buffer maximum size can be changed via sysctl from prison0'
-	atf_set execenv host
+	atf_set require.user root
 	# TODO: atf_set execenv host-prison0
 	# TODO: atf_set is.exclusive true
 }
