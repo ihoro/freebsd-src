@@ -185,7 +185,7 @@ jm_sysctl_security_jail_meta(SYSCTL_HANDLER_ARGS)
 
 	return (error);
 }
-SYSCTL_PROC(_debug, OID_AUTO, meta,
+SYSCTL_PROC(_security_jail, OID_AUTO, meta,
     CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_MPSAFE,
     0, 0, jm_sysctl_security_jail_meta, "A", "Jail meta info");
 
