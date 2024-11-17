@@ -118,6 +118,36 @@ jail_add_cleanup()
 	return 0
 }
 
+atf_test_case "jail_reset" "cleanup"
+jail_reset_head()
+{
+	atf_set descr 'Test that meta can be reset to an empty string with jail(8)'
+}
+jail_reset_body()
+{
+	setup
+
+	atf_check -s not-exit:0 -e match:"not found" -o ignore \
+	    jls -j jail1
+
+	atf_check -s exit:0 \
+	    jail -c name=jail1 persist meta="123"
+
+	atf_check -s exit:0 -o inline:"123\n" \
+	    jls -j jail1 meta
+
+	atf_check -s exit:0 \
+	    jail -m name=jail1 meta=
+
+	atf_check -s exit:0 -o inline:'""\n' \
+	    jls -j jail1 meta
+}
+jail_reset_cleanup()
+{
+	jail -r jail1
+	return 0
+}
+
 atf_test_case "jls_libxo" "cleanup"
 jls_libxo_head()
 {
@@ -201,13 +231,12 @@ atf_init_test_cases()
 	atf_add_test_case "jail_create"
 	atf_add_test_case "jail_modify"
 	atf_add_test_case "jail_add"
-#	atf_add_test_case "jail_reset"
+	atf_add_test_case "jail_reset"
 
 	atf_add_test_case "jls_libxo"
 
 	atf_add_test_case "flua_create"
 	atf_add_test_case "flua_modify"
-#	atf_add_test_case "flua_add"
 #
 #	atf_add_test_case "inc_maxbufsize"
 #	atf_add_test_case "dec_maxbufsize"
