@@ -178,7 +178,7 @@ jm_sysctl_security_jail_meta(SYSCTL_HANDLER_ARGS)
 		tmpbuf = &empty;
 		outlen = 1;
 	} else {
-		outlen = strlen(arg1) + 1 /* '\0' */;
+		outlen = strlen(arg1) + 1;
 		if (req->oldptr != NULL) {
 			tmpbuf = malloc(outlen, M_PRISON, M_NOWAIT);
 			error = (tmpbuf == NULL) ? ENOMEM : 0;
