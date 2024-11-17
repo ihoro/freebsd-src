@@ -118,13 +118,37 @@ jail_add_cleanup()
 	return 0
 }
 
+atf_test_case "jls_libxo" "cleanup"
+jls_libxo_head()
+{
+	atf_set descr 'Test that meta can be read with jls(8) using libxo'
+}
+jls_libxo_body()
+{
+	setup
+
+	atf_check -s not-exit:0 -e match:"not found" -o ignore \
+	    jls -j jail1
+
+	atf_check -s exit:0 \
+	    jail -c name=jail1 persist meta="a b c"
+
+	atf_check -s exit:0 -o inline:'{"__version": "2", "jail-information": {"jail": [{"name":"jail1","meta":"a b c"}]}}\n' \
+	    jls -j jail1 --libxo json name meta
+}
+jls_libxo_cleanup()
+{
+	jail -r jail1
+	return 0
+}
+
 atf_init_test_cases()
 {
 	atf_add_test_case "jail_create"
 	atf_add_test_case "jail_modify"
 	atf_add_test_case "jail_add"
 
-#	atf_add_test_case "jls_libxo"
+	atf_add_test_case "jls_libxo"
 #
 #	atf_add_test_case "flua_create"
 #	atf_add_test_case "flua_modify"
