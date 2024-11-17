@@ -25,8 +25,6 @@
  * SUCH DAMAGE.
  */
 
-//#include <sys/systm.h> /* TODO: it was added for printf only */
-
 #include <sys/param.h>
 #include <sys/kernel.h>
 #include <sys/mount.h>
@@ -37,9 +35,9 @@
 
 /* New jail parameter announcement */
 
-#define JAILMETA_BUF_MAXLEN 4096
-SYSCTL_JAIL_PARAM_STRING(, meta, CTLFLAG_RW, JAILMETA_BUF_MAXLEN,
-    "Jail meta info");
+#define JM_PARAM_NAME	"meta"
+#define JM_BUF_MAXLEN	4096
+SYSCTL_JAIL_PARAM_STRING(, meta, CTLFLAG_RW, JM_BUF_MAXLEN, "Jail meta info");
 
 
 /* OSD */
@@ -60,17 +58,17 @@ jm_osd_method_set(void *obj, void *data)
 	int error;
 
 	/* Check the option presence and its len before buf allocation */
-	error = vfs_getopt(opts, "meta", NULL, &len);
+	error = vfs_getopt(opts, JM_PARAM_NAME, NULL, &len);
 	if (error != 0)
 		return (0);
-	if (len > JAILMETA_BUF_MAXLEN) /* len includes '\0' char */
+	if (len > JM_BUF_MAXLEN) /* len includes '\0' char */
 		return (EFBIG);
 	if (len < 1)
 		return (EINVAL);
 
 	/* Prepare a new buf */
 	osd_addr = malloc(len, M_PRISON, M_WAITOK);
-	error = vfs_copyopt(opts, "meta", osd_addr, len);
+	error = vfs_copyopt(opts, JM_PARAM_NAME, osd_addr, len);
 	if (error != 0) {
 		free(osd_addr, M_PRISON);
 		return (error);
@@ -95,19 +93,24 @@ jm_osd_method_get(void *obj, void *data)
 {
 	struct prison *pr = obj;
 	struct vfsoptlist *opts = data;
-	char *osd_addr;
+	char *osd_addr = NULL;
 	char empty = '\0';
+	int error;
+
+	/* Check the option presence to avoid unnecessary locking */
+	error = vfs_getopt(opts, JM_PARAM_NAME, NULL, NULL);
+	if (error != 0)
+		return (0);
 
 	mtx_lock(&pr->pr_mtx);
 	osd_addr = osd_jail_get(pr, jm_osd_slot);
-	/* printf("_get: osd_meta=%s | ", osd_addr); */
 	if (osd_addr == NULL)
-		/* TODO: error = */ vfs_setopts(opts, "meta", &empty);
+		error = vfs_setopts(opts, JM_PARAM_NAME, &empty);
 	else
-		/* TODO: error = */ vfs_setopts(opts, "meta", osd_addr);
+		error = vfs_setopts(opts, JM_PARAM_NAME, osd_addr);
 	mtx_unlock(&pr->pr_mtx);
 
-	return (0);
+	return (error);
 }
 
 static int
@@ -118,16 +121,19 @@ jm_osd_method_check(void *obj __unused, void *data)
 	int error;
 	int len = 0;
 
-	error = vfs_getopt(opts, "meta", (void **)&meta, &len);
+	/* Check the option presence */
+	error = vfs_getopt(opts, JM_PARAM_NAME, (void **)&meta, &len);
+	if (error == ENOENT)
+		return (0);
 	if (error != 0)
 		return (error);
 
-	if (len < 0)
+	if (len > JM_BUF_MAXLEN) /* len includes '\0' char */
+		return (EFBIG);
+	if (len < 1)
 		return (EINVAL);
 	if (meta == NULL)
 		return (EINVAL);
-	if (strlen(meta) + 1 /* '\0' */ > JAILMETA_BUF_MAXLEN)
-		return (EFBIG);
 
 	return (0);
 }
@@ -163,6 +169,5 @@ jm_sysuninit(void *arg __unused)
 	return (0);
 }
 
-/* TODO: which system should be used? */
 SYSINIT(jailmeta, SI_SUB_DRIVERS, SI_ORDER_ANY, jm_sysinit, NULL);
 SYSUNINIT(jailmeta, SI_SUB_DRIVERS, SI_ORDER_ANY, jm_sysuninit, NULL);
