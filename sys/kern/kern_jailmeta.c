@@ -25,27 +25,29 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/systm.h> /* TODO: it was added for printf only */
+//#include <sys/systm.h> /* TODO: it was added for printf only */
 
 #include <sys/param.h>
 #include <sys/kernel.h>
-// #include <sys/module.h>
 #include <sys/mount.h>
 #include <sys/malloc.h>
 #include <sys/jail.h>
 #include <sys/osd.h>
 
+
+/* New jail parameter announcement */
+
+#define JAILMETA_BUF_MAXLEN 4096
+SYSCTL_JAIL_PARAM_STRING(, meta, CTLFLAG_RW, JAILMETA_BUF_MAXLEN,
+    "Jail meta info");
+
+
+/* OSD */
+
 static u_int jm_osd_slot;
 
-#define JAILMETAMAXLEN 4096
 
-SYSCTL_JAIL_PARAM_STRING(, meta, CTLFLAG_RW, JAILMETAMAXLEN, "Jail meta info");
-
-static void
-jm_osd_destructor(void *osd_addr)
-{
-	free(osd_addr, M_PRISON);
-}
+/* OSD_JAIL methods */
 
 /* TODO: it looks we should do nothing on create phase, anyway set is called
  * right after create.
@@ -67,7 +69,7 @@ jm_osd_method_create(void *obj, void *data)
 		return (0);
 	/* printf("_create: opt_meta=%s, len=%d | ", opt_meta, len); */
 
-	/* TODO: check for JAILMETAMAXLEN */
+	/* TODO: check for JAILMETA_BUF_MAXLEN */
 
 	osd_addr = malloc(opt_len + 1, M_PRISON, M_WAITOK);
 	memcpy(osd_addr, opt_addr, opt_len);
@@ -100,7 +102,7 @@ jm_osd_method_set(void *obj, void *data)
 	if (error != 0)
 		return (0);
 
-	/* TODO: check for JAILMETAMAXLEN */
+	/* TODO: check for JAILMETA_BUF_MAXLEN */
 
 	osd_addr = malloc(opt_len + 1, M_PRISON, M_WAITOK);
 	error = vfs_copyopt(opts, "meta", osd_addr, opt_len);
@@ -149,15 +151,31 @@ static int
 jm_osd_method_check(void *obj __unused, void *data)
 {
 	struct vfsoptlist *opts = data;
-	char *meta;
-	int error __unused;
-	int len;
+	char *meta = NULL;
+	int error;
+	int len = 0;
 
 	error = vfs_getopt(opts, "meta", (void **)&meta, &len);
+	if (error != 0)
+		return (error);
 
-	/* TODO: check max len, return error if bad */
+	if (len < 0)
+		return (EINVAL);
+	if (meta == NULL)
+		return (EINVAL);
+	if (strlen(meta) + 1 /* '\0' */ > JAILMETA_BUF_MAXLEN)
+		return (EFBIG);
 
 	return (0);
+}
+
+
+/* Initialization */
+
+static void
+jm_osd_destructor(void *osd_addr)
+{
+	free(osd_addr, M_PRISON);
 }
 
 static int
@@ -184,36 +202,5 @@ jm_sysuninit(void *arg __unused)
 }
 
 /* TODO: which system should be used? */
-SYSINIT(jail_meta, SI_SUB_DRIVERS, SI_ORDER_ANY, jm_sysinit, NULL);
-SYSUNINIT(jail_meta, SI_SUB_DRIVERS, SI_ORDER_ANY, jm_sysuninit, NULL);
-
-/*
-static int
-jm_modevent(module_t mod __unused, int event, void *arg)
-{
-	int error = 0;
-
-	switch (event) {
-	case MOD_LOAD:
-		error = jm_mod_load(arg);
-		break;
-	case MOD_UNLOAD:
-		error = jm_mod_unload(arg);
-		break;
-	default:
-		error = EOPNOTSUPP;
-		break;
-	}
-
-	return (error);
-}
-
-static moduledata_t jm_mod = {
-	"jail_meta",
-	jm_modevent,
-	NULL
-};
-*/
-
-// DECLARE_MODULE(jail_meta, jm_mod, SI_SUB_DRIVERS, SI_ORDER_ANY); /* TODO: which system should be used? */
-// MODULE_VERSION(jail_meta, 1);
+SYSINIT(jailmeta, SI_SUB_DRIVERS, SI_ORDER_ANY, jm_sysinit, NULL);
+SYSUNINIT(jailmeta, SI_SUB_DRIVERS, SI_ORDER_ANY, jm_sysuninit, NULL);
