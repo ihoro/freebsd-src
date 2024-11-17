@@ -83,11 +83,15 @@ jm_osd_method_set(void *obj, void *data)
 		return (EINVAL);
 
 	/* Prepare a new buf */
-	osd_addr = malloc(len, M_PRISON, M_WAITOK);
-	error = vfs_copyopt(opts, JM_PARAM_NAME, osd_addr, len);
-	if (error != 0) {
-		free(osd_addr, M_PRISON);
-		return (error);
+	if (len > 1) {
+		osd_addr = malloc(len, M_PRISON, M_WAITOK);
+		error = vfs_copyopt(opts, JM_PARAM_NAME, osd_addr, len);
+		if (error != 0) {
+			free(osd_addr, M_PRISON);
+			return (error);
+		}
+	} else {
+		osd_addr = NULL;
 	}
 
 	/* Swap bufs */
