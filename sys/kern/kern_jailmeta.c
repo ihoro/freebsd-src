@@ -37,11 +37,26 @@
 #include <sys/proc.h>
 
 
-/* New jail parameter announcement */
-
 #define JM_PARAM_NAME	"meta"
-#define JM_BUF_MAXLEN	4096
-SYSCTL_JAIL_PARAM_STRING(, meta, CTLFLAG_RW, JM_BUF_MAXLEN, "Jail meta info");
+
+
+/* Buffer limit */
+
+static uint32_t jm_maxbufsize = 4096;
+SYSCTL_U32(_security_jail, OID_AUTO, meta_maxbufsize,
+    CTLFLAG_RW, &jm_maxbufsize, 0, "Maximum meta buffer size.");
+
+
+/* Jail parameter announcement */
+
+static int
+jm_sysctl_jail_param_meta(SYSCTL_HANDLER_ARGS)
+{
+	return (sysctl_jail_param(oidp, arg1, jm_maxbufsize, req));
+}
+SYSCTL_PROC(_security_jail_param, OID_AUTO, meta,
+    CTLTYPE_STRING | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, 0,
+    jm_sysctl_jail_param_meta, "A", "Jail meta info");
 
 
 /* OSD */
@@ -62,7 +77,7 @@ jm_osd_method_set(void *obj, void *data)
 	error = vfs_getopt(opts, JM_PARAM_NAME, NULL, &len);
 	if (error != 0)
 		return (0);
-	if (len > JM_BUF_MAXLEN) /* len includes '\0' char */
+	if (len > jm_maxbufsize) /* len includes '\0' char */
 		return (EFBIG);
 	if (len < 1)
 		return (EINVAL);
@@ -129,8 +144,6 @@ jm_osd_method_check(void *obj __unused, void *data)
 	if (error != 0)
 		return (error);
 
-	if (len > JM_BUF_MAXLEN) /* len includes '\0' char */
-		return (EFBIG);
 	if (len < 1)
 		return (EINVAL);
 	if (meta == NULL)
