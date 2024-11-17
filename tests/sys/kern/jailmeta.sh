@@ -142,16 +142,71 @@ jls_libxo_cleanup()
 	return 0
 }
 
+atf_test_case "flua_create" "cleanup"
+flua_create_head()
+{
+	atf_set descr 'Test that meta can be set upon jail creation with flua'
+}
+flua_create_body()
+{
+	setup
+
+	atf_check -s not-exit:0 -e match:"not found" -o ignore \
+	    jls -j jail1
+
+	atf_check -s exit:0 \
+	    /usr/libexec/flua -ljail -e 'jail.setparams("jail1", {["meta"]="t1 t2=v2", ["persist"]="true"}, jail.CREATE)'
+
+	atf_check -s exit:0 -o inline:"t1 t2=v2\n" \
+	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("jail1", {"meta"}); print(res["meta"])'
+}
+flua_create_cleanup()
+{
+	jail -r jail1
+	return 0
+}
+
+atf_test_case "flua_modify" "cleanup"
+flua_modify_head()
+{
+	atf_set descr 'Test that meta can be changed with flua after jail creation'
+}
+flua_modify_body()
+{
+	setup
+
+	atf_check -s not-exit:0 -e match:"not found" -o ignore \
+	    jls -j jail1
+
+	atf_check -s exit:0 \
+	    jail -c name=jail1 persist meta="ABC"
+
+	atf_check -s exit:0 -o inline:"ABC\n" \
+	    jls -j jail1 meta
+
+	atf_check -s exit:0 \
+	    /usr/libexec/flua -ljail -e 'jail.setparams("jail1", {["meta"]="t1 t2=v"}, jail.UPDATE)'
+
+	atf_check -s exit:0 -o inline:"t1 t2=v\n" \
+	    jls -j jail1 meta
+}
+flua_modify_cleanup()
+{
+	jail -r jail1
+	return 0
+}
+
 atf_init_test_cases()
 {
 	atf_add_test_case "jail_create"
 	atf_add_test_case "jail_modify"
 	atf_add_test_case "jail_add"
+#	atf_add_test_case "jail_reset"
 
 	atf_add_test_case "jls_libxo"
-#
-#	atf_add_test_case "flua_create"
-#	atf_add_test_case "flua_modify"
+
+	atf_add_test_case "flua_create"
+	atf_add_test_case "flua_modify"
 #	atf_add_test_case "flua_add"
 #
 #	atf_add_test_case "inc_maxbufsize"
