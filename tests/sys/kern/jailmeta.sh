@@ -255,7 +255,7 @@ maxbufsize_body()
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
 	    jls -j $jn
 
-	# the size counts string length and its \0 char tail
+	# the size counts string length and the trailing \0 char
 	origmax=$(sysctl -n security.jail.meta_maxbufsize)
 
 	# must be fine with current max
