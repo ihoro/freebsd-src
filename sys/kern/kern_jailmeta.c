@@ -29,6 +29,8 @@
  */
 
 #include <sys/param.h>
+#include <sys/lock.h>
+#include <sys/sx.h>
 #include <sys/kernel.h>
 #include <sys/mount.h>
 #include <sys/malloc.h>
@@ -40,23 +42,73 @@
 #define JM_PARAM_NAME	"meta"
 
 
-/* Buffer limit */
+/*
+ * Buffer limit
+ *
+ * The hard limit is the actual value used during setting or modification. The
+ * soft limit is used solely by the security.jail.param.meta sysctl. The soft
+ * limit may remain higher than the hard limit to ensure that previously set
+ * long meta strings can still be correctly interpreted by end-user interfaces
+ * like jls(8).
+ */
 
-static uint32_t jm_maxbufsize = 4096;
-SYSCTL_U32(_security_jail, OID_AUTO, meta_maxbufsize,
-    CTLFLAG_RW, &jm_maxbufsize, 0, "Maximum meta buffer size.");
+static uint32_t jm_maxbufsize_hard = 4096;
+static uint32_t jm_maxbufsize_soft = 4096;
+
+static int
+jm_sysctl_meta_maxbufsize(SYSCTL_HANDLER_ARGS)
+{
+	int error;
+	uint32_t newmax = 0;
+
+	if (req->newptr == NULL) {
+		/* read-only */
+		sx_slock(&allprison_lock);
+		error = SYSCTL_OUT(req, &jm_maxbufsize_hard,
+		    sizeof(jm_maxbufsize_hard));
+		sx_sunlock(&allprison_lock);
+	} else {
+		/* read and write */
+		sx_xlock(&allprison_lock);
+		error = SYSCTL_IN(req, &newmax, sizeof(newmax));
+		if (error == 0 && newmax < 1)
+			error = EINVAL;
+		if (error == 0) {
+			jm_maxbufsize_hard = newmax;
+			if (jm_maxbufsize_hard >= jm_maxbufsize_soft)
+				jm_maxbufsize_soft = jm_maxbufsize_hard;
+			else if (TAILQ_EMPTY(&allprison))
+				/* TODO: For now, this is the simplest way to
+				 * avoid O(n) iteration over all prisons in
+				 * cases of a large n. */
+				jm_maxbufsize_soft = jm_maxbufsize_hard;
+		}
+		sx_xunlock(&allprison_lock);
+	}
+
+	return (error);
+}
+SYSCTL_PROC(_security_jail, OID_AUTO, meta_maxbufsize,
+    CTLTYPE_U32 | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, 0,
+    jm_sysctl_meta_maxbufsize, "IU", "Maximum meta buffer size.");
 
 
 /* Jail parameter announcement */
 
 static int
-jm_sysctl_jail_param_meta(SYSCTL_HANDLER_ARGS)
+jm_sysctl_param_meta(SYSCTL_HANDLER_ARGS)
 {
-	return (sysctl_jail_param(oidp, arg1, jm_maxbufsize, req));
+	uint32_t soft;
+
+	sx_slock(&allprison_lock);
+	soft = jm_maxbufsize_soft;
+	sx_sunlock(&allprison_lock);
+
+	return (sysctl_jail_param(oidp, arg1, soft, req));
 }
 SYSCTL_PROC(_security_jail_param, OID_AUTO, meta,
     CTLTYPE_STRING | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, 0,
-    jm_sysctl_jail_param_meta, "A", "Jail meta info");
+    jm_sysctl_param_meta, "A", "Jail meta info");
 
 
 /* OSD */
@@ -77,10 +129,12 @@ jm_osd_method_set(void *obj, void *data)
 	error = vfs_getopt(opts, JM_PARAM_NAME, NULL, &len);
 	if (error != 0)
 		return (0);
-	if (len > jm_maxbufsize) /* len includes '\0' char */
-		return (EFBIG);
 	if (len < 1)
 		return (EINVAL);
+
+	sx_assert(&allprison_lock, SA_LOCKED);
+	if (len > jm_maxbufsize_hard) /* len includes '\0' char */
+		return (EFBIG);
 
 	/* Prepare a new buf */
 	osd_addr = NULL;
