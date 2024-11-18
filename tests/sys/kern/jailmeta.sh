@@ -240,6 +240,67 @@ flua_modify_cleanup()
 	return 0
 }
 
+atf_test_case "readable_from_jail" "cleanup"
+readable_from_jail_head()
+{
+	atf_set descr 'Test that a jail can read its own meta parameter via sysctl(8)'
+	atf_set require.user root
+	atf_set execenv jail
+}
+readable_from_jail_body()
+{
+	setup
+
+	atf_check -s not-exit:0 -e match:"not found" -o ignore \
+	    jls -j jail1
+
+	atf_check -s exit:0 \
+	    jail -c name=jail1 persist meta="a b c"
+
+	atf_check -s exit:0 -o inline:"a b c\n" \
+	    jls -j jail1 meta
+
+	atf_check -s exit:0 -o inline:"a b c\n" \
+	    jexec jail1 sysctl -n security.jail.meta
+}
+readable_from_jail_cleanup()
+{
+	jail -r jail1
+	return 0
+}
+
+atf_test_case "not_inheritable" "cleanup"
+not_inheritable_head()
+{
+	atf_set descr 'Test that a jail does not inherit meta parameter from its parent jail'
+	atf_set require.user root
+	atf_set execenv jail
+}
+not_inheritable_body()
+{
+	setup
+
+	atf_check -s not-exit:0 -e match:"not found" -o ignore \
+	    jls -j parent
+
+	atf_check -s exit:0 \
+	    jail -c name=parent children.max=1 persist meta="a b c"
+
+	jexec parent jail -c name=child persist
+
+	atf_check -s exit:0 -o inline:"a b c\n" \
+	    jexec parent sysctl -n security.jail.meta
+
+	atf_check -s exit:0 -o inline:"\n" \
+	    jexec parent.child sysctl -n security.jail.meta
+}
+not_inheritable_cleanup()
+{
+	jail -r parent.child
+	jail -r parent
+	return 0
+}
+
 atf_test_case "maxbufsize" "cleanup"
 maxbufsize_head()
 {
@@ -304,6 +365,9 @@ atf_init_test_cases()
 
 	atf_add_test_case "flua_create"
 	atf_add_test_case "flua_modify"
+
+	atf_add_test_case "readable_from_jail"
+	atf_add_test_case "not_inheritable"
 
 	atf_add_test_case "maxbufsize"
 }
