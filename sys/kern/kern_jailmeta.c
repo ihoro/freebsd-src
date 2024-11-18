@@ -78,9 +78,11 @@ jm_sysctl_meta_maxbufsize(SYSCTL_HANDLER_ARGS)
 			if (jm_maxbufsize_hard >= jm_maxbufsize_soft)
 				jm_maxbufsize_soft = jm_maxbufsize_hard;
 			else if (TAILQ_EMPTY(&allprison))
-				/* TODO: For now, this is the simplest way to
+				/*
+				 * TODO: For now, this is the simplest way to
 				 * avoid O(n) iteration over all prisons in
-				 * cases of a large n. */
+				 * cases of a large n.
+				 */
 				jm_maxbufsize_soft = jm_maxbufsize_hard;
 		}
 		sx_xunlock(&allprison_lock);
