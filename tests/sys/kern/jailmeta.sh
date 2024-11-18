@@ -255,8 +255,8 @@ maxbufsize_body()
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
 	    jls -j $jn
 
+	# the size counts string length and its \0 char tail
 	origmax=$(sysctl -n security.jail.meta_maxbufsize)
-	echo $origmax
 
 	# must be fine with current max
 	atf_check -s exit:0 \
@@ -269,17 +269,23 @@ maxbufsize_body()
 	    jail -m name=$jn meta="$(printf %${origmax}s)"
 
 	# should allow the same size with increased max
-	max=$((origmax + 1))
-	sysctl security.jail.meta_maxbufsize=$max
+	newmax=$((origmax + 1))
+	sysctl security.jail.meta_maxbufsize=$newmax
 	atf_check -s exit:0 \
 	    jail -m name=$jn meta="$(printf %${origmax}s)"
-	atf_check -s exit:0 -o inline:"${max}\n" \
+	atf_check -s exit:0 -o inline:"${origmax}\n" \
 	    jls -j $jn meta | wc -c
 
-	# get back to the original maximum
+	# decrease back to the original max
 	sysctl security.jail.meta_maxbufsize=$origmax
 	atf_check -s not-exit:0 -e match:"too large" \
 	    jail -m name=$jn meta="$(printf %${origmax}s)"
+
+	# the previously set long meta is still readable as is
+	# due to the soft limit remains higher than the hard limit
+	atf_check_equal "${newmax}" "$(sysctl -n security.jail.param.meta)"
+	atf_check -s exit:0 -o inline:"${origmax}\n" \
+	    jls -j $jn meta | wc -c
 }
 maxbufsize_cleanup()
 {
