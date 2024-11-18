@@ -129,8 +129,10 @@ jm_osd_method_set(void *obj, void *data)
 
 	/* Check the option presence and its len before buf allocation */
 	error = vfs_getopt(opts, JM_PARAM_NAME, NULL, &len);
-	if (error != 0)
+	if (error == ENOENT)
 		return (0);
+	if (error != 0)
+		return (error);
 	if (len < 1)
 		return (EINVAL);
 
@@ -174,8 +176,10 @@ jm_osd_method_get(void *obj, void *data)
 
 	/* Check the option presence to avoid unnecessary locking */
 	error = vfs_getopt(opts, JM_PARAM_NAME, NULL, NULL);
-	if (error != 0)
+	if (error == ENOENT)
 		return (0);
+	if (error != 0)
+		return (error);
 
 	mtx_lock(&pr->pr_mtx);
 	osd_addr = osd_jail_get(pr, jm_osd_slot);
