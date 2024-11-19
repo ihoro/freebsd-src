@@ -204,7 +204,7 @@ jm_osd_destructor(void *osd_addr)
 /* A jail can read its own meta */
 
 static int
-jm_sysctl_security_jail_meta(SYSCTL_HANDLER_ARGS)
+jm_sysctl_meta(SYSCTL_HANDLER_ARGS)
 {
 	struct prison *pr;
 	char empty = '\0';
@@ -245,7 +245,7 @@ jm_sysctl_security_jail_meta(SYSCTL_HANDLER_ARGS)
 }
 SYSCTL_PROC(_security_jail, OID_AUTO, meta,
     CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_MPSAFE,
-    0, 0, jm_sysctl_security_jail_meta, "A", "Jail meta info");
+    0, 0, jm_sysctl_meta, "A", "Jail meta info");
 
 
 /* Setup and tear down */
