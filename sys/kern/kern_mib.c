@@ -555,7 +555,7 @@ sysctl_osrelease(SYSCTL_HANDLER_ARGS)
 }
 
 SYSCTL_PROC(_kern, KERN_OSRELEASE, osrelease,
-    CTLTYPE_STRING | CTLFLAG_CAPRD | CTLFLAG_RD | CTLFLAG_MPSAFE,
+    CTLTYPE_STRING | CTLFLAG_CAPRD | CTLFLAG_RD | CTLFLAG_PRISON | CTLFLAG_MPSAFE,
     NULL, 0, sysctl_osrelease, "A", "Operating system release");
 
 /*
@@ -578,7 +578,7 @@ sysctl_osreldate(SYSCTL_HANDLER_ARGS)
  * /usr/include/osreldate.h
  */
 SYSCTL_PROC(_kern, KERN_OSRELDATE, osreldate,
-    CTLTYPE_INT | CTLFLAG_CAPRD | CTLFLAG_RD | CTLFLAG_MPSAFE,
+    CTLTYPE_INT | CTLFLAG_CAPRD | CTLFLAG_RD | CTLFLAG_PRISON | CTLFLAG_MPSAFE,
     NULL, 0, sysctl_osreldate, "I", "Kernel release date");
 
 /*

@@ -81,7 +81,7 @@
 #define	CTLFLAG_DORMANT	0x20000000	/* This sysctl is not active yet */
 #define	CTLFLAG_ANYBODY	0x10000000	/* All users can set this var */
 #define	CTLFLAG_SECURE	0x08000000	/* Permit set only if securelevel<=0 */
-#define	CTLFLAG_PRISON	0x04000000	/* Prisoned roots can fiddle */
+#define	CTLFLAG_PRISON	0x04000000	/* Per jail, prisoned root can fiddle */
 #define	CTLFLAG_DYN	0x02000000	/* Dynamic oid - can be freed */
 #define	CTLFLAG_SKIP	0x01000000	/* Skip this sysctl when listing */
 #define	CTLMASK_SECURE	0x00F00000	/* Secure level */
