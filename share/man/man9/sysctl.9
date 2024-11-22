@@ -901,7 +901,7 @@ A process in capability mode can write to this sysctl.
 This sysctl can be written to only if the effective securelevel of the
 process is \[<=] 0.
 .It Dv CTLFLAG_PRISON
-It flags that this sysctl variable is allocated per
+It indicates that this sysctl variable may vary per
 .Xr jail 2 .
 All such variables can be listed using
 .Fl J
