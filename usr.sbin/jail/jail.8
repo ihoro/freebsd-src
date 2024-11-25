@@ -513,11 +513,21 @@ sysctl and uname -r.
 The number for the jail's
 .Va kern.osreldate
 and uname -K.
-.It meta
+.It Va metaext , Va metaint
 Any string associated with the jail.
 Its buffer size is limited by the global
 .Va security.jail.meta_maxbufsize
 sysctl, which can only be tuned by the non-jailed root user.
+The
+.Va metaext
+is an external meta information which can be read only by parent jail(s).
+The
+.Va metaint
+is an internal meta information which can be read by both,
+the jail and its parents.
+The jail can read it via
+.Va security.jail.metaint
+sysctl.
 .It Va allow.*
 Some restrictions of the jail environment may be set on a per-jail
 basis.
