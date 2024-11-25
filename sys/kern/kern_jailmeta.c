@@ -208,19 +208,19 @@ jm_osd_destructor(void *osd_addr)
 
 static struct meta metaext;
 
-static int
+static inline int
 jm_osd_method_set_metaext(void *obj, void *data)
 {
 	return (jm_osd_method_set(obj, data, &metaext));
 }
 
-static int
+static inline int
 jm_osd_method_get_metaext(void *obj, void *data)
 {
 	return (jm_osd_method_get(obj, data, &metaext));
 }
 
-static int
+static inline int
 jm_osd_method_check_metaext(void *obj __unused, void *data)
 {
 	return (jm_osd_method_check(obj, data, &metaext));
@@ -241,19 +241,19 @@ static struct meta metaext = {
 
 static struct meta metaint;
 
-static int
+static inline int
 jm_osd_method_set_metaint(void *obj, void *data)
 {
 	return (jm_osd_method_set(obj, data, &metaint));
 }
 
-static int
+static inline int
 jm_osd_method_get_metaint(void *obj, void *data)
 {
 	return (jm_osd_method_get(obj, data, &metaint));
 }
 
-static int
+static inline int
 jm_osd_method_check_metaint(void *obj __unused, void *data)
 {
 	return (jm_osd_method_check(obj, data, &metaint));
