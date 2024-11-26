@@ -368,8 +368,8 @@ maxbufsize_body()
 
 	# the previously set long meta is still readable as is
 	# due to the soft limit remains higher than the hard limit
-	atf_check_equal "${newmax}" "$(sysctl -n security.jail.param.metaext)"
-	atf_check_equal "${newmax}" "$(sysctl -n security.jail.param.metaint)"
+	atf_check_equal '${newmax}' '$(sysctl -n security.jail.param.metaext)'
+	atf_check_equal '${newmax}' '$(sysctl -n security.jail.param.metaint)'
 	atf_check -s exit:0 -o inline:"${origmax}\n" \
 	    jls -j $jn metaext | wc -c
 	#
