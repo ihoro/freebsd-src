@@ -27,11 +27,11 @@
  * interfaces, such as jls(8).
  */
 
-static uint32_t jm_maxsize_hard = 4096;
-static uint32_t jm_maxsize_soft = 4096;
+static uint32_t jm_maxbufsize_hard = 4096;
+static uint32_t jm_maxbufsize_soft = 4096;
 
 static int
-jm_sysctl_meta_maxsize(SYSCTL_HANDLER_ARGS)
+jm_sysctl_meta_maxbufsize(SYSCTL_HANDLER_ARGS)
 {
 	int error;
 	uint32_t newmax = 0;
@@ -39,8 +39,8 @@ jm_sysctl_meta_maxsize(SYSCTL_HANDLER_ARGS)
 	if (req->newptr == NULL) {
 		/* read-only */
 		sx_slock(&allprison_lock);
-		error = SYSCTL_OUT(req, &jm_maxsize_hard,
-		    sizeof(jm_maxsize_hard));
+		error = SYSCTL_OUT(req, &jm_maxbufsize_hard,
+		    sizeof(jm_maxbufsize_hard));
 		sx_sunlock(&allprison_lock);
 	} else {
 		/* read and write */
@@ -49,25 +49,25 @@ jm_sysctl_meta_maxsize(SYSCTL_HANDLER_ARGS)
 		if (error == 0 && newmax < 1)
 			error = EINVAL;
 		if (error == 0) {
-			jm_maxsize_hard = newmax;
-			if (jm_maxsize_hard >= jm_maxsize_soft)
-				jm_maxsize_soft = jm_maxsize_hard;
+			jm_maxbufsize_hard = newmax;
+			if (jm_maxbufsize_hard >= jm_maxbufsize_soft)
+				jm_maxbufsize_soft = jm_maxbufsize_hard;
 			else if (TAILQ_EMPTY(&allprison))
 				/*
 				 * For now, this is the simplest way to
 				 * avoid O(n) iteration over all prisons in
 				 * cases of a large n.
 				 */
-				jm_maxsize_soft = jm_maxsize_hard;
+				jm_maxbufsize_soft = jm_maxbufsize_hard;
 		}
 		sx_xunlock(&allprison_lock);
 	}
 
 	return (error);
 }
-SYSCTL_PROC(_security_jail, OID_AUTO, meta_maxsize,
+SYSCTL_PROC(_security_jail, OID_AUTO, meta_maxbufsize,
     CTLTYPE_U32 | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, 0,
-    jm_sysctl_meta_maxsize, "IU", "Maximum buffer size of each meta and env");
+    jm_sysctl_meta_maxbufsize, "IU", "Maximum buffer size of each meta and env");
 
 
 /* Jail parameter announcement */
@@ -78,7 +78,7 @@ jm_sysctl_param_meta(SYSCTL_HANDLER_ARGS)
 	uint32_t soft;
 
 	sx_slock(&allprison_lock);
-	soft = jm_maxsize_soft;
+	soft = jm_maxbufsize_soft;
 	sx_sunlock(&allprison_lock);
 
 	return (sysctl_jail_param(oidp, arg1, soft, req));
@@ -119,7 +119,7 @@ jm_osd_method_set(void *obj, void *data, struct meta *meta)
 		return (EINVAL);
 
 	sx_assert(&allprison_lock, SA_LOCKED);
-	if (len > jm_maxsize_hard) /* len includes '\0' char */
+	if (len > jm_maxbufsize_hard) /* len includes '\0' char */
 		return (EFBIG);
 
 	/* Prepare a new buf */

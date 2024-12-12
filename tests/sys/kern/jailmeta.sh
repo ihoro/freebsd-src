@@ -9,8 +9,8 @@
 
 setup()
 {
-	if [ $(sysctl -n security.jail.meta_maxsize) -lt 10 ]; then
-		atf_skip "sysctl security.jail.meta_maxsize must be 10+ for testing."
+	if [ $(sysctl -n security.jail.meta_maxbufsize) -lt 10 ]; then
+		atf_skip "sysctl security.jail.meta_maxbufsize must be 10+ for testing."
 	fi
 }
 
@@ -309,23 +309,23 @@ not_inheritable_cleanup()
 	return 0
 }
 
-atf_test_case "maxsize" "cleanup"
-maxsize_head()
+atf_test_case "maxbufsize" "cleanup"
+maxbufsize_head()
 {
 	atf_set descr 'Test that meta buffer maximum size can be changed via sysctl from prison0'
 	atf_set require.user root
 }
-maxsize_body()
+maxbufsize_body()
 {
 	setup
 
-	jn=jailmeta_maxsize
+	jn=jailmeta_maxbufsize
 
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
 	    jls -j $jn
 
 	# the size counts string length and the trailing \0 char
-	origmax=$(sysctl -n security.jail.meta_maxsize)
+	origmax=$(sysctl -n security.jail.meta_maxbufsize)
 
 	# must be fine with current max
 	atf_check -s exit:0 \
@@ -347,7 +347,7 @@ maxsize_body()
 
 	# should allow the same size with increased max
 	newmax=$((origmax + 1))
-	sysctl security.jail.meta_maxsize=$newmax
+	sysctl security.jail.meta_maxbufsize=$newmax
 	atf_check -s exit:0 \
 	    jail -m name=$jn meta="$(printf %${origmax}s)"
 	atf_check -s exit:0 -o inline:"${origmax}\n" \
@@ -359,7 +359,7 @@ maxsize_body()
 	    jls -j $jn env | wc -c
 
 	# decrease back to the original max
-	sysctl security.jail.meta_maxsize=$origmax
+	sysctl security.jail.meta_maxbufsize=$origmax
 	atf_check -s not-exit:0 -e match:"too large" \
 	    jail -m name=$jn meta="$(printf %${origmax}s)"
 	#
@@ -376,9 +376,9 @@ maxsize_body()
 	atf_check -s exit:0 -o inline:"${origmax}\n" \
 	    jls -j $jn env | wc -c
 }
-maxsize_cleanup()
+maxbufsize_cleanup()
 {
-	jail -r jailmeta_maxsize
+	jail -r jailmeta_maxbufsize
 	return 0
 }
 
@@ -397,5 +397,5 @@ atf_init_test_cases()
 	atf_add_test_case "readable_from_jail"
 	atf_add_test_case "not_inheritable"
 
-	atf_add_test_case "maxsize"
+	atf_add_test_case "maxbufsize"
 }
