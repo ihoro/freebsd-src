@@ -9,8 +9,8 @@
 
 setup()
 {
-	if [ $(sysctl -n security.jail.meta_maxbufsize) -lt 10 ]; then
-		atf_skip "sysctl security.jail.meta_maxbufsize must be 10+ for testing."
+	if [ $(sysctl -n security.jail.meta_maxsize) -lt 10 ]; then
+		atf_skip "sysctl security.jail.meta_maxsize must be 10+ for testing."
 	fi
 }
 
@@ -29,12 +29,12 @@ jail_create_body()
 	    jls -j jail1
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist metaext="a b c" metaint="C B A"
+	    jail -c name=jail1 persist meta="a b c" env="C B A"
 
 	atf_check -s exit:0 -o inline:"a b c\n" \
-	    jls -j jail1 metaext
+	    jls -j jail1 meta
 	atf_check -s exit:0 -o inline:"C B A\n" \
-	    jls -j jail1 metaint
+	    jls -j jail1 env
 }
 jail_create_cleanup()
 {
@@ -57,20 +57,20 @@ jail_modify_body()
 	    jls -j jail1
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist metaext="a	b	c" metaint="internal"
+	    jail -c name=jail1 persist meta="a	b	c" env="internal"
 
 	atf_check -s exit:0 -o inline:"a	b	c\n" \
-	    jls -j jail1 metaext
+	    jls -j jail1 meta
 	atf_check -s exit:0 -o inline:"internal\n" \
-	    jls -j jail1 metaint
+	    jls -j jail1 env
 
 	atf_check -s exit:0 \
-	    jail -m name=jail1 metaext="t1=A t2=B" metaint="internal2"
+	    jail -m name=jail1 meta="t1=A t2=B" env="internal2"
 
 	atf_check -s exit:0 -o inline:"t1=A t2=B\n" \
-	    jls -j jail1 metaext
+	    jls -j jail1 meta
 	atf_check -s exit:0 -o inline:"internal2\n" \
-	    jls -j jail1 metaint
+	    jls -j jail1 env
 }
 jail_modify_cleanup()
 {
@@ -96,17 +96,17 @@ jail_add_body()
 	    jail -c name=jail1 persist host.hostname=jail1
 
 	atf_check -s exit:0 -o inline:'""\n' \
-	    jls -j jail1 metaext
+	    jls -j jail1 meta
 	atf_check -s exit:0 -o inline:'""\n' \
-	    jls -j jail1 metaint
+	    jls -j jail1 env
 
 	atf_check -s exit:0 \
-	    jail -m name=jail1 metaext="$(jot 3 1 3)" metaint="$(jot 2 11 12)"
+	    jail -m name=jail1 meta="$(jot 3 1 3)" env="$(jot 2 11 12)"
 
 	atf_check -s exit:0 -o inline:"1\n2\n3\n" \
-	    jls -j jail1 metaext
+	    jls -j jail1 meta
 	atf_check -s exit:0 -o inline:"11\n12\n" \
-	    jls -j jail1 metaint
+	    jls -j jail1 env
 }
 jail_add_cleanup()
 {
@@ -129,20 +129,20 @@ jail_reset_body()
 	    jls -j jail1
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist metaext="123" metaint="456"
+	    jail -c name=jail1 persist meta="123" env="456"
 
 	atf_check -s exit:0 -o inline:"123\n" \
-	    jls -j jail1 metaext
+	    jls -j jail1 meta
 	atf_check -s exit:0 -o inline:"456\n" \
-	    jls -j jail1 metaint
+	    jls -j jail1 env
 
 	atf_check -s exit:0 \
-	    jail -m name=jail1 metaext= metaint=
+	    jail -m name=jail1 meta= env=
 
 	atf_check -s exit:0 -o inline:'""\n' \
-	    jls -j jail1 metaext
+	    jls -j jail1 meta
 	atf_check -s exit:0 -o inline:'""\n' \
-	    jls -j jail1 metaint
+	    jls -j jail1 env
 }
 jail_reset_cleanup()
 {
@@ -165,12 +165,12 @@ jls_libxo_body()
 	    jls -j jail1
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist metaext="a b c" metaint="1 2 3"
+	    jail -c name=jail1 persist meta="a b c" env="1 2 3"
 
-	atf_check -s exit:0 -o inline:'{"__version": "2", "jail-information": {"jail": [{"name":"jail1","metaext":"a b c"}]}}\n' \
-	    jls -j jail1 --libxo json name metaext
-	atf_check -s exit:0 -o inline:'{"__version": "2", "jail-information": {"jail": [{"metaint":"1 2 3"}]}}\n' \
-	    jls -j jail1 --libxo json metaint
+	atf_check -s exit:0 -o inline:'{"__version": "2", "jail-information": {"jail": [{"name":"jail1","meta":"a b c"}]}}\n' \
+	    jls -j jail1 --libxo json name meta
+	atf_check -s exit:0 -o inline:'{"__version": "2", "jail-information": {"jail": [{"env":"1 2 3"}]}}\n' \
+	    jls -j jail1 --libxo json env
 }
 jls_libxo_cleanup()
 {
@@ -193,12 +193,12 @@ flua_create_body()
 	    jls -j jail1
 
 	atf_check -s exit:0 \
-	    /usr/libexec/flua -ljail -e 'jail.setparams("jail1", {["metaext"]="t1 t2=v2", ["metaint"]="secret", ["persist"]="true"}, jail.CREATE)'
+	    /usr/libexec/flua -ljail -e 'jail.setparams("jail1", {["meta"]="t1 t2=v2", ["env"]="secret", ["persist"]="true"}, jail.CREATE)'
 
 	atf_check -s exit:0 -o inline:"t1 t2=v2\n" \
-	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("jail1", {"metaext"}); print(res["metaext"])'
+	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("jail1", {"meta"}); print(res["meta"])'
 	atf_check -s exit:0 -o inline:"secret\n" \
-	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("jail1", {"metaint"}); print(res["metaint"])'
+	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("jail1", {"env"}); print(res["env"])'
 }
 flua_create_cleanup()
 {
@@ -221,20 +221,20 @@ flua_modify_body()
 	    jls -j jail1
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist metaext="ABC" metaint="123"
+	    jail -c name=jail1 persist meta="ABC" env="123"
 
 	atf_check -s exit:0 -o inline:"ABC\n" \
-	    jls -j jail1 metaext
+	    jls -j jail1 meta
 	atf_check -s exit:0 -o inline:"123\n" \
-	    jls -j jail1 metaint
+	    jls -j jail1 env
 
 	atf_check -s exit:0 \
-	    /usr/libexec/flua -ljail -e 'jail.setparams("jail1", {["metaext"]="t1 t2=v", ["metaint"]="4"}, jail.UPDATE)'
+	    /usr/libexec/flua -ljail -e 'jail.setparams("jail1", {["meta"]="t1 t2=v", ["env"]="4"}, jail.UPDATE)'
 
 	atf_check -s exit:0 -o inline:"t1 t2=v\n" \
-	    jls -j jail1 metaext
+	    jls -j jail1 meta
 	atf_check -s exit:0 -o inline:"4\n" \
-	    jls -j jail1 metaint
+	    jls -j jail1 env
 }
 flua_modify_cleanup()
 {
@@ -257,15 +257,15 @@ readable_from_jail_body()
 	    jls -j jail1
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist metaext="a b c" metaint="internal data"
+	    jail -c name=jail1 persist meta="a b c" env="internal data"
 
 	atf_check -s exit:0 -o inline:"a b c\n" \
-	    jls -j jail1 metaext
+	    jls -j jail1 meta
 	atf_check -s exit:0 -o inline:"internal data\n" \
-	    jls -j jail1 metaint
+	    jls -j jail1 env
 
 	atf_check -s exit:0 -o inline:"internal data\n" \
-	    jexec jail1 sysctl -n security.jail.metaint
+	    jexec jail1 sysctl -n security.jail.env
 }
 readable_from_jail_cleanup()
 {
@@ -288,19 +288,19 @@ not_inheritable_body()
 	    jls -j parent
 
 	atf_check -s exit:0 \
-	    jail -c name=parent children.max=1 persist metaext="parent-ext" metaint="parent-int"
+	    jail -c name=parent children.max=1 persist meta="parent-ext" env="parent-int"
 
 	jexec parent jail -c name=child persist
 
 	atf_check -s exit:0 -o inline:"parent-ext\n" \
-	    jls -j parent metaext
+	    jls -j parent meta
 	atf_check -s exit:0 -o inline:'""\n' \
-	    jls -j parent.child metaext
+	    jls -j parent.child meta
 
 	atf_check -s exit:0 -o inline:"parent-int\n" \
-	    jexec parent sysctl -n security.jail.metaint
+	    jexec parent sysctl -n security.jail.env
 	atf_check -s exit:0 -o inline:"\n" \
-	    jexec parent.child sysctl -n security.jail.metaint
+	    jexec parent.child sysctl -n security.jail.env
 }
 not_inheritable_cleanup()
 {
@@ -309,76 +309,76 @@ not_inheritable_cleanup()
 	return 0
 }
 
-atf_test_case "maxbufsize" "cleanup"
-maxbufsize_head()
+atf_test_case "maxsize" "cleanup"
+maxsize_head()
 {
 	atf_set descr 'Test that meta buffer maximum size can be changed via sysctl from prison0'
 	atf_set require.user root
 }
-maxbufsize_body()
+maxsize_body()
 {
 	setup
 
-	jn=jailmeta_maxbufsize
+	jn=jailmeta_maxsize
 
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
 	    jls -j $jn
 
 	# the size counts string length and the trailing \0 char
-	origmax=$(sysctl -n security.jail.meta_maxbufsize)
+	origmax=$(sysctl -n security.jail.meta_maxsize)
 
 	# must be fine with current max
 	atf_check -s exit:0 \
-	    jail -c name=$jn persist metaext="$(printf %$((origmax-1))s)"
+	    jail -c name=$jn persist meta="$(printf %$((origmax-1))s)"
 	atf_check -s exit:0 -o inline:"${origmax}\n" \
-	    jls -j $jn metaext | wc -c
+	    jls -j $jn meta | wc -c
 	#
 	atf_check -s exit:0 \
-	    jail -m name=$jn metaint="$(printf %$((origmax-1))s)"
+	    jail -m name=$jn env="$(printf %$((origmax-1))s)"
 	atf_check -s exit:0 -o inline:"${origmax}\n" \
-	    jls -j $jn metaint | wc -c
+	    jls -j $jn env | wc -c
 
 	# should not allow exceeding current max
 	atf_check -s not-exit:0 -e match:"too large" \
-	    jail -m name=$jn metaext="$(printf %${origmax}s)"
+	    jail -m name=$jn meta="$(printf %${origmax}s)"
 	#
 	atf_check -s not-exit:0 -e match:"too large" \
-	    jail -m name=$jn metaint="$(printf %${origmax}s)"
+	    jail -m name=$jn env="$(printf %${origmax}s)"
 
 	# should allow the same size with increased max
 	newmax=$((origmax + 1))
-	sysctl security.jail.meta_maxbufsize=$newmax
+	sysctl security.jail.meta_maxsize=$newmax
 	atf_check -s exit:0 \
-	    jail -m name=$jn metaext="$(printf %${origmax}s)"
+	    jail -m name=$jn meta="$(printf %${origmax}s)"
 	atf_check -s exit:0 -o inline:"${origmax}\n" \
-	    jls -j $jn metaext | wc -c
+	    jls -j $jn meta | wc -c
 	#
 	atf_check -s exit:0 \
-	    jail -m name=$jn metaint="$(printf %${origmax}s)"
+	    jail -m name=$jn env="$(printf %${origmax}s)"
 	atf_check -s exit:0 -o inline:"${origmax}\n" \
-	    jls -j $jn metaint | wc -c
+	    jls -j $jn env | wc -c
 
 	# decrease back to the original max
-	sysctl security.jail.meta_maxbufsize=$origmax
+	sysctl security.jail.meta_maxsize=$origmax
 	atf_check -s not-exit:0 -e match:"too large" \
-	    jail -m name=$jn metaext="$(printf %${origmax}s)"
+	    jail -m name=$jn meta="$(printf %${origmax}s)"
 	#
 	atf_check -s not-exit:0 -e match:"too large" \
-	    jail -m name=$jn metaint="$(printf %${origmax}s)"
+	    jail -m name=$jn env="$(printf %${origmax}s)"
 
 	# the previously set long meta is still readable as is
 	# due to the soft limit remains higher than the hard limit
-	atf_check_equal '${newmax}' '$(sysctl -n security.jail.param.metaext)'
-	atf_check_equal '${newmax}' '$(sysctl -n security.jail.param.metaint)'
+	atf_check_equal '${newmax}' '$(sysctl -n security.jail.param.meta)'
+	atf_check_equal '${newmax}' '$(sysctl -n security.jail.param.env)'
 	atf_check -s exit:0 -o inline:"${origmax}\n" \
-	    jls -j $jn metaext | wc -c
+	    jls -j $jn meta | wc -c
 	#
 	atf_check -s exit:0 -o inline:"${origmax}\n" \
-	    jls -j $jn metaint | wc -c
+	    jls -j $jn env | wc -c
 }
-maxbufsize_cleanup()
+maxsize_cleanup()
 {
-	jail -r jailmeta_maxbufsize
+	jail -r jailmeta_maxsize
 	return 0
 }
 
@@ -397,5 +397,5 @@ atf_init_test_cases()
 	atf_add_test_case "readable_from_jail"
 	atf_add_test_case "not_inheritable"
 
-	atf_add_test_case "maxbufsize"
+	atf_add_test_case "maxsize"
 }

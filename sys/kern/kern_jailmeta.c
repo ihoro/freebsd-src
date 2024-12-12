@@ -21,17 +21,17 @@
  * Buffer limit
  *
  * The hard limit is the actual value used during setting or modification. The
- * soft limit is used solely by the security.jail.param.metaext & .metaint
- * sysctlS. The soft limit may remain higher than the hard limit to ensure that
- * previously set long meta strings can still be correctly interpreted by
- * end-user interfaces like jls(8).
+ * soft limit is used solely by the security.jail.param.meta and .env sysctl. If
+ * the hard limit is decreased, the soft limit may remain higher to ensure that
+ * previously set meta strings can still be correctly interpreted by end-user
+ * interfaces, such as jls(8).
  */
 
-static uint32_t jm_maxbufsize_hard = 4096;
-static uint32_t jm_maxbufsize_soft = 4096;
+static uint32_t jm_maxsize_hard = 4096;
+static uint32_t jm_maxsize_soft = 4096;
 
 static int
-jm_sysctl_meta_maxbufsize(SYSCTL_HANDLER_ARGS)
+jm_sysctl_meta_maxsize(SYSCTL_HANDLER_ARGS)
 {
 	int error;
 	uint32_t newmax = 0;
@@ -39,8 +39,8 @@ jm_sysctl_meta_maxbufsize(SYSCTL_HANDLER_ARGS)
 	if (req->newptr == NULL) {
 		/* read-only */
 		sx_slock(&allprison_lock);
-		error = SYSCTL_OUT(req, &jm_maxbufsize_hard,
-		    sizeof(jm_maxbufsize_hard));
+		error = SYSCTL_OUT(req, &jm_maxsize_hard,
+		    sizeof(jm_maxsize_hard));
 		sx_sunlock(&allprison_lock);
 	} else {
 		/* read and write */
@@ -49,25 +49,25 @@ jm_sysctl_meta_maxbufsize(SYSCTL_HANDLER_ARGS)
 		if (error == 0 && newmax < 1)
 			error = EINVAL;
 		if (error == 0) {
-			jm_maxbufsize_hard = newmax;
-			if (jm_maxbufsize_hard >= jm_maxbufsize_soft)
-				jm_maxbufsize_soft = jm_maxbufsize_hard;
+			jm_maxsize_hard = newmax;
+			if (jm_maxsize_hard >= jm_maxsize_soft)
+				jm_maxsize_soft = jm_maxsize_hard;
 			else if (TAILQ_EMPTY(&allprison))
 				/*
-				 * TODO: For now, this is the simplest way to
+				 * For now, this is the simplest way to
 				 * avoid O(n) iteration over all prisons in
 				 * cases of a large n.
 				 */
-				jm_maxbufsize_soft = jm_maxbufsize_hard;
+				jm_maxsize_soft = jm_maxsize_hard;
 		}
 		sx_xunlock(&allprison_lock);
 	}
 
 	return (error);
 }
-SYSCTL_PROC(_security_jail, OID_AUTO, meta_maxbufsize,
+SYSCTL_PROC(_security_jail, OID_AUTO, meta_maxsize,
     CTLTYPE_U32 | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, 0,
-    jm_sysctl_meta_maxbufsize, "IU", "Maximum meta buffer size.");
+    jm_sysctl_meta_maxsize, "IU", "Maximum buffer size of each meta and env");
 
 
 /* Jail parameter announcement */
@@ -78,17 +78,17 @@ jm_sysctl_param_meta(SYSCTL_HANDLER_ARGS)
 	uint32_t soft;
 
 	sx_slock(&allprison_lock);
-	soft = jm_maxbufsize_soft;
+	soft = jm_maxsize_soft;
 	sx_sunlock(&allprison_lock);
 
 	return (sysctl_jail_param(oidp, arg1, soft, req));
 }
-SYSCTL_PROC(_security_jail_param, OID_AUTO, metaext,
+SYSCTL_PROC(_security_jail_param, OID_AUTO, meta,
     CTLTYPE_STRING | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, 0,
-    jm_sysctl_param_meta, "A", "Jail external meta information");
-SYSCTL_PROC(_security_jail_param, OID_AUTO, metaint,
+    jm_sysctl_param_meta, "A", "Jail meta information hidden from the jail");
+SYSCTL_PROC(_security_jail_param, OID_AUTO, env,
     CTLTYPE_STRING | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, 0,
-    jm_sysctl_param_meta, "A", "Jail internal meta information");
+    jm_sysctl_param_meta, "A", "Jail meta information readable by the jail");
 
 
 /* OSD -- general */
@@ -119,7 +119,7 @@ jm_osd_method_set(void *obj, void *data, struct meta *meta)
 		return (EINVAL);
 
 	sx_assert(&allprison_lock, SA_LOCKED);
-	if (len > jm_maxbufsize_hard) /* len includes '\0' char */
+	if (len > jm_maxsize_hard) /* len includes '\0' char */
 		return (EFBIG);
 
 	/* Prepare a new buf */
@@ -204,76 +204,76 @@ jm_osd_destructor(void *osd_addr)
 }
 
 
-/* OSD -- metaext */
+/* OSD -- meta */
 
-static struct meta metaext;
+static struct meta meta;
 
 static inline int
-jm_osd_method_set_metaext(void *obj, void *data)
+jm_osd_method_set_meta(void *obj, void *data)
 {
-	return (jm_osd_method_set(obj, data, &metaext));
+	return (jm_osd_method_set(obj, data, &meta));
 }
 
 static inline int
-jm_osd_method_get_metaext(void *obj, void *data)
+jm_osd_method_get_meta(void *obj, void *data)
 {
-	return (jm_osd_method_get(obj, data, &metaext));
+	return (jm_osd_method_get(obj, data, &meta));
 }
 
 static inline int
-jm_osd_method_check_metaext(void *obj __unused, void *data)
+jm_osd_method_check_meta(void *obj, void *data)
 {
-	return (jm_osd_method_check(obj, data, &metaext));
+	return (jm_osd_method_check(obj, data, &meta));
 }
 
-static struct meta metaext = {
-	.name = "metaext",
+static struct meta meta = {
+	.name = "meta",
 	.osd_slot = 0,
 	.methods = {
-		[PR_METHOD_SET] =	jm_osd_method_set_metaext,
-		[PR_METHOD_GET] =	jm_osd_method_get_metaext,
-		[PR_METHOD_CHECK] =	jm_osd_method_check_metaext,
+		[PR_METHOD_SET] =	jm_osd_method_set_meta,
+		[PR_METHOD_GET] =	jm_osd_method_get_meta,
+		[PR_METHOD_CHECK] =	jm_osd_method_check_meta,
 	}
 };
 
 
-/* OSD -- metaint */
+/* OSD -- env */
 
-static struct meta metaint;
+static struct meta env;
 
 static inline int
-jm_osd_method_set_metaint(void *obj, void *data)
+jm_osd_method_set_env(void *obj, void *data)
 {
-	return (jm_osd_method_set(obj, data, &metaint));
+	return (jm_osd_method_set(obj, data, &env));
 }
 
 static inline int
-jm_osd_method_get_metaint(void *obj, void *data)
+jm_osd_method_get_env(void *obj, void *data)
 {
-	return (jm_osd_method_get(obj, data, &metaint));
+	return (jm_osd_method_get(obj, data, &env));
 }
 
 static inline int
-jm_osd_method_check_metaint(void *obj __unused, void *data)
+jm_osd_method_check_env(void *obj, void *data)
 {
-	return (jm_osd_method_check(obj, data, &metaint));
+	return (jm_osd_method_check(obj, data, &env));
 }
 
-static struct meta metaint = {
-	.name = "metaint",
+static struct meta env = {
+	.name = "env",
 	.osd_slot = 0,
 	.methods = {
-		[PR_METHOD_SET] =	jm_osd_method_set_metaint,
-		[PR_METHOD_GET] =	jm_osd_method_get_metaint,
-		[PR_METHOD_CHECK] =	jm_osd_method_check_metaint,
+		[PR_METHOD_SET] =	jm_osd_method_set_env,
+		[PR_METHOD_GET] =	jm_osd_method_get_env,
+		[PR_METHOD_CHECK] =	jm_osd_method_check_env,
 	}
 };
 
 
-/* A jail can read its internal meta */
+/* A jail can read its 'env' */
 
 static int
-jm_sysctl_metaint(SYSCTL_HANDLER_ARGS)
+jm_sysctl_env(SYSCTL_HANDLER_ARGS)
 {
 	struct prison *pr;
 	char empty = '\0';
@@ -284,7 +284,7 @@ jm_sysctl_metaint(SYSCTL_HANDLER_ARGS)
 	pr = req->td->td_ucred->cr_prison;
 
 	mtx_lock(&pr->pr_mtx);
-	arg1 = osd_jail_get(pr, metaint.osd_slot);
+	arg1 = osd_jail_get(pr, env.osd_slot);
 	if (arg1 == NULL) {
 		tmpbuf = &empty;
 		outlen = 1;
@@ -312,9 +312,9 @@ jm_sysctl_metaint(SYSCTL_HANDLER_ARGS)
 
 	return (error);
 }
-SYSCTL_PROC(_security_jail, OID_AUTO, metaint,
+SYSCTL_PROC(_security_jail, OID_AUTO, env,
     CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_MPSAFE,
-    0, 0, jm_sysctl_metaint, "A", "Jail internal meta information");
+    0, 0, jm_sysctl_env, "A", "Meta information provided by parent jail");
 
 
 /* Setup and tear down */
@@ -322,8 +322,8 @@ SYSCTL_PROC(_security_jail, OID_AUTO, metaint,
 static int
 jm_sysinit(void *arg __unused)
 {
-	metaext.osd_slot = osd_jail_register(jm_osd_destructor, metaext.methods);
-	metaint.osd_slot = osd_jail_register(jm_osd_destructor, metaint.methods);
+	meta.osd_slot = osd_jail_register(jm_osd_destructor, meta.methods);
+	env.osd_slot = osd_jail_register(jm_osd_destructor, env.methods);
 
 	return (0);
 }
@@ -331,8 +331,8 @@ jm_sysinit(void *arg __unused)
 static int
 jm_sysuninit(void *arg __unused)
 {
-	osd_jail_deregister(metaext.osd_slot);
-	osd_jail_deregister(metaint.osd_slot);
+	osd_jail_deregister(meta.osd_slot);
+	osd_jail_deregister(env.osd_slot);
 
 	return (0);
 }
