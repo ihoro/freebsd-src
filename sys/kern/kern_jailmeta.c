@@ -59,8 +59,6 @@ jm_sysctl_meta_maxbufsize(SYSCTL_HANDLER_ARGS)
 		goto end;
 
 	error = SYSCTL_IN(req, &newmax, sizeof(newmax));
-	if (error == 0 && newmax < 1)
-		error = EINVAL;
 	if (error != 0)
 		goto end;
 
@@ -187,7 +185,7 @@ jm_osd_method_set(void *obj, void *data, struct meta *meta)
 	sx_assert(&allprison_lock, SA_LOCKED);
 
 	/* Check buffer size limit */
-	if (len > jm_maxbufsize_hard) /* len includes '\0' char */
+	if (len > 1 && len > jm_maxbufsize_hard) /* len includes '\0' char */
 		return (EFBIG);
 
 	/* Check allowed chars */
