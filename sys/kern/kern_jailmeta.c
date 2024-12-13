@@ -101,22 +101,27 @@ jm_sysctl_meta_allowedchars(SYSCTL_HANDLER_ARGS)
 
 	readonly ? sx_slock(&allprison_lock) : sx_xlock(&allprison_lock);
 
-	for (size_t i = 1; i < NCHARS; i++) {
-		if (!BIT_ISSET(NCHARS, i, &allowedchars))
-			continue;
-		chars[len] = i;
-		len++;
-	}
+	if (!BIT_ISFULLSET(NCHARS, &allowedchars))
+		for (size_t i = 1; i < NCHARS; i++) {
+			if (!BIT_ISSET(NCHARS, i, &allowedchars))
+				continue;
+			chars[len] = i;
+			len++;
+		}
 	chars[len] = 0;
 
 	error = sysctl_handle_string(oidp, chars, arg2, req);
 
 	if (!readonly) {
-		BIT_ZERO(NCHARS, &allowedchars);
-		for (size_t i = 0; i < NCHARS; i++) {
-			if (chars[i] == 0)
-				break;
-			BIT_SET(NCHARS, chars[i], &allowedchars);
+		if (chars[0] == 0) {
+			BIT_FILL(NCHARS, &allowedchars);
+		} else {
+			BIT_ZERO(NCHARS, &allowedchars);
+			for (size_t i = 0; i < NCHARS; i++) {
+				if (chars[i] == 0)
+					break;
+				BIT_SET(NCHARS, chars[i], &allowedchars);
+			}
 		}
 	}
 
@@ -127,7 +132,8 @@ jm_sysctl_meta_allowedchars(SYSCTL_HANDLER_ARGS)
 SYSCTL_PROC(_security_jail, OID_AUTO, meta_allowedchars,
     CTLTYPE_STRING | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, NCHARS,
     jm_sysctl_meta_allowedchars, "A",
-    "The single-byte chars allowed to be used for meta and env");
+    "The single-byte chars allowed to be used for meta and env"
+    " (empty string means all chars are allowed)");
 
 
 /* Jail parameter announcement */
