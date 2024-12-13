@@ -17,7 +17,7 @@ setup()
 atf_test_case "jail_create" "cleanup"
 jail_create_head()
 {
-	atf_set descr 'Test that meta can be set upon jail creation with jail(8)'
+	atf_set descr 'Test that metadata can be set upon jail creation with jail(8)'
 	atf_set require.user root
 	atf_set execenv jail
 }
@@ -45,7 +45,7 @@ jail_create_cleanup()
 atf_test_case "jail_modify" "cleanup"
 jail_modify_head()
 {
-	atf_set descr 'Test that meta can be modified after jail creation with jail(8)'
+	atf_set descr 'Test that metadata can be modified after jail creation with jail(8)'
 	atf_set require.user root
 	atf_set execenv jail
 }
@@ -81,7 +81,7 @@ jail_modify_cleanup()
 atf_test_case "jail_add" "cleanup"
 jail_add_head()
 {
-	atf_set descr 'Test that meta can be added to an existing jail with jail(8)'
+	atf_set descr 'Test that metadata can be added to an existing jail with jail(8)'
 	atf_set require.user root
 	atf_set execenv jail
 }
@@ -117,7 +117,7 @@ jail_add_cleanup()
 atf_test_case "jail_reset" "cleanup"
 jail_reset_head()
 {
-	atf_set descr 'Test that meta can be reset to an empty string with jail(8)'
+	atf_set descr 'Test that metadata can be reset to an empty string with jail(8)'
 	atf_set require.user root
 	atf_set execenv jail
 }
@@ -153,7 +153,7 @@ jail_reset_cleanup()
 atf_test_case "jls_libxo" "cleanup"
 jls_libxo_head()
 {
-	atf_set descr 'Test that meta can be read with jls(8) using libxo'
+	atf_set descr 'Test that metadata can be read with jls(8) using libxo'
 	atf_set require.user root
 	atf_set execenv jail
 }
@@ -181,7 +181,7 @@ jls_libxo_cleanup()
 atf_test_case "flua_create" "cleanup"
 flua_create_head()
 {
-	atf_set descr 'Test that meta can be set upon jail creation with flua'
+	atf_set descr 'Test that metadata can be set upon jail creation with flua'
 	atf_set require.user root
 	atf_set execenv jail
 }
@@ -209,7 +209,7 @@ flua_create_cleanup()
 atf_test_case "flua_modify" "cleanup"
 flua_modify_head()
 {
-	atf_set descr 'Test that meta can be changed with flua after jail creation'
+	atf_set descr 'Test that metadata can be changed with flua after jail creation'
 	atf_set require.user root
 	atf_set execenv jail
 }
@@ -276,7 +276,7 @@ env_readable_by_jail_cleanup()
 atf_test_case "not_inheritable" "cleanup"
 not_inheritable_head()
 {
-	atf_set descr 'Test that a jail does not inherit meta parameter from its parent jail'
+	atf_set descr 'Test that a jail does not inherit metadata from its parent jail'
 	atf_set require.user root
 	atf_set execenv jail
 }
@@ -288,16 +288,16 @@ not_inheritable_body()
 	    jls -j parent
 
 	atf_check -s exit:0 \
-	    jail -c name=parent children.max=1 persist meta="parent-ext" env="parent-int"
+	    jail -c name=parent children.max=1 persist meta="meta-value" env="env-value"
 
 	jexec parent jail -c name=child persist
 
-	atf_check -s exit:0 -o inline:"parent-ext\n" \
+	atf_check -s exit:0 -o inline:"meta-value\n" \
 	    jls -j parent meta
 	atf_check -s exit:0 -o inline:'""\n' \
 	    jls -j parent.child meta
 
-	atf_check -s exit:0 -o inline:"parent-int\n" \
+	atf_check -s exit:0 -o inline:"env-value\n" \
 	    jexec parent sysctl -n security.jail.env
 	atf_check -s exit:0 -o inline:"\n" \
 	    jexec parent.child sysctl -n security.jail.env
@@ -312,7 +312,7 @@ not_inheritable_cleanup()
 atf_test_case "maxbufsize" "cleanup"
 maxbufsize_head()
 {
-	atf_set descr 'Test that meta buffer maximum size can be changed via sysctl from prison0'
+	atf_set descr 'Test that metadata buffer maximum size can be changed'
 	atf_set require.user root
 }
 maxbufsize_body()
@@ -382,6 +382,64 @@ maxbufsize_cleanup()
 	return 0
 }
 
+atf_test_case "allowedchars" "cleanup"
+allowedchars_head()
+{
+	atf_set descr 'Test that the set of allowed chars can be changed'
+	atf_set require.user root
+}
+allowedchars_body()
+{
+	setup
+
+	jn=jailmeta_allowedchars
+	atf_check -s not-exit:0 -e match:"not found" -o ignore \
+	    jls -j $jn
+	atf_check -s exit:0 \
+	    jail -c name=$jn persist
+
+	# Save the original value
+	sysctl -b security.jail.meta_allowedchars > meta_allowedchars.bin
+
+	# All chars
+	sysctl security.jail.meta_allowedchars=
+	printf $(jot -w '\%o' -s '' -n 127 1 127) > 7bit.bin
+	atf_check -s exit:0 \
+	    jail -m name=$jn meta="$(cat 7bit.bin)" env="$(cat 7bit.bin)"
+	jls -j $jn meta > meta.bin
+	jls -j $jn env > env.bin
+	printf '\n' >> 7bit.bin # jls adds a newline
+	atf_check -s exit:0 diff 7bit.bin meta.bin
+	atf_check -s exit:0 diff 7bit.bin env.bin
+
+	# Limited set
+	sysctl security.jail.meta_allowedchars="$(printf 'AB\1\2_\3\11C')"
+	# should be okay if within the limits
+	atf_check -s exit:0 \
+	    jail -m name=$jn meta="$(printf 'C\11A\3')" env="$(printf '\1A\2B\3')"
+	# should error and not change env
+	atf_check -s not-exit:0 -o ignore -e ignore \
+	    jail -m name=$jn meta="$(printf 'XC\11A\3')" env="$(printf '_\1A\2B\3')"
+	# should error and not change meta
+	atf_check -s not-exit:0 -o ignore -e ignore \
+	    jail -m name=$jn meta="$(printf '_C\11A\3')" env="$(printf '\1A\2B\3x')"
+	# should stay intact after errors
+	atf_check -s exit:0 -o inline:"43094103" \
+	    jls -j $jn meta | hexdump -e '1/1 "%02x"'
+	atf_check -s exit:0 -o inline:"0141024303" \
+	    jls -j $jn env | hexdump -e '1/1 "%02x"'
+
+}
+allowedchars_cleanup()
+{
+	# Restore the original value
+	sysctl security.jail.meta_allowedchars="'$(cat meta_allowedchars.bin)'"
+	rm *.bin
+
+	jail -r jailmeta_allowedchars
+	return 0
+}
+
 atf_init_test_cases()
 {
 	atf_add_test_case "jail_create"
@@ -398,4 +456,5 @@ atf_init_test_cases()
 	atf_add_test_case "not_inheritable"
 
 	atf_add_test_case "maxbufsize"
+	atf_add_test_case "allowedchars"
 }
