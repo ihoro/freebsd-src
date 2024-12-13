@@ -90,7 +90,7 @@ SYSCTL_PROC(_security_jail, OID_AUTO, meta_maxbufsize,
 BITSET_DEFINE(charbitset, NCHARS);
 static struct charbitset allowedchars = BITSET_T_INITIALIZER(
     /* TODO */
-    0x01
+    0x00
 );
 
 static int
@@ -153,7 +153,7 @@ SYSCTL_PROC(_security_jail_param, OID_AUTO, env,
     jm_sysctl_param_meta, "A", "Jail meta information readable by the jail");
 
 
-/* OSD -- general */
+/* OSD -- generic */
 
 struct meta {
 	char *name;
@@ -172,7 +172,7 @@ jm_osd_method_set(void *obj, void *data, struct meta *meta)
 	int error;
 
 	/* Check the option presence and its len before buf allocation */
-	error = vfs_getopt(opts, meta->name, NULL, &len);
+	error = vfs_getopt(opts, meta->name, (void **)&osd_addr, &len);
 	if (error == ENOENT)
 		return (0);
 	if (error != 0)
@@ -181,8 +181,18 @@ jm_osd_method_set(void *obj, void *data, struct meta *meta)
 		return (EINVAL);
 
 	sx_assert(&allprison_lock, SA_LOCKED);
+
+	/* Check buffer size limit */
 	if (len > jm_maxbufsize_hard) /* len includes '\0' char */
 		return (EFBIG);
+
+	/* Check allowed chars */
+	for (size_t i = 0; i < len; i++) {
+		if (osd_addr[i] == 0)
+			continue;
+		if (!BIT_ISSET(NCHARS, osd_addr[i], &allowedchars))
+			return (EINVAL);
+	}
 
 	/* Prepare a new buf */
 	osd_addr = NULL;
