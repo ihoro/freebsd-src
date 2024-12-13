@@ -242,14 +242,14 @@ flua_modify_cleanup()
 	return 0
 }
 
-atf_test_case "readable_from_jail" "cleanup"
-readable_from_jail_head()
+atf_test_case "env_readable_by_jail" "cleanup"
+env_readable_by_jail_head()
 {
-	atf_set descr 'Test that a jail can read its internal meta parameter via sysctl(8)'
+	atf_set descr 'Test that a jail can read its own env parameter via sysctl(8)'
 	atf_set require.user root
 	atf_set execenv jail
 }
-readable_from_jail_body()
+env_readable_by_jail_body()
 {
 	setup
 
@@ -267,7 +267,7 @@ readable_from_jail_body()
 	atf_check -s exit:0 -o inline:"internal data\n" \
 	    jexec jail1 sysctl -n security.jail.env
 }
-readable_from_jail_cleanup()
+env_readable_by_jail_cleanup()
 {
 	jail -r jail1
 	return 0
@@ -394,7 +394,7 @@ atf_init_test_cases()
 	atf_add_test_case "flua_create"
 	atf_add_test_case "flua_modify"
 
-	atf_add_test_case "readable_from_jail"
+	atf_add_test_case "env_readable_by_jail"
 	atf_add_test_case "not_inheritable"
 
 	atf_add_test_case "maxbufsize"
