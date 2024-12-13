@@ -81,17 +81,15 @@ end:
 }
 SYSCTL_PROC(_security_jail, OID_AUTO, meta_maxbufsize,
     CTLTYPE_U32 | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, 0,
-    jm_sysctl_meta_maxbufsize, "IU", "Maximum buffer size of each meta and env");
+    jm_sysctl_meta_maxbufsize, "IU",
+    "Maximum buffer size of each meta and env");
 
 
 /* Allowed chars */
 
 #define NCHARS	256
 BITSET_DEFINE(charbitset, NCHARS);
-static struct charbitset allowedchars = BITSET_T_INITIALIZER(
-    /* TODO */
-    0x00
-);
+static struct charbitset allowedchars;
 
 static int
 jm_sysctl_meta_allowedchars(SYSCTL_HANDLER_ARGS)
@@ -394,6 +392,16 @@ SYSCTL_PROC(_security_jail, OID_AUTO, env,
 static int
 jm_sysinit(void *arg __unused)
 {
+	/* Default set of allowed chars */
+	BIT_ZERO(NCHARS, &allowedchars);
+	/* HT, LF, CR */
+	BIT_SET(NCHARS, 0x09, &allowedchars);
+	BIT_SET(NCHARS, 0x0A, &allowedchars);
+	BIT_SET(NCHARS, 0x0D, &allowedchars);
+	/* 7bit printable */
+	for (size_t i = 0x20; i <= 0x7E; i++)
+		BIT_SET(NCHARS, i, &allowedchars);
+
 	meta.osd_slot = osd_jail_register(jm_osd_destructor, meta.methods);
 	env.osd_slot = osd_jail_register(jm_osd_destructor, env.methods);
 
