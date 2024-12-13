@@ -399,14 +399,34 @@ static int
 jm_sysinit(void *arg __unused)
 {
 	/* Default set of allowed chars */
+
 	BIT_ZERO(NCHARS, &allowedchars);
-	/* HT, LF, CR */
-	BIT_SET(NCHARS, 0x09, &allowedchars);
-	BIT_SET(NCHARS, 0x0A, &allowedchars);
-	BIT_SET(NCHARS, 0x0D, &allowedchars);
-	/* 7bit printable */
-	for (size_t i = 0x20; i <= 0x7E; i++)
+
+	/* Base64 */
+	for (size_t i = 0x41; i <= 0x5A; i++)	/* A-Z */
 		BIT_SET(NCHARS, i, &allowedchars);
+	for (size_t i = 0x61; i <= 0x7A; i++)	/* a-z */
+		BIT_SET(NCHARS, i, &allowedchars);
+	for (size_t i = 0x30; i <= 0x39; i++)	/* 0-9 */
+		BIT_SET(NCHARS, i, &allowedchars);
+	BIT_SET(NCHARS, 0x2B, &allowedchars);	/* + */
+	BIT_SET(NCHARS, 0x2F, &allowedchars);	/* / */
+	BIT_SET(NCHARS, 0x3D, &allowedchars);	/* = */
+
+	/* key=value\n format */
+	BIT_SET(NCHARS, 0x0A, &allowedchars);	/* LF */
+	BIT_SET(NCHARS, 0x0D, &allowedchars);	/* CR */
+
+	/* Extra */
+	BIT_SET(NCHARS, 0x09, &allowedchars);	/* HT */
+	BIT_SET(NCHARS, 0x20, &allowedchars);	/* SP */
+	BIT_SET(NCHARS, 0x2C, &allowedchars);	/* , */
+	BIT_SET(NCHARS, 0x2D, &allowedchars);	/* - */
+	BIT_SET(NCHARS, 0x2E, &allowedchars);	/* . */
+	BIT_SET(NCHARS, 0x3A, &allowedchars);	/* : */
+	BIT_SET(NCHARS, 0x40, &allowedchars);	/* @ */
+	BIT_SET(NCHARS, 0x5F, &allowedchars);	/* _ */
+
 
 	meta.osd_slot = osd_jail_register(jm_osd_destructor, meta.methods);
 	env.osd_slot = osd_jail_register(jm_osd_destructor, env.methods);
