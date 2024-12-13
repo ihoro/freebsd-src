@@ -8,6 +8,8 @@
  */
 
 #include <sys/param.h>
+#include <sys/_bitset.h>
+#include <sys/bitset.h>
 #include <sys/lock.h>
 #include <sys/sx.h>
 #include <sys/kernel.h>
@@ -36,38 +38,98 @@ jm_sysctl_meta_maxbufsize(SYSCTL_HANDLER_ARGS)
 	int error;
 	uint32_t newmax = 0;
 
+	/* only reading */
+
 	if (req->newptr == NULL) {
-		/* read-only */
 		sx_slock(&allprison_lock);
 		error = SYSCTL_OUT(req, &jm_maxbufsize_hard,
 		    sizeof(jm_maxbufsize_hard));
 		sx_sunlock(&allprison_lock);
-	} else {
-		/* read and write */
-		sx_xlock(&allprison_lock);
-		error = SYSCTL_IN(req, &newmax, sizeof(newmax));
-		if (error == 0 && newmax < 1)
-			error = EINVAL;
-		if (error == 0) {
-			jm_maxbufsize_hard = newmax;
-			if (jm_maxbufsize_hard >= jm_maxbufsize_soft)
-				jm_maxbufsize_soft = jm_maxbufsize_hard;
-			else if (TAILQ_EMPTY(&allprison))
-				/*
-				 * For now, this is the simplest way to
-				 * avoid O(n) iteration over all prisons in
-				 * cases of a large n.
-				 */
-				jm_maxbufsize_soft = jm_maxbufsize_hard;
-		}
-		sx_xunlock(&allprison_lock);
+
+		return (error);
 	}
 
+	/* reading and writing */
+
+	sx_xlock(&allprison_lock);
+
+	error = SYSCTL_OUT(req, &jm_maxbufsize_hard,
+	    sizeof(jm_maxbufsize_hard));
+	if (error != 0)
+		goto end;
+
+	error = SYSCTL_IN(req, &newmax, sizeof(newmax));
+	if (error == 0 && newmax < 1)
+		error = EINVAL;
+	if (error != 0)
+		goto end;
+
+	jm_maxbufsize_hard = newmax;
+	if (jm_maxbufsize_hard >= jm_maxbufsize_soft)
+		jm_maxbufsize_soft = jm_maxbufsize_hard;
+	else if (TAILQ_EMPTY(&allprison))
+		/*
+		 * For now, this is the simplest way to
+		 * avoid O(n) iteration over all prisons in
+		 * case of a large n.
+		 */
+		jm_maxbufsize_soft = jm_maxbufsize_hard;
+
+end:
+	sx_xunlock(&allprison_lock);
 	return (error);
 }
 SYSCTL_PROC(_security_jail, OID_AUTO, meta_maxbufsize,
     CTLTYPE_U32 | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, 0,
     jm_sysctl_meta_maxbufsize, "IU", "Maximum buffer size of each meta and env");
+
+
+/* Allowed chars */
+
+#define NCHARS	256
+BITSET_DEFINE(charbitset, NCHARS);
+static struct charbitset allowedchars = BITSET_T_INITIALIZER(
+    /* TODO */
+    0x01
+);
+
+static int
+jm_sysctl_meta_allowedchars(SYSCTL_HANDLER_ARGS)
+{
+	int error;
+	unsigned char chars[NCHARS];
+	int len = 0;
+	const bool readonly = req->newptr == NULL;
+
+	readonly ? sx_slock(&allprison_lock) : sx_xlock(&allprison_lock);
+
+	for (size_t i = 1; i < NCHARS; i++) {
+		if (!BIT_ISSET(NCHARS, i, &allowedchars))
+			continue;
+		chars[len] = i;
+		len++;
+	}
+	chars[len] = 0;
+
+	error = sysctl_handle_string(oidp, chars, arg2, req);
+
+	if (!readonly) {
+		BIT_ZERO(NCHARS, &allowedchars);
+		for (size_t i = 0; i < NCHARS; i++) {
+			if (chars[i] == 0)
+				break;
+			BIT_SET(NCHARS, chars[i], &allowedchars);
+		}
+	}
+
+	readonly ? sx_sunlock(&allprison_lock) : sx_xunlock(&allprison_lock);
+
+	return (error);
+}
+SYSCTL_PROC(_security_jail, OID_AUTO, meta_allowedchars,
+    CTLTYPE_STRING | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, NCHARS,
+    jm_sysctl_meta_allowedchars, "A",
+    "The single-byte chars allowed to be used for meta and env");
 
 
 /* Jail parameter announcement */
