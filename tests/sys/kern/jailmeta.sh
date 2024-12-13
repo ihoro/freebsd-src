@@ -10,8 +10,8 @@
 setup()
 {
 	# Check if we have enough buffer space for testing
-	if [ $(sysctl -n security.jail.meta_maxbufsize) -lt 10 ]; then
-		atf_skip "sysctl security.jail.meta_maxbufsize must be 10+ for testing."
+	if [ $(sysctl -n security.jail.meta_maxbufsize) -lt 128 ]; then
+		atf_skip "sysctl security.jail.meta_maxbufsize must be 128+ for testing."
 	fi
 
 	# Check if chars required for testing are allowed
