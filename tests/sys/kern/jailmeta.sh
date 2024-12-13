@@ -9,9 +9,23 @@
 
 setup()
 {
+	# Check if we have enough buffer space for testing
 	if [ $(sysctl -n security.jail.meta_maxbufsize) -lt 10 ]; then
 		atf_skip "sysctl security.jail.meta_maxbufsize must be 10+ for testing."
 	fi
+
+	# Check if chars required for testing are allowed
+	sysctl -b security.jail.meta_allowedchars \
+		| hexdump -e '1/1 "%02x\n"' > meta_allowedchars.hex
+	# ABCabctv =0-9\t\n
+	for b in 41 42 43 61 62 63 74 76 20 30 31 32 33 34 35 36 37 38 39 09 0a
+	do
+		if ! grep $b meta_allowedchars.hex; then
+			rm meta_allowedchars.hex
+			atf_skip "sysctl security.jail.meta_allowedchars is not wide enough for testing"
+		fi
+	done
+	rm meta_allowedchars.hex
 }
 
 atf_test_case "jail_create" "cleanup"
@@ -57,19 +71,19 @@ jail_modify_body()
 	    jls -j jail1
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist meta="a	b	c" env="internal"
+	    jail -c name=jail1 persist meta="a	b	c" env="CAB"
 
 	atf_check -s exit:0 -o inline:"a	b	c\n" \
 	    jls -j jail1 meta
-	atf_check -s exit:0 -o inline:"internal\n" \
+	atf_check -s exit:0 -o inline:"CAB\n" \
 	    jls -j jail1 env
 
 	atf_check -s exit:0 \
-	    jail -m name=jail1 meta="t1=A t2=B" env="internal2"
+	    jail -m name=jail1 meta="t1=A t2=B" env="CAB2"
 
 	atf_check -s exit:0 -o inline:"t1=A t2=B\n" \
 	    jls -j jail1 meta
-	atf_check -s exit:0 -o inline:"internal2\n" \
+	atf_check -s exit:0 -o inline:"CAB2\n" \
 	    jls -j jail1 env
 }
 jail_modify_cleanup()
@@ -193,11 +207,11 @@ flua_create_body()
 	    jls -j jail1
 
 	atf_check -s exit:0 \
-	    /usr/libexec/flua -ljail -e 'jail.setparams("jail1", {["meta"]="t1 t2=v2", ["env"]="secret", ["persist"]="true"}, jail.CREATE)'
+	    /usr/libexec/flua -ljail -e 'jail.setparams("jail1", {["meta"]="t1 t2=v2", ["env"]="BAC", ["persist"]="true"}, jail.CREATE)'
 
 	atf_check -s exit:0 -o inline:"t1 t2=v2\n" \
 	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("jail1", {"meta"}); print(res["meta"])'
-	atf_check -s exit:0 -o inline:"secret\n" \
+	atf_check -s exit:0 -o inline:"BAC\n" \
 	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("jail1", {"env"}); print(res["env"])'
 }
 flua_create_cleanup()
@@ -257,14 +271,14 @@ env_readable_by_jail_body()
 	    jls -j jail1
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist meta="a b c" env="internal data"
+	    jail -c name=jail1 persist meta="a b c" env="CBA"
 
 	atf_check -s exit:0 -o inline:"a b c\n" \
 	    jls -j jail1 meta
-	atf_check -s exit:0 -o inline:"internal data\n" \
+	atf_check -s exit:0 -o inline:"CBA\n" \
 	    jls -j jail1 env
 
-	atf_check -s exit:0 -o inline:"internal data\n" \
+	atf_check -s exit:0 -o inline:"CBA\n" \
 	    jexec jail1 sysctl -n security.jail.env
 }
 env_readable_by_jail_cleanup()
@@ -288,16 +302,16 @@ not_inheritable_body()
 	    jls -j parent
 
 	atf_check -s exit:0 \
-	    jail -c name=parent children.max=1 persist meta="meta-value" env="env-value"
+	    jail -c name=parent children.max=1 persist meta="abc" env="cba"
 
 	jexec parent jail -c name=child persist
 
-	atf_check -s exit:0 -o inline:"meta-value\n" \
+	atf_check -s exit:0 -o inline:"abc\n" \
 	    jls -j parent meta
 	atf_check -s exit:0 -o inline:'""\n' \
 	    jls -j parent.child meta
 
-	atf_check -s exit:0 -o inline:"env-value\n" \
+	atf_check -s exit:0 -o inline:"cba\n" \
 	    jexec parent sysctl -n security.jail.env
 	atf_check -s exit:0 -o inline:"\n" \
 	    jexec parent.child sysctl -n security.jail.env
@@ -433,7 +447,8 @@ allowedchars_body()
 allowedchars_cleanup()
 {
 	# Restore the original value
-	sysctl security.jail.meta_allowedchars="'$(cat meta_allowedchars.bin)'"
+	test -f meta_allowedchars.bin \
+	    && sysctl security.jail.meta_allowedchars="'$(cat meta_allowedchars.bin)'"
 	rm *.bin
 
 	jail -r jailmeta_allowedchars
