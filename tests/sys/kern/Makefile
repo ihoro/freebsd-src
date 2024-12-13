@@ -60,6 +60,7 @@ TEST_METADATA.sigsys+=	is_exclusive="true"
 ATF_TESTS_SH+=	coredump_phnum_test
 ATF_TESTS_SH+=	logsigexit_test
 ATF_TESTS_SH+=	jailmeta
+TEST_METADATA.jailmeta+=	is_exclusive="true"
 ATF_TESTS_SH+=	sonewconn_overflow
 TEST_METADATA.sonewconn_overflow+=	required_programs="python"
 TEST_METADATA.sonewconn_overflow+=	required_user="root"
