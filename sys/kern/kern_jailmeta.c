@@ -149,10 +149,12 @@ jm_sysctl_param_meta(SYSCTL_HANDLER_ARGS)
 }
 SYSCTL_PROC(_security_jail_param, OID_AUTO, meta,
     CTLTYPE_STRING | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, 0,
-    jm_sysctl_param_meta, "A", "Jail meta information hidden from the jail");
+    jm_sysctl_param_meta, "A,keyvalue",
+    "Jail meta information hidden from the jail");
 SYSCTL_PROC(_security_jail_param, OID_AUTO, env,
     CTLTYPE_STRING | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, 0,
-    jm_sysctl_param_meta, "A", "Jail meta information readable by the jail");
+    jm_sysctl_param_meta, "A,keyvalue",
+    "Jail meta information readable by the jail");
 
 
 /* OSD -- generic */
@@ -169,12 +171,12 @@ jm_osd_method_set(void *obj, void *data, struct meta *meta)
 	struct prison *pr = obj;
 	struct vfsoptlist *opts = data;
 	int len = 0;
-	char *osd_addr;
-	char *osd_addr_old;
+	char *osd;
+	char *prevosd;
 	int error;
 
 	/* Check the option presence and its len before buf allocation */
-	error = vfs_getopt(opts, meta->name, (void **)&osd_addr, &len);
+	error = vfs_getopt(opts, meta->name, (void **)&osd, &len);
 	if (error == ENOENT)
 		return (0);
 	if (error != 0)
@@ -190,33 +192,34 @@ jm_osd_method_set(void *obj, void *data, struct meta *meta)
 
 	/* Check allowed chars */
 	for (size_t i = 0; i < len; i++) {
-		if (osd_addr[i] == 0)
+		if (osd[i] == 0)
 			continue;
-		if (!BIT_ISSET(NCHARS, osd_addr[i], &allowedchars))
+		if (!BIT_ISSET(NCHARS, osd[i], &allowedchars))
 			return (EINVAL);
 	}
 
 	/* Prepare a new buf */
-	osd_addr = NULL;
+	osd = NULL;
 	if (len > 1) {
-		osd_addr = malloc(len, M_PRISON, M_WAITOK);
-		error = vfs_copyopt(opts, meta->name, osd_addr, len);
+		osd = malloc(len, M_PRISON, M_WAITOK);
+		error = vfs_copyopt(opts, meta->name, osd, len);
 		if (error != 0) {
-			free(osd_addr, M_PRISON);
+			free(osd, M_PRISON);
 			return (error);
 		}
+		osd[len] = '\0'; /* the reading logic may rely on this */
 	}
 
 	/* Swap bufs */
 	mtx_lock(&pr->pr_mtx);
-	osd_addr_old = osd_jail_get(pr, meta->osd_slot);
-	error = osd_jail_set(pr, meta->osd_slot, osd_addr);
+	prevosd = osd_jail_get(pr, meta->osd_slot);
+	error = osd_jail_set(pr, meta->osd_slot, osd);
 	mtx_unlock(&pr->pr_mtx);
 
 	if (error != 0)
-		osd_addr_old = osd_addr;
+		prevosd = osd;
 
-	free(osd_addr_old, M_PRISON);
+	free(prevosd, M_PRISON);
 
 	return (error);
 }
@@ -226,24 +229,61 @@ jm_osd_method_get(void *obj, void *data, struct meta *meta)
 {
 	struct prison *pr = obj;
 	struct vfsoptlist *opts = data;
-	char *osd_addr = NULL;
+	struct vfsopt *opt;
+	char *osd = NULL;
 	char empty = '\0';
-	int error;
+	int error = 0;
+	bool locked = false;
+	const char *key = NULL;
+	size_t keylen = 0;
+	const char *p;
 
-	/* Check the option presence to avoid unnecessary locking */
-	error = vfs_getopt(opts, meta->name, NULL, NULL);
-	if (error == ENOENT)
-		return (0);
-	if (error != 0)
-		return (error);
+	TAILQ_FOREACH(opt, opts, link) {
+		if (strstr(opt->name, meta->name) != opt->name)
+			continue;
+		if (opt->name[strlen(meta->name)] != '.' &&
+		    opt->name[strlen(meta->name)] != '\0')
+			continue;
 
-	mtx_lock(&pr->pr_mtx);
-	osd_addr = osd_jail_get(pr, meta->osd_slot);
-	if (osd_addr == NULL)
-		error = vfs_setopts(opts, meta->name, &empty);
-	else
-		error = vfs_setopts(opts, meta->name, osd_addr);
-	mtx_unlock(&pr->pr_mtx);
+		opt->seen = 1;
+
+		if (!locked) {
+			mtx_lock(&pr->pr_mtx);
+			locked = true;
+			osd = osd_jail_get(pr, meta->osd_slot);
+			if (osd == NULL)
+				osd = &empty;
+		}
+
+		/* Provide full metadata */
+		if (strcmp(opt->name, meta->name) == 0) {
+			if (strlcpy(opt->value, osd, opt->len) >= opt->len) {
+				error = EINVAL;
+				break;
+			}
+			continue;
+		}
+
+		/* Extract specific key=value\n */
+		p = osd;
+		key = opt->name + strlen(meta->name) + 1;
+		keylen = strlen(key);
+		while ((p = strstr(p, key)) != NULL) {
+			if ((p == osd || *(p - 1) == '\n')
+			    && p[keylen] == '=') {
+				if (strlcpy(opt->value, p + keylen + 1,
+				    MIN(opt->len, strchr(p + keylen + 1, '\n') -
+				    (p + keylen + 1))) >= opt->len) {
+					error = EINVAL;
+					break;
+				}
+			}
+			p += keylen;
+		}
+	}
+
+	if (locked)
+		mtx_unlock(&pr->pr_mtx);
 
 	return (error);
 }
@@ -272,9 +312,9 @@ jm_osd_method_check(void *obj __unused, void *data, struct meta *meta)
 }
 
 static void
-jm_osd_destructor(void *osd_addr)
+jm_osd_destructor(void *osd)
 {
-	free(osd_addr, M_PRISON);
+	free(osd, M_PRISON);
 }
 
 
