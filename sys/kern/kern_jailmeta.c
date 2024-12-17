@@ -273,7 +273,7 @@ jm_osd_method_get(void *obj, void *data, struct meta *meta)
 			    && p[keylen] == '=') {
 				if (strlcpy(opt->value, p + keylen + 1,
 				    MIN(opt->len, strchr(p + keylen + 1, '\n') -
-				    (p + keylen + 1))) >= opt->len) {
+				    (p + keylen + 1) + 1)) >= opt->len) {
 					error = EINVAL;
 					break;
 				}
