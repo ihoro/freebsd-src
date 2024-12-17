@@ -59,6 +59,7 @@ static int jailparam_type(struct jailparam *jp);
 static int kldload_param(const char *name);
 static char *noname(const char *name);
 static char *nononame(const char *name);
+static char *kvname(const char *name);
 
 char jail_errmsg[JAIL_ERRMSGLEN];
 
@@ -903,6 +904,22 @@ jailparam_type(struct jailparam *jp)
 		    desc.s, strlen(desc.s)) >= 0)
 			goto mib_desc;
 		/*
+		 * It might be an assumed sub-node of a fmt='A,keyvalue' sysctl.
+		 */
+		nname = kvname(name);
+		if (nname != NULL) {
+			snprintf(desc.s, sizeof(desc.s), SJPARAM ".%s", nname);
+			miblen = sizeof(mib) - 2 * sizeof(int);
+			if (sysctl(mib, 2, mib + 2, &miblen, desc.s,
+			    strlen(desc.s)) >= 0) {
+				name = alloca(strlen(nname) + 1);
+				strcpy(name, nname);
+				free(nname);
+				jp->jp_flags |= JP_KEYVALUE;
+			}
+			free(nname);
+		}
+		/*
 		 * The parameter probably doesn't exist.  But it might be
 		 * the "no" counterpart to a boolean.
 		 */
@@ -1118,4 +1135,27 @@ nononame(const char *name)
 	else
 		strcpy(nname, name + 2);
 	return (nname);
+}
+
+static char *
+kvname(const char *name)
+{
+	const char *p;
+	char *kvname;
+	size_t len;
+
+	p = strchr(name, '.');
+	if (p == NULL)
+		return (NULL);
+
+	len = p - name;
+	kvname = malloc(len + 1);
+	if (kvname == NULL) {
+		strerror_r(errno, jail_errmsg, JAIL_ERRMSGLEN);
+		return (NULL);
+	}
+	strncpy(kvname, name, len);
+	kvname[len] = '\0';
+
+	return (kvname);
 }
