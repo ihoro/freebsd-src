@@ -904,6 +904,24 @@ jailparam_type(struct jailparam *jp)
 		    desc.s, strlen(desc.s)) >= 0)
 			goto mib_desc;
 		/*
+		 * The parameter probably doesn't exist.  But it might be
+		 * the "no" counterpart to a boolean.
+		 */
+		nname = nononame(name);
+		if (nname != NULL) {
+			snprintf(desc.s, sizeof(desc.s), SJPARAM ".%s", nname);
+			miblen = sizeof(mib) - 2 * sizeof(int);
+			if (sysctl(mib, 2, mib + 2, &miblen, desc.s,
+			    strlen(desc.s)) >= 0) {
+				name = alloca(strlen(nname) + 1);
+				strcpy(name, nname);
+				free(nname);
+				jp->jp_flags |= JP_NOBOOL;
+				goto mib_desc;
+			}
+			free(nname);
+		}
+		/*
 		 * It might be an assumed sub-node of a fmt='A,keyvalue' sysctl.
 		 */
 		nname = kvname(name);
@@ -920,27 +938,11 @@ jailparam_type(struct jailparam *jp)
 			}
 			free(nname);
 		}
-		/*
-		 * The parameter probably doesn't exist.  But it might be
-		 * the "no" counterpart to a boolean.
-		 */
-		nname = nononame(name);
-		if (nname == NULL) {
-		unknown_parameter:
-			snprintf(jail_errmsg, JAIL_ERRMSGLEN,
-			    "unknown parameter: %s", jp->jp_name);
-			errno = ENOENT;
-			return (-1);
-		}
-		name = alloca(strlen(nname) + 1);
-		strcpy(name, nname);
-		free(nname);
-		snprintf(desc.s, sizeof(desc.s), SJPARAM ".%s", name);
-		miblen = sizeof(mib) - 2 * sizeof(int);
-		if (sysctl(mib, 2, mib + 2, &miblen, desc.s,
-		    strlen(desc.s)) < 0)
-			goto unknown_parameter;
-		jp->jp_flags |= JP_NOBOOL;
+unknown_parameter:
+		snprintf(jail_errmsg, JAIL_ERRMSGLEN,
+		    "unknown parameter: %s", jp->jp_name);
+		errno = ENOENT;
+		return (-1);
 	}
  mib_desc:
 	mib[1] = 4;
