@@ -15,17 +15,14 @@ setup()
 	fi
 
 	# Check if chars required for testing are allowed
-	sysctl -b security.jail.meta_allowedchars \
-		| hexdump -e '1/1 "%02x\n"' > meta_allowedchars.hex
+	allowed="$(sysctl -b security.jail.meta_allowedchars | hexdump -e '1/1 "%02x\n"')"
 	# ABCabctv =0-9\t\n
 	for b in 41 42 43 61 62 63 74 76 20 30 31 32 33 34 35 36 37 38 39 09 0a
 	do
-		if ! grep $b meta_allowedchars.hex; then
-			rm meta_allowedchars.hex
+		if ! echo $allowed | grep -q $b; then
 			atf_skip "sysctl security.jail.meta_allowedchars is not wide enough for testing"
 		fi
 	done
-	rm meta_allowedchars.hex
 }
 
 atf_test_case "jail_create" "cleanup"
@@ -40,19 +37,19 @@ jail_create_body()
 	setup
 
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
-	    jls -j jail1
+	    jls -jj
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist meta="a b c" env="C B A"
+	    jail -c name=j persist meta="a b c" env="C B A"
 
 	atf_check -s exit:0 -o inline:"a b c\n" \
-	    jls -j jail1 meta
+	    jls -jj meta
 	atf_check -s exit:0 -o inline:"C B A\n" \
-	    jls -j jail1 env
+	    jls -jj env
 }
 jail_create_cleanup()
 {
-	jail -r jail1
+	jail -r j
 	return 0
 }
 
@@ -68,27 +65,27 @@ jail_modify_body()
 	setup
 
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
-	    jls -j jail1
+	    jls -jj
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist meta="a	b	c" env="CAB"
+	    jail -c name=j persist meta="a	b	c" env="CAB"
 
 	atf_check -s exit:0 -o inline:"a	b	c\n" \
-	    jls -j jail1 meta
+	    jls -jj meta
 	atf_check -s exit:0 -o inline:"CAB\n" \
-	    jls -j jail1 env
+	    jls -jj env
 
 	atf_check -s exit:0 \
-	    jail -m name=jail1 meta="t1=A t2=B" env="CAB2"
+	    jail -m name=j meta="t1=A t2=B" env="CAB2"
 
 	atf_check -s exit:0 -o inline:"t1=A t2=B\n" \
-	    jls -j jail1 meta
+	    jls -jj meta
 	atf_check -s exit:0 -o inline:"CAB2\n" \
-	    jls -j jail1 env
+	    jls -jj env
 }
 jail_modify_cleanup()
 {
-	jail -r jail1
+	jail -r j
 	return 0
 }
 
@@ -104,27 +101,27 @@ jail_add_body()
 	setup
 
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
-	    jls -j jail1
+	    jls -jj
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist host.hostname=jail1
+	    jail -c name=j persist host.hostname=jail1
 
 	atf_check -s exit:0 -o inline:'""\n' \
-	    jls -j jail1 meta
+	    jls -jj meta
 	atf_check -s exit:0 -o inline:'""\n' \
-	    jls -j jail1 env
+	    jls -jj env
 
 	atf_check -s exit:0 \
-	    jail -m name=jail1 meta="$(jot 3 1 3)" env="$(jot 2 11 12)"
+	    jail -m name=j meta="$(jot 3 1 3)" env="$(jot 2 11 12)"
 
 	atf_check -s exit:0 -o inline:"1\n2\n3\n" \
-	    jls -j jail1 meta
+	    jls -jj meta
 	atf_check -s exit:0 -o inline:"11\n12\n" \
-	    jls -j jail1 env
+	    jls -jj env
 }
 jail_add_cleanup()
 {
-	jail -r jail1
+	jail -r j
 	return 0
 }
 
@@ -140,27 +137,27 @@ jail_reset_body()
 	setup
 
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
-	    jls -j jail1
+	    jls -jj
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist meta="123" env="456"
+	    jail -c name=j persist meta="123" env="456"
 
 	atf_check -s exit:0 -o inline:"123\n" \
-	    jls -j jail1 meta
+	    jls -jj meta
 	atf_check -s exit:0 -o inline:"456\n" \
-	    jls -j jail1 env
+	    jls -jj env
 
 	atf_check -s exit:0 \
-	    jail -m name=jail1 meta= env=
+	    jail -m name=j meta= env=
 
 	atf_check -s exit:0 -o inline:'""\n' \
-	    jls -j jail1 meta
+	    jls -jj meta
 	atf_check -s exit:0 -o inline:'""\n' \
-	    jls -j jail1 env
+	    jls -jj env
 }
 jail_reset_cleanup()
 {
-	jail -r jail1
+	jail -r j
 	return 0
 }
 
@@ -176,19 +173,19 @@ jls_libxo_body()
 	setup
 
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
-	    jls -j jail1
+	    jls -jj
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist meta="a b c" env="1 2 3"
+	    jail -c name=j persist meta="a b c" env="1 2 3"
 
-	atf_check -s exit:0 -o inline:'{"__version": "2", "jail-information": {"jail": [{"name":"jail1","meta":"a b c"}]}}\n' \
-	    jls -j jail1 --libxo json name meta
+	atf_check -s exit:0 -o inline:'{"__version": "2", "jail-information": {"jail": [{"name":"j","meta":"a b c"}]}}\n' \
+	    jls -jj --libxo json name meta
 	atf_check -s exit:0 -o inline:'{"__version": "2", "jail-information": {"jail": [{"env":"1 2 3"}]}}\n' \
-	    jls -j jail1 --libxo json env
+	    jls -jj --libxo json env
 }
 jls_libxo_cleanup()
 {
-	jail -r jail1
+	jail -r j
 	return 0
 }
 
@@ -204,19 +201,19 @@ flua_create_body()
 	setup
 
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
-	    jls -j jail1
+	    jls -jj
 
 	atf_check -s exit:0 \
-	    /usr/libexec/flua -ljail -e 'jail.setparams("jail1", {["meta"]="t1 t2=v2", ["env"]="BAC", ["persist"]="true"}, jail.CREATE)'
+	    /usr/libexec/flua -ljail -e 'jail.setparams("j", {["meta"]="t1 t2=v2", ["env"]="BAC", ["persist"]="true"}, jail.CREATE)'
 
 	atf_check -s exit:0 -o inline:"t1 t2=v2\n" \
-	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("jail1", {"meta"}); print(res["meta"])'
+	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("j", {"meta"}); print(res["meta"])'
 	atf_check -s exit:0 -o inline:"BAC\n" \
-	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("jail1", {"env"}); print(res["env"])'
+	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("j", {"env"}); print(res["env"])'
 }
 flua_create_cleanup()
 {
-	jail -r jail1
+	jail -r j
 	return 0
 }
 
@@ -232,27 +229,27 @@ flua_modify_body()
 	setup
 
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
-	    jls -j jail1
+	    jls -jj
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist meta="ABC" env="123"
+	    jail -c name=j persist meta="ABC" env="123"
 
 	atf_check -s exit:0 -o inline:"ABC\n" \
-	    jls -j jail1 meta
+	    jls -jj meta
 	atf_check -s exit:0 -o inline:"123\n" \
-	    jls -j jail1 env
+	    jls -jj env
 
 	atf_check -s exit:0 \
-	    /usr/libexec/flua -ljail -e 'jail.setparams("jail1", {["meta"]="t1 t2=v", ["env"]="4"}, jail.UPDATE)'
+	    /usr/libexec/flua -ljail -e 'jail.setparams("j", {["meta"]="t1 t2=v", ["env"]="4"}, jail.UPDATE)'
 
 	atf_check -s exit:0 -o inline:"t1 t2=v\n" \
-	    jls -j jail1 meta
+	    jls -jj meta
 	atf_check -s exit:0 -o inline:"4\n" \
-	    jls -j jail1 env
+	    jls -jj env
 }
 flua_modify_cleanup()
 {
-	jail -r jail1
+	jail -r j
 	return 0
 }
 
@@ -268,22 +265,22 @@ env_readable_by_jail_body()
 	setup
 
 	atf_check -s not-exit:0 -e match:"not found" -o ignore \
-	    jls -j jail1
+	    jls -jj
 
 	atf_check -s exit:0 \
-	    jail -c name=jail1 persist meta="a b c" env="CBA"
+	    jail -c name=j persist meta="a b c" env="CBA"
 
 	atf_check -s exit:0 -o inline:"a b c\n" \
-	    jls -j jail1 meta
+	    jls -jj meta
 	atf_check -s exit:0 -o inline:"CBA\n" \
-	    jls -j jail1 env
+	    jls -jj env
 
 	atf_check -s exit:0 -o inline:"CBA\n" \
-	    jexec jail1 sysctl -n security.jail.env
+	    jexec j sysctl -n security.jail.env
 }
 env_readable_by_jail_cleanup()
 {
-	jail -r jail1
+	jail -r j
 	return 0
 }
 
@@ -455,6 +452,105 @@ allowedchars_cleanup()
 	return 0
 }
 
+atf_test_case "keyvalue" "cleanup"
+keyvalue_head()
+{
+	atf_set descr 'Test that metadata can be handled as a set of key=value\n strings using jail(8) and jls(8)'
+	atf_set require.user root
+	atf_set execenv jail
+}
+keyvalue_generic()
+{
+	local meta=$1
+
+	atf_check -sexit:0 -oinline:'""\n'	jls -jj $meta
+
+	# Should be able to extract a key added manually
+	atf_check -sexit:0				jail -m name=j $meta="a=1"
+	atf_check -sexit:0 -oinline:'a=1\n'		jls -jj $meta
+	atf_check -sexit:0 -oinline:'1\n'		jls -jj $meta.a
+	atf_check -sexit:0				jail -m name=j $meta="$(printf 'a=2\nb=3')"
+	atf_check -sexit:0 -oinline:'a=2\nb=3\n'	jls -jj $meta
+	atf_check -sexit:0 -oinline:'2\n'		jls -jj $meta.a
+	atf_check -sexit:0 -oinline:'3\n'		jls -jj $meta.b
+
+	# Should provide an empty string for a non-found key
+	atf_check -sexit:0 -oinline:'""\n'		jls -jj $meta.c
+
+	# Should be able to lookup multiple keys at once
+	atf_check -sexit:0 -oinline:'3 2\n'		jls -jj $meta.b $meta.a
+
+	# Should be able to lookup keys and the whole buffer at once
+	atf_check -sexit:0 -oinline:'3 a=2\nb=3 2\n'	jls -jj $meta.b $meta $meta.a
+
+	# Should be able to lookup a key with libxo-based output
+	s='{"__version": "2", "jail-information": {"jail": [{"'$meta'.b":"3","'$meta'.c":""}]}}\n'
+	atf_check -s exit:0 -o inline:"$s"		jls -jj --libxo json $meta.b $meta.c
+
+	# Should be able to lookup a key with flua
+	atf_check -s exit:0 -o inline:"2\n"	\
+	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("j", {"'$meta'.a"}); print(res["'$meta'.a"])'
+
+	# Should be fine if a buffer is empty
+	atf_check -sexit:0				jail -m name=j $meta=
+	atf_check -sexit:0 -oinline:'"" "" ""\n'	jls -jj $meta.c $meta $meta.a
+
+	# Should allow adding a new key
+	atf_check -sexit:0				jail -m name=j $meta.a=1
+	atf_check -sexit:0 -oinline:'1\n'		jls -jj $meta.a
+	atf_check -sexit:0 -oinline:'a=1\n'		jls -jj $meta
+
+	# Should allow adding multiple new keys at once
+	atf_check -sexit:0				jail -m name=j $meta.c=3 $meta.b=2
+	atf_check -sexit:0 -oinline:'3\n'		jls -jj $meta.c
+	atf_check -sexit:0 -oinline:'2\n'		jls -jj $meta.b
+	atf_check -sexit:0 -oinline:'b=2\nc=3\na=1\n'	jls -jj $meta
+
+	# Should replace existing keys
+	atf_check -sexit:0				jail -m name=j $meta.a=A $meta.c=C
+	atf_check -sexit:0 -oinline:'A\n'		jls -jj $meta.a
+	atf_check -sexit:0 -oinline:'C\n'		jls -jj $meta.c
+	atf_check -sexit:0 -oinline:'c=C\na=A\nb=2\n'	jls -jj $meta
+
+	# Should treat empty value correctly
+	atf_check -sexit:0				jail -m name=j $meta.b $meta.a=
+	atf_check -sexit:0 -oinline:'""\n'		jls -jj $meta.a
+	atf_check -sexit:0 -oinline:'""\n'		jls -jj $meta.b
+	atf_check -sexit:0 -oinline:'a=\nb=\nc=C\n'	jls -jj $meta
+
+	# Should allow changing the whole buffer and per key at once (order matters)
+	atf_check -sexit:0				jail -m name=j $meta.a=1 $meta=ttt $meta.b=2
+	atf_check -sexit:0 -oinline:'""\n'		jls -jj $meta.a
+	atf_check -sexit:0 -oinline:'2\n'		jls -jj $meta.b
+	atf_check -sexit:0 -oinline:'b=2\nttt\n'	jls -jj $meta
+
+	# Should treat only the first equal sign as syntax
+	atf_check -sexit:0				jail -m name=j $meta.b==
+	atf_check -sexit:0 -oinline:'=\n'		jls -jj $meta.b
+	atf_check -sexit:0 -oinline:'b==\nttt\n'	jls -jj $meta
+
+	# Should allow adding or modifying keys with flua
+	atf_check -s exit:0 \
+	    /usr/libexec/flua -ljail -e 'jail.setparams("j", {["'$meta.b'"]="ttt", ["'$meta'.c"]="C"}, jail.UPDATE)'
+	atf_check -sexit:0 -oinline:'ttt\n'		jls -jj $meta.b
+	atf_check -sexit:0 -oinline:'C\n'		jls -jj $meta.c
+}
+keyvalue_body()
+{
+	setup
+
+	atf_check -s exit:0 \
+	    jail -c name=j persist meta env
+
+	keyvalue_generic "meta"
+	keyvalue_generic "env"
+}
+keyvalue_cleanup()
+{
+	jail -r j
+	return 0
+}
+
 atf_init_test_cases()
 {
 	atf_add_test_case "jail_create"
@@ -472,4 +568,6 @@ atf_init_test_cases()
 
 	atf_add_test_case "maxbufsize"
 	atf_add_test_case "allowedchars"
+
+	atf_add_test_case "keyvalue"
 }
