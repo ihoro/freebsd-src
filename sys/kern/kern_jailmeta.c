@@ -229,23 +229,28 @@ jm_h_cut_occurrences(struct hunk *h, const char *key, size_t keylen)
 {
 	char *p = h->p;
 
+#define nexthunk()					\
+	do {						\
+		h = h->next;				\
+		p = (h == NULL) ? NULL : h->p;		\
+	} while (0)
+
 	while (p != NULL) {
 		p = strnstr(p, key, h->len - (p - h->p));
 		if (p == NULL) {
-			/* try the next hunk */
-			h = h->next;
-			p = (h == NULL) ? NULL : h->p;
+			nexthunk();
 			continue;
 		}
 		if ((p == h->p || *(p - 1) == '\n') && p[keylen] == '=') {
 			jm_h_cut_line(h, p);
-			/* continue with the remainder */
-			h = h->next;
-			p = (h == NULL) ? NULL : h->p;
+			nexthunk();
 			continue;
 		}
 		/* continue with this hunk */
-		p += keylen - 1;
+		p += keylen;
+		/* empty? the next hunk then */
+		if ((p - h->p) >= h->len)
+			nexthunk();
 	}
 }
 
@@ -308,7 +313,7 @@ jm_osd_method_set(void *obj, void *data, const struct meta *meta)
 	int repeats = 0;
 	bool repeat;
 
-	sx_assert(&allprison_lock, SA_LOCKED);
+	sx_assert(&allprison_lock, SA_XLOCKED);
 
 again:
 	origosd = NULL;
@@ -456,6 +461,8 @@ jm_osd_method_get(void *obj, void *data, const struct meta *meta)
 	const char *key;
 	size_t keylen;
 	const char *p;
+
+	sx_assert(&allprison_lock, SA_SLOCKED);
 
 	TAILQ_FOREACH(opt, opts, link) {
 		if (strstr(opt->name, meta->name) != opt->name)
