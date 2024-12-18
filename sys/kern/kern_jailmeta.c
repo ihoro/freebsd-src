@@ -453,8 +453,8 @@ jm_osd_method_get(void *obj, void *data, const struct meta *meta)
 	char empty = '\0';
 	int error = 0;
 	bool locked = false;
-	const char *key = NULL;
-	size_t keylen = 0;
+	const char *key;
+	size_t keylen;
 	const char *p;
 
 	TAILQ_FOREACH(opt, opts, link) {
