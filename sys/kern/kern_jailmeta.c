@@ -257,7 +257,6 @@ jm_h_len(struct hunk *h)
 		len += h->len;
 		h = h->next;
 	}
-	len++; /* final \0 char */
 	return (len);
 }
 
@@ -268,12 +267,12 @@ jm_h_assemble(char *dst, struct hunk *h)
 		if (h->len > 0) {
 			memcpy(dst, h->p, h->len);
 			dst += h->len;
+			/* if not the last hunk then concatenate with \n */
 			if (h->next != NULL && *(dst - 1) == '\0')
 				*(dst - 1) = '\n';
 		}
 		h = h->next;
 	}
-	*dst = '\0';
 }
 
 static inline struct hunk *
@@ -404,6 +403,7 @@ again:
 	if (osdlen > 1) {
 		osd = malloc(osdlen, M_PRISON, M_WAITOK);
 		jm_h_assemble(osd, h);
+		osd[osdlen - 1] = '\0'; /* sealed */
 		/* Check allowed chars */
 		for (size_t i = 0; i < osdlen; i++) {
 			if (osd[i] == 0)
