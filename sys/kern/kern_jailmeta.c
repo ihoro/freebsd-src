@@ -110,7 +110,7 @@ jm_sysctl_meta_allowedchars(SYSCTL_HANDLER_ARGS)
 
 	error = sysctl_handle_string(oidp, chars, arg2, req);
 
-	if (!readonly) {
+	if (!readonly && error == 0) {
 		if (chars[0] == 0) {
 			BIT_FILL(NCHARS, &allowedchars);
 		} else {
