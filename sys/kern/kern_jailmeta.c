@@ -268,7 +268,7 @@ jm_h_assemble(char *dst, struct hunk *h)
 		if (h->len > 0) {
 			memcpy(dst, h->p, h->len);
 			dst += h->len;
-			if (*(dst - 1) == '\0')
+			if (h->next != NULL && *(dst - 1) == '\0')
 				*(dst - 1) = '\n';
 		}
 		h = h->next;
