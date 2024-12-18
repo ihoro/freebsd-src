@@ -916,6 +916,7 @@ jailparam_type(struct jailparam *jp)
 				strcpy(name, nname);
 				free(nname);
 				jp->jp_flags |= JP_KEYVALUE;
+				goto mib_desc;
 			}
 			free(nname);
 		}
