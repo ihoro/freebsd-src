@@ -157,7 +157,7 @@ SYSCTL_PROC(_security_jail_param, OID_AUTO, env,
     "Jail meta information readable by the jail");
 
 
-/* OSD -- generic */
+/* OSD -- generic logic for any metadata buffer */
 
 struct meta {
 	char *name;
@@ -165,67 +165,285 @@ struct meta {
 	osd_method_t methods[PR_MAXMETHOD];
 };
 
+/*
+ * A chain of hunks depicts the final buffer after all manipulations.
+ */
+struct hunk {
+	char *p;
+	size_t len;  /* may include \0 char or not */
+	char *owned; /* must be freed */
+	struct hunk *next;
+};
+
+static inline struct hunk *
+jm_h_alloc(void)
+{
+	/* all fields are zeroed */
+	return malloc(sizeof(struct hunk), M_PRISON, M_WAITOK|M_ZERO);
+}
+
+static inline struct hunk *
+jm_h_prepend(struct hunk *h, char *p, size_t len)
+{
+	struct hunk *n;
+
+	n = jm_h_alloc();
+	n->p = p;
+	n->len = len;
+
+	if (h == NULL)
+		return (n);
+
+	n->next = h;
+	return (n);
+}
+
+static inline void
+jm_h_cut_line(struct hunk *h, char *begin)
+{
+	struct hunk *rem;
+	char *end;
+
+	/* Find the end of key=value\n */
+	for (end = begin; (end + 1) - h->p < h->len; end++)
+		if (*end == '\0' || *end == '\n')
+			break;
+
+	/* Pick up non-empty remainder */
+	if ((end + 1) - h->p < h->len && *(end + 1) != '\0') {
+		rem = jm_h_alloc();
+		rem->p = end + 1;
+		rem->len = h->p + h->len - rem->p;
+
+		/* insert */
+		rem->next = h->next;
+		h->next = rem;
+	}
+
+	/* Shorten this hunk */
+	h->len = begin - h->p;
+}
+
+static inline void
+jm_h_cut_occurrences(struct hunk *h, const char *key, size_t keylen)
+{
+	char *p = h->p;
+
+	while (p != NULL) {
+		p = strnstr(p, key, h->len - (p - h->p));
+		if (p == NULL) {
+			/* try the next hunk */
+			h = h->next;
+			p = (h == NULL) ? NULL : h->p;
+			continue;
+		}
+		if ((p == h->p || *(p - 1) == '\n') && p[keylen] == '=') {
+			jm_h_cut_line(h, p);
+			/* continue with the remainder */
+			h = h->next;
+			p = (h == NULL) ? NULL : h->p;
+			continue;
+		}
+		/* continue with this hunk */
+		p += keylen - 1;
+	}
+}
+
+static inline size_t
+jm_h_len(struct hunk *h)
+{
+	size_t len = 0;
+	while (h != NULL) {
+		len += h->len;
+		h = h->next;
+	}
+	len++; /* final \0 char */
+	return (len);
+}
+
+static inline void
+jm_h_assemble(char *dst, struct hunk *h)
+{
+	while (h != NULL) {
+		if (h->len > 0) {
+			memcpy(dst, h->p, h->len);
+			dst += h->len;
+			if (*(dst - 1) == '\0')
+				*(dst - 1) = '\n';
+		}
+		h = h->next;
+	}
+	*dst = '\0';
+}
+
+static inline struct hunk *
+jm_h_freechain(struct hunk *h)
+{
+	struct hunk *n = h;
+	while (n != NULL) {
+		h = n;
+		n = h->next;
+		free(h->owned, M_PRISON);
+		free(h, M_PRISON);
+	}
+
+	return (NULL);
+}
+
 static int
-jm_osd_method_set(void *obj, void *data, struct meta *meta)
+jm_osd_method_set(void *obj, void *data, const struct meta *meta)
 {
 	struct prison *pr = obj;
 	struct vfsoptlist *opts = data;
-	int len = 0;
-	char *osd;
-	char *prevosd;
-	int error;
+	struct vfsopt *opt;
 
-	/* Check the option presence and its len before buf allocation */
-	error = vfs_getopt(opts, meta->name, (void **)&osd, &len);
-	if (error == ENOENT)
-		return (0);
-	if (error != 0)
-		return (error);
-	if (len < 1)
-		return (EINVAL);
+	char *origosd;
+	char *origosd_copy;
+	char *oldosd;
+	char *osd;
+	size_t osdlen;
+	struct hunk *h;
+	char *key;
+	size_t keylen;
+	int error;
+	int repeats = 0;
+	bool repeat;
 
 	sx_assert(&allprison_lock, SA_LOCKED);
 
-	/* Check buffer size limit */
-	if (len > 1 && len > jm_maxbufsize_hard) /* len includes '\0' char */
-		return (EFBIG);
-
-	/* Check allowed chars */
-	for (size_t i = 0; i < len; i++) {
-		if (osd[i] == 0)
-			continue;
-		if (!BIT_ISSET(NCHARS, osd[i], &allowedchars))
-			return (EINVAL);
-	}
-
-	/* Prepare a new buf */
+again:
+	origosd = NULL;
+	origosd_copy = NULL;
 	osd = NULL;
-	if (len > 1) {
-		osd = malloc(len, M_PRISON, M_WAITOK);
-		error = vfs_copyopt(opts, meta->name, osd, len);
-		if (error != 0) {
-			free(osd, M_PRISON);
-			return (error);
+	h = NULL;
+	error = 0;
+	repeat = false;
+	TAILQ_FOREACH(opt, opts, link) {
+		/* Look for options with <metaname> prefix */
+		if (strstr(opt->name, meta->name) != opt->name)
+			continue;
+		/* Consider only full <metaname> or <metaname>.* ones */
+		if (opt->name[strlen(meta->name)] != '.' &&
+		    opt->name[strlen(meta->name)] != '\0')
+			continue;
+		opt->seen = 1;
+
+		/* The very first preconditions */
+		if (opt->len <= 0)
+			continue;
+		if (opt->len > jm_maxbufsize_hard) {
+			error = EFBIG;
+			break;
 		}
-		osd[len] = '\0'; /* the reading logic may rely on this */
+		/* vfsopt is expected to provide NULL-terminated strings */
+		if (((char*)opt->value)[opt->len - 1] != '\0') {
+			error = EINVAL;
+			break;
+		}
+
+		/* Work with our own copy of existing metadata */
+		if (h == NULL) {
+			h = jm_h_alloc(); /* zeroed */
+			mtx_lock(&pr->pr_mtx);
+			origosd = osd_jail_get(pr, meta->osd_slot);
+			if (origosd != NULL) {
+				origosd_copy = malloc(strlen(origosd) + 1, M_PRISON, M_NOWAIT);
+				if (origosd_copy == NULL)
+					error = ENOMEM;
+				else {
+					h->p = origosd_copy;
+					h->len = strlen(origosd) + 1;
+					memcpy(h->p, origosd, h->len);
+				}
+			}
+			mtx_unlock(&pr->pr_mtx);
+			if (error != 0)
+				break;
+		}
+
+		/* Change the whole metadata */
+		if (strcmp(opt->name, meta->name) == 0) {
+			if (opt->len > jm_maxbufsize_hard) {
+				error = EFBIG;
+				break;
+			}
+			h = jm_h_freechain(h);
+			h = jm_h_prepend(h, opt->value,
+			    /* avoid empty NULL-terminated string */
+			    (opt->len > 1) ? opt->len : 0);
+			continue;
+		}
+
+		/* Add or replace existing key=value */
+		key = opt->name + strlen(meta->name) + 1;
+		keylen = strlen(key);
+		if (keylen < 1) {
+			error = EINVAL;
+			break;
+		}
+		jm_h_cut_occurrences(h, key, keylen);
+		h = jm_h_prepend(h, NULL, 0);
+		h->len = keylen + 1 /* = */ + opt->len;
+		h->owned = malloc(h->len, M_PRISON, M_WAITOK|M_ZERO);
+		h->p = h->owned;
+		memcpy(h->p, key, keylen);
+		h->p[keylen] = '=';
+		memcpy(h->p + keylen + 1, opt->value, opt->len);
 	}
 
-	/* Swap bufs */
+	if (h == NULL || error != 0)
+		goto end;
+
+	/* Assemble the contiguous buffer */
+	osdlen = jm_h_len(h);
+	if (osdlen > jm_maxbufsize_hard) {
+		error = EFBIG;
+		goto end;
+	}
+	if (osdlen > 1) {
+		osd = malloc(osdlen, M_PRISON, M_WAITOK);
+		jm_h_assemble(osd, h);
+		/* Check allowed chars */
+		for (size_t i = 0; i < osdlen; i++) {
+			if (osd[i] == 0)
+				continue;
+			if (!BIT_ISSET(NCHARS, osd[i], &allowedchars)) {
+				error = EINVAL;
+				goto end;
+			}
+		}
+	}
+
+	/* Compare and swap buffers */
 	mtx_lock(&pr->pr_mtx);
-	prevosd = osd_jail_get(pr, meta->osd_slot);
-	error = osd_jail_set(pr, meta->osd_slot, osd);
+	oldosd = osd_jail_get(pr, meta->osd_slot);
+	if (oldosd == origosd) {
+		error = osd_jail_set(pr, meta->osd_slot, osd);
+	} else {
+		/* someone else was quicker - re-apply opts then */
+		error = EAGAIN;
+		repeat = true;
+	}
 	mtx_unlock(&pr->pr_mtx);
+	if (error == 0)
+		osd = oldosd;
 
-	if (error != 0)
-		prevosd = osd;
+end:
+	jm_h_freechain(h);
+	free(osd, M_PRISON);
+	free(origosd_copy, M_PRISON);
 
-	free(prevosd, M_PRISON);
+	if (repeat) {
+		repeats++;
+		if (repeats < 3)
+			goto again;
+	}
 
 	return (error);
 }
 
 static int
-jm_osd_method_get(void *obj, void *data, struct meta *meta)
+jm_osd_method_get(void *obj, void *data, const struct meta *meta)
 {
 	struct prison *pr = obj;
 	struct vfsoptlist *opts = data;
@@ -264,7 +482,7 @@ jm_osd_method_get(void *obj, void *data, struct meta *meta)
 			continue;
 		}
 
-		/* Extract specific key=value\n */
+		/* Extract a specific key=value\n */
 		p = osd;
 		key = opt->name + strlen(meta->name) + 1;
 		keylen = strlen(key);
@@ -289,24 +507,19 @@ jm_osd_method_get(void *obj, void *data, struct meta *meta)
 }
 
 static int
-jm_osd_method_check(void *obj __unused, void *data, struct meta *meta)
+jm_osd_method_check(void *obj __unused, void *data, const struct meta *meta)
 {
 	struct vfsoptlist *opts = data;
-	char *value = NULL;
-	int error;
-	int len = 0;
+	struct vfsopt *opt;
 
-	/* Check the option presence */
-	error = vfs_getopt(opts, meta->name, (void **)&value, &len);
-	if (error == ENOENT)
-		return (0);
-	if (error != 0)
-		return (error);
-
-	if (len < 1)
-		return (EINVAL);
-	if (value == NULL)
-		return (EINVAL);
+	TAILQ_FOREACH(opt, opts, link) {
+		if (strstr(opt->name, meta->name) != opt->name)
+			continue;
+		if (opt->name[strlen(meta->name)] != '.' &&
+		    opt->name[strlen(meta->name)] != '\0')
+			continue;
+		opt->seen = 1;
+	}
 
 	return (0);
 }
