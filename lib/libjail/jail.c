@@ -961,6 +961,12 @@ jailparam_type(struct jailparam *jp)
 		else if ((desc.i & CTLTYPE) != CTLTYPE_NODE)
 			goto unknown_parameter;
 	}
+	/* Make sure it is a valid keyvalue param */
+	if (jp->jp_flags & JP_KEYVALUE) {
+		if ((desc.i & CTLTYPE) != CTLTYPE_STRING ||
+		    strcmp(desc.s, "A,keyvalue") != 0)
+			goto unknown_parameter;
+	}
 	/* See if this is an array type. */
 	p = strchr(desc.s, '\0');
 	isarray  = 0;
