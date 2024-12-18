@@ -179,7 +179,7 @@ static inline struct hunk *
 jm_h_alloc(void)
 {
 	/* all fields are zeroed */
-	return malloc(sizeof(struct hunk), M_PRISON, M_WAITOK|M_ZERO);
+	return (malloc(sizeof(struct hunk), M_PRISON, M_WAITOK | M_ZERO));
 }
 
 static inline struct hunk *
@@ -336,7 +336,7 @@ again:
 			break;
 		}
 		/* vfsopt is expected to provide NULL-terminated strings */
-		if (((char*)opt->value)[opt->len - 1] != '\0') {
+		if (((char *)opt->value)[opt->len - 1] != '\0') {
 			error = EINVAL;
 			break;
 		}
@@ -347,7 +347,8 @@ again:
 			mtx_lock(&pr->pr_mtx);
 			origosd = osd_jail_get(pr, meta->osd_slot);
 			if (origosd != NULL) {
-				origosd_copy = malloc(strlen(origosd) + 1, M_PRISON, M_NOWAIT);
+				origosd_copy = malloc(strlen(origosd) + 1,
+				    M_PRISON, M_NOWAIT);
 				if (origosd_copy == NULL)
 					error = ENOMEM;
 				else {
@@ -383,8 +384,8 @@ again:
 		}
 		jm_h_cut_occurrences(h, key, keylen);
 		h = jm_h_prepend(h, NULL, 0);
-		h->len = keylen + 1 /* = */ + opt->len;
-		h->owned = malloc(h->len, M_PRISON, M_WAITOK|M_ZERO);
+		h->len = keylen + 1 + opt->len; /* key=value\0 */
+		h->owned = malloc(h->len, M_PRISON, M_WAITOK | M_ZERO);
 		h->p = h->owned;
 		memcpy(h->p, key, keylen);
 		h->p[keylen] = '=';
