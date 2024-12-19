@@ -551,6 +551,63 @@ keyvalue_cleanup()
 	return 0
 }
 
+atf_test_case "keyvalue_contention" "cleanup"
+keyvalue_contention_head()
+{
+	atf_set descr 'Try to stress metadata read/write mechanism with some contention'
+	atf_set require.user root
+	atf_set execenv jail
+	atf_set timeout 30
+}
+keyvalue_stresser()
+{
+	local jailname=$1
+	local modifier=$2
+
+	while true
+	do
+		jail -m name=$jailname $modifier
+	done
+}
+keyvalue_contention_body()
+{
+	setup
+
+	atf_check -s exit:0 jail -c name=j persist meta env
+
+	keyvalue_stresser "j" "meta.a=1" &
+	apid=$!
+	keyvalue_stresser "j" "meta.b=2" &
+	bpid=$!
+	keyvalue_stresser "j" "env.c=3" &
+	cpid=$!
+	keyvalue_stresser "j" "env.d=4" &
+	dpid=$!
+
+	for it in $(jot 8)
+	do
+		sleep 1
+		jail -m name=j meta='meta=META' env='env=ENV'
+		atf_check -sexit:0 -oinline:'META\n'	jls -jj meta.meta
+		atf_check -sexit:0 -oinline:'ENV\n'	jls -jj env.env
+		atf_check -sexit:0 -oinline:'1\n'	jls -jj meta.a
+		atf_check -sexit:0 -oinline:'2\n'	jls -jj meta.b
+		atf_check -sexit:0 -oinline:'3\n'	jls -jj env.c
+		atf_check -sexit:0 -oinline:'4\n'	jls -jj env.d
+	done
+
+	# TODO: Think of adding a stresser on the kernel side which does
+	#       osd_set() w/o allprison lock. It could test the compare
+	#       and swap mechanism in jm_osd_method_set().
+
+	kill -9 $apid $bpid $cpid $dpid
+}
+keyvalue_contention_cleanup()
+{
+	jail -r j
+	return 0
+}
+
 atf_init_test_cases()
 {
 	atf_add_test_case "jail_create"
@@ -570,4 +627,5 @@ atf_init_test_cases()
 	atf_add_test_case "allowedchars"
 
 	atf_add_test_case "keyvalue"
+	atf_add_test_case "keyvalue_contention"
 }
