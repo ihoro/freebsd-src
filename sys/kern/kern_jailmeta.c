@@ -170,8 +170,8 @@ struct meta {
  */
 struct hunk {
 	char *p;
-	size_t len;  /* may include \0 char or not */
-	char *owned; /* must be freed */
+	size_t len;		/* number of bytes referred */
+	char *owned;		/* must be freed */
 	struct hunk *next;
 };
 
