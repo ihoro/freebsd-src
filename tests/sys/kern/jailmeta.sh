@@ -586,14 +586,14 @@ keyvalue_contention_body()
 
 	for it in $(jot 8)
 	do
-		sleep 1
 		jail -m name=j meta='meta=META' env='env=ENV'
-		atf_check -sexit:0 -oinline:'META\n'	jls -jj meta.meta
-		atf_check -sexit:0 -oinline:'ENV\n'	jls -jj env.env
+		sleep 1
 		atf_check -sexit:0 -oinline:'1\n'	jls -jj meta.a
 		atf_check -sexit:0 -oinline:'2\n'	jls -jj meta.b
 		atf_check -sexit:0 -oinline:'3\n'	jls -jj env.c
 		atf_check -sexit:0 -oinline:'4\n'	jls -jj env.d
+		atf_check -sexit:0 -oinline:'META\n'	jls -jj meta.meta
+		atf_check -sexit:0 -oinline:'ENV\n'	jls -jj env.env
 	done
 
 	# TODO: Think of adding a stresser on the kernel side which does
