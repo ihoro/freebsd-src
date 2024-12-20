@@ -190,10 +190,6 @@ jm_h_prepend(struct hunk *h, char *p, size_t len)
 	n = jm_h_alloc();
 	n->p = p;
 	n->len = len;
-
-	if (h == NULL)
-		return (n);
-
 	n->next = h;
 	return (n);
 }
