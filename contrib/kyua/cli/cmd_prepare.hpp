@@ -26,38 +26,28 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "os/freebsd/main.hpp"
+/// \file cli/cmd_prepare.hpp
+/// Provides the cmd_prepare class.
 
-#include "engine/execenv/execenv.hpp"
-#include "os/freebsd/execenv_jail_manager.hpp"
+#if !defined(CLI_CMD_PREPARE_HPP)
+#define CLI_CMD_PREPARE_HPP
 
-#include "engine/rr/rr.hpp"
-#include "os/freebsd/rr_kmods.hpp"
+#include "cli/common.hpp"
 
-namespace execenv = engine::execenv;
-namespace rr = engine::rr;
+namespace cli {
 
 
-/// FreeBSD related features initialization.
-///
-/// \param argc The number of arguments passed on the command line.
-/// \param argv NULL-terminated array containing the command line arguments.
-///
-/// \return 0 on success, some other integer on error.
-///
-/// \throw std::exception This throws any uncaught exception.  Such exceptions
-///     are bugs, but we let them propagate so that the runtime will abort and
-///     dump core.
-int
-freebsd::main(const int, const char* const* const)
+/// Implementation of the "prepare" subcommand.
+class cmd_prepare : public cli_command
 {
-    execenv::register_execenv(
-        std::shared_ptr< execenv::manager >(new freebsd::execenv_jail_manager())
-    );
+public:
+    cmd_prepare(void);
 
-#ifdef __FreeBSD__
-    rr::register_resolver(std::shared_ptr< rr::interface >(new freebsd::rr_kmods()));
-#endif
+    int run(utils::cmdline::ui*, const utils::cmdline::parsed_cmdline&,
+            const utils::config::tree&);
+};
 
-    return 0;
-}
+
+}  // namespace cli
+
+#endif  // !defined(CLI_CMD_PREPARE_HPP)

@@ -26,38 +26,40 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "os/freebsd/main.hpp"
+#include "engine/rr/rr_all.hpp"
 
-#include "engine/execenv/execenv.hpp"
-#include "os/freebsd/execenv_jail_manager.hpp"
+static const std::string _name = "all";
+static const std::string _description = "Run all preparations";
 
-#include "engine/rr/rr.hpp"
-#include "os/freebsd/rr_kmods.hpp"
-
-namespace execenv = engine::execenv;
 namespace rr = engine::rr;
 
 
-/// FreeBSD related features initialization.
-///
-/// \param argc The number of arguments passed on the command line.
-/// \param argv NULL-terminated array containing the command line arguments.
-///
-/// \return 0 on success, some other integer on error.
-///
-/// \throw std::exception This throws any uncaught exception.  Such exceptions
-///     are bugs, but we let them propagate so that the runtime will abort and
-///     dump core.
-int
-freebsd::main(const int, const char* const* const)
+const std::string&
+rr::rr_all::name() const
 {
-    execenv::register_execenv(
-        std::shared_ptr< execenv::manager >(new freebsd::execenv_jail_manager())
-    );
+    return _name;
+}
 
-#ifdef __FreeBSD__
-    rr::register_resolver(std::shared_ptr< rr::interface >(new freebsd::rr_kmods()));
-#endif
 
-    return 0;
+const std::string&
+rr::rr_all::description() const
+{
+    return _description;
+}
+
+
+int
+rr::rr_all::exec(cmdline::ui* ui, const cmdline::parsed_cmdline& cmdline,
+                 const config::tree& user_config) const
+{
+    for (auto r : rr::resolvers()) {
+        if (r->name() == this->name())
+            continue;
+
+        int error = r->exec(ui, cmdline, user_config);
+        if (error != EXIT_SUCCESS)
+            return error;
+    }
+
+    return EXIT_SUCCESS;
 }
