@@ -26,38 +26,51 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "os/freebsd/main.hpp"
+#include "cli/cmd_prepare.hpp"
 
-#include "engine/execenv/execenv.hpp"
-#include "os/freebsd/execenv_jail_manager.hpp"
-
+#include "cli/common.ipp"
 #include "engine/rr/rr.hpp"
-#include "os/freebsd/rr_kmods.hpp"
+#include "utils/cmdline/options.hpp"
 
-namespace execenv = engine::execenv;
+namespace cmdline = utils::cmdline;
+namespace config = utils::config;
 namespace rr = engine::rr;
 
+using cli::cmd_prepare;
 
-/// FreeBSD related features initialization.
-///
-/// \param argc The number of arguments passed on the command line.
-/// \param argv NULL-terminated array containing the command line arguments.
-///
-/// \return 0 on success, some other integer on error.
-///
-/// \throw std::exception This throws any uncaught exception.  Such exceptions
-///     are bugs, but we let them propagate so that the runtime will abort and
-///     dump core.
-int
-freebsd::main(const int, const char* const* const)
+
+/// Default constructor for cmd_prepare.
+cmd_prepare::cmd_prepare(void) : cli_command(
+    "prepare", "[resolver-name ...]", 0, -1,
+    "Prepare env and resolve requirements before testing")
 {
-    execenv::register_execenv(
-        std::shared_ptr< execenv::manager >(new freebsd::execenv_jail_manager())
-    );
+    add_option(kyuafile_option);
+    add_option(build_root_option);
+    add_option(cmdline::bool_option('n', "dry-run", "Do not alter the system"));
+}
 
-#ifdef __FreeBSD__
-    rr::register_resolver(std::shared_ptr< rr::interface >(new freebsd::rr_kmods()));
-#endif
 
-    return 0;
+/// Entry point for the "prepare" subcommand.
+///
+/// \param ui Object to interact with the I/O of the program.
+/// \param cmdline Representation of the command line to the subcommand.
+/// \param user_config The runtime configuration of the program.
+///
+/// \return 0 if successful, 1 otherwise.
+int
+cmd_prepare::run(cmdline::ui* ui, const cmdline::parsed_cmdline& cmdline,
+            const config::tree& user_config)
+{
+    // List available resolvers
+    if (cmdline.arguments().empty()) {
+        for (auto r : rr::resolvers()) {
+            ui->out(r->name(), false);
+            ui->out("\t\t\t", false);
+            ui->out(r->description());
+        }
+        return EXIT_SUCCESS;
+    }
+
+    // Or run specified ones
+    return rr::run(cmdline.arguments(), ui, cmdline, user_config);
 }
