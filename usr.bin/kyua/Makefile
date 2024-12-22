@@ -129,10 +129,13 @@ SRCS+=	engine/atf.cpp			\
 	engine/tap_parser.cpp		\
 	engine/scheduler.cpp		\
 	engine/execenv/execenv.cpp	\
-	engine/execenv/execenv_host.cpp
+	engine/execenv/execenv_host.cpp	\
+	engine/rr/rr.cpp		\
+	engine/rr/rr_all.cpp
 
 SRCS+=	os/freebsd/execenv_jail_manager.cpp	\
-	os/freebsd/main.cpp
+	os/freebsd/main.cpp			\
+	os/freebsd/rr_kmods.cpp
 
 SRCS+=	store/dbtypes.cpp		\
 	store/exceptions.cpp		\
@@ -157,6 +160,7 @@ SRCS+=	cli/cmd_about.cpp		\
 	cli/cmd_debug.cpp		\
 	cli/cmd_help.cpp		\
 	cli/cmd_list.cpp		\
+	cli/cmd_prepare.cpp		\
 	cli/cmd_report.cpp		\
 	cli/cmd_report_html.cpp		\
 	cli/cmd_report_junit.cpp	\

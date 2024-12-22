@@ -26,38 +26,58 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "os/freebsd/main.hpp"
-
-#include "engine/execenv/execenv.hpp"
-#include "os/freebsd/execenv_jail_manager.hpp"
-
 #include "engine/rr/rr.hpp"
-#include "os/freebsd/rr_kmods.hpp"
 
-namespace execenv = engine::execenv;
+#include "engine/rr/rr_all.hpp"
+
 namespace rr = engine::rr;
 
 
-/// FreeBSD related features initialization.
+/// List of registered execution environments, except default host one.
 ///
-/// \param argc The number of arguments passed on the command line.
-/// \param argv NULL-terminated array containing the command line arguments.
-///
-/// \return 0 on success, some other integer on error.
-///
-/// \throw std::exception This throws any uncaught exception.  Such exceptions
-///     are bugs, but we let them propagate so that the runtime will abort and
-///     dump core.
-int
-freebsd::main(const int, const char* const* const)
+/// Use register_execenv() to add an entry to this global list.
+static std::vector< std::shared_ptr< rr::interface > > _resolvers = {
+    std::shared_ptr< rr::interface >(new rr::rr_all())
+};
+
+
+void
+rr::register_resolver(const std::shared_ptr< interface > resolver)
 {
-    execenv::register_execenv(
-        std::shared_ptr< execenv::manager >(new freebsd::execenv_jail_manager())
-    );
+    _resolvers.push_back(resolver);
+}
 
-#ifdef __FreeBSD__
-    rr::register_resolver(std::shared_ptr< rr::interface >(new freebsd::rr_kmods()));
-#endif
 
-    return 0;
+const std::vector< std::shared_ptr< rr::interface > >
+rr::resolvers()
+{
+    return _resolvers;
+}
+
+
+int
+rr::run(const std::vector< std::string >& resolver_names,
+        cmdline::ui* ui,
+        const cmdline::parsed_cmdline& cmdline,
+        const config::tree& user_config)
+{
+    for (auto rname : resolver_names) {
+        std::shared_ptr< rr::interface > resolver = nullptr;
+        for (auto r : rr::resolvers())
+            if (r->name() == rname) {
+                resolver = r;
+                break;
+            }
+
+        if (resolver == nullptr) {
+            ui->out(F("Unknown requirement resolver: %s") % rname);
+            return EXIT_FAILURE;
+        }
+
+        if (resolver->exec(ui, cmdline, user_config) != EXIT_SUCCESS)
+            // suppress the actual code -- main limits possible exit codes
+            return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }
