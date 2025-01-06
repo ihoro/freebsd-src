@@ -325,6 +325,7 @@ maxbufsize_head()
 {
 	atf_set descr 'Test that metadata buffer maximum size can be changed'
 	atf_set require.user root
+	atf_set is.exclusive true
 }
 maxbufsize_body()
 {
@@ -398,6 +399,7 @@ allowedchars_head()
 {
 	atf_set descr 'Test that the set of allowed chars can be changed'
 	atf_set require.user root
+	atf_set is.exclusive true
 }
 allowedchars_body()
 {
