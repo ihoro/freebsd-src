@@ -307,6 +307,7 @@ SRCS+=	abd.c \
 	spa_json_stats.c \
 	spa_log_spacemap.c \
 	spa_misc.c \
+	spa_json_stats.c \
 	spa_stats.c \
 	txg.c \
 	uberblock.c \
