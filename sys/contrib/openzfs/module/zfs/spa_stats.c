@@ -1059,7 +1059,7 @@ spa_json_stats_init(spa_t *spa)
 
 	mutex_init(&spa->spa_json_stats.lock, NULL, MUTEX_DEFAULT, NULL);
 	name = kmem_asprintf("zfs/%s", spa_name(spa));
-	ksp = kstat_create(name, 0, "status.json", "misc", KSTAT_TYPE_RAW, 0,
+	ksp = kstat_create(name, 0, "xray_status_json", "misc", KSTAT_TYPE_RAW, 0,
 	    KSTAT_FLAG_VIRTUAL | KSTAT_FLAG_RESTRICTED | KSTAT_FLAG_NO_HEADERS);
 	spa->spa_json_stats.kstat = ksp;
 	if (ksp) {
