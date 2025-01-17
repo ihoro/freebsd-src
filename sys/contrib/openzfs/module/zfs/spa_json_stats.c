@@ -292,7 +292,7 @@ spa_props_json(spa_t *spa, nvlist_t **nvl)
 	const char *name;
 	uint64_t src;
 
-	if (spa_prop_get(spa, nvl) != 0)
+	if (spa_prop_get(spa, *nvl) != 0)
 		return (-1);
 
 	for (curr = nvlist_next_nvpair(*nvl, NULL); curr;
