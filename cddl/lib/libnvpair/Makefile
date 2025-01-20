@@ -14,6 +14,7 @@ SRCS=	libnvpair.c \
 # kernel
 SRCS+= nvpair_alloc_fixed.c \
 	nvpair.c \
+	nvpair_json.c \
 	fnvpair.c
 
 WARNS?=	2

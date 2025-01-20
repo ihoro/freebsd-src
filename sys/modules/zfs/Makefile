@@ -145,7 +145,8 @@ SRCS+=	lapi.c \
 SRCS+=	nvpair.c \
 	fnvpair.c \
 	nvpair_alloc_spl.c \
-	nvpair_alloc_fixed.c
+	nvpair_alloc_fixed.c \
+	nvpair_json.c
 
 #os/freebsd/spl
 SRCS+=	acl_common.c \

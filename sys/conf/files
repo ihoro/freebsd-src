@@ -196,6 +196,7 @@ contrib/openzfs/module/nvpair/fnvpair.c		optional zfs compile-with "${ZFS_C}"
 contrib/openzfs/module/nvpair/nvpair.c		optional zfs compile-with "${ZFS_RPC_C} ${NO_WSTRINGOP_OVERREAD}"
 contrib/openzfs/module/nvpair/nvpair_alloc_fixed.c	optional zfs compile-with "${ZFS_C}"
 contrib/openzfs/module/nvpair/nvpair_alloc_spl.c	optional zfs compile-with "${ZFS_C}"
+contrib/openzfs/module/nvpair/nvpair_json.c		optional zfs compile-with "${ZFS_C}"
 
 #zfs platform compatibility code
 contrib/openzfs/module/os/freebsd/zfs/abd_os.c		optional zfs compile-with "${ZFS_C}"
