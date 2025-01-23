@@ -422,7 +422,14 @@ again:
 	if (oldosd == origosd) {
 		error = osd_jail_set(pr, meta->osd_slot, osd);
 	} else {
-		/* someone else was quicker - re-apply opts then */
+		/*
+		 * The osd(9) framework requires protection only for pr_osd,
+		 * which is covered by pr_mtx. Therefore, other code might
+		 * legally alter jail metadata without allprison_lock. It
+		 * means that here we could override data just added by other
+		 * thread. This extra caution with retry mechanism aims to
+		 * prevent user data loss in such potential cases.
+		 */
 		error = EAGAIN;
 		repeat = true;
 	}
