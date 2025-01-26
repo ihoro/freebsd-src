@@ -442,11 +442,8 @@ end:
 	free(osd, M_PRISON);
 	free(origosd_copy, M_PRISON);
 
-	if (repeat) {
-		repeats++;
-		if (repeats < 3)
-			goto again;
-	}
+	if (repeat && ++repeats < 3)
+		goto again;
 
 	return (error);
 }
