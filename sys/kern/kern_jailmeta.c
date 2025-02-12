@@ -687,6 +687,8 @@ jm_sysinit(void *arg __unused)
 	BIT_SET(NCHARS, 0x5F, &allowedchars);	/* _ */
 
 
+	/* OSD registration */
+
 	meta.osd_slot = osd_jail_register(jm_osd_destructor, meta.methods);
 	env.osd_slot = osd_jail_register(jm_osd_destructor, env.methods);
 
