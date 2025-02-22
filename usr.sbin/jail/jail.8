@@ -537,11 +537,22 @@ In order to add or replace a specific key the
 or
 .Va env.keyname=value
 parameter notations must be used.
-The
+While
+.Va meta.keyname=
+or
+.Va env.keyname=
+reset the value to an empty string, the
 .Va meta.keyname
 or
 .Va env.keyname
-notations are used for reading.
+notations, without the equal sign, remove the given key.
+Respectively, the same
+.Va meta.keyname
+or
+.Va env.keyname
+notations are used to query a specific key while reading jail parameters
+using such commands as
+.Xr jls 8 .
 Multiple keys can be queried or modified with a single command.
 .It Va allow.*
 Some restrictions of the jail environment may be set on a per-jail
