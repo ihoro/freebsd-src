@@ -522,6 +522,11 @@ jailparam_set(struct jailparam *jp, unsigned njp, int flags)
 				jiov[i - 1].iov_len = strlen(nname) + 1;
 				
 			}
+		} else if (jp[j].jp_flags & JP_KEYVALUE &&
+		    jp[j].jp_value == NULL) {
+			/* No value means key removal */
+			jiov[i].iov_base = NULL;
+			jiov[i].iov_len = 0;
 		} else {
 			/*
 			 * Try to fill in missing values with an empty string.
