@@ -165,9 +165,7 @@ struct meta {
 	osd_method_t methods[PR_MAXMETHOD];
 };
 
-/*
- * A chain of hunks depicts the final buffer after all manipulations.
- */
+/* A chain of hunks depicts the final buffer after all manipulations. */
 struct hunk {
 	char *p;
 	size_t len;		/* number of bytes referred */
@@ -329,14 +327,15 @@ again:
 		opt->seen = 1;
 
 		/* The very first preconditions */
-		if (opt->len <= 0)
+		if (opt->len < 0)
 			continue;
 		if (opt->len > jm_maxbufsize_hard) {
 			error = EFBIG;
 			break;
 		}
 		/* vfsopt is expected to provide NULL-terminated strings */
-		if (((char *)opt->value)[opt->len - 1] != '\0') {
+		if (opt->value != NULL &&
+		    ((char *)opt->value)[opt->len - 1] != '\0') {
 			error = EINVAL;
 			break;
 		}
@@ -362,20 +361,21 @@ again:
 				break;
 		}
 
-		/* Change the whole metadata */
+		/* 1) change the whole metadata */
 		if (strcmp(opt->name, meta->name) == 0) {
 			if (opt->len > jm_maxbufsize_hard) {
 				error = EFBIG;
 				break;
 			}
 			h = jm_h_freechain(h);
-			h = jm_h_prepend(h, opt->value,
+			h = jm_h_prepend(h,
+			    (opt->value != NULL) ? opt->value : "",
 			    /* avoid empty NULL-terminated string */
 			    (opt->len > 1) ? opt->len : 0);
 			continue;
 		}
 
-		/* Add or replace existing key=value */
+		/* 2) or add/replace/remove existing key=value */
 		key = opt->name + strlen(meta->name) + 1;
 		keylen = strlen(key);
 		if (keylen < 1) {
@@ -383,6 +383,8 @@ again:
 			break;
 		}
 		jm_h_cut_occurrences(h, key, keylen);
+		if (opt->value == NULL)
+			continue;
 		h = jm_h_prepend(h, NULL, 0);
 		h->len = keylen + 1 + opt->len; /* key=value\0 */
 		h->owned = malloc(h->len, M_PRISON, M_WAITOK | M_ZERO);
