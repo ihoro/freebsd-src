@@ -465,7 +465,7 @@ keyvalue_generic()
 {
 	local meta=$1
 
-	atf_check -sexit:0 -oinline:'""\n'	jls -jj $meta
+	atf_check -sexit:0 -oinline:'""\n'		jls -jj $meta
 
 	# Should be able to extract a key added manually
 	atf_check -sexit:0				jail -m name=j $meta="a=1"
@@ -515,10 +515,15 @@ keyvalue_generic()
 	atf_check -sexit:0 -oinline:'c=C\na=A\nb=2\n'	jls -jj $meta
 
 	# Should treat empty value correctly
-	atf_check -sexit:0				jail -m name=j $meta.b $meta.a=
+	atf_check -sexit:0				jail -m name=j $meta.a=
 	atf_check -sexit:0 -oinline:'""\n'		jls -jj $meta.a
+	atf_check -sexit:0 -oinline:'a=\nc=C\nb=2\n'	jls -jj $meta
+
+	# Should treat NULL value as a key removal
+	atf_check -sexit:0 -oinline:'2\n'		jls -jj $meta.b
+	atf_check -sexit:0				jail -m name=j $meta.b
 	atf_check -sexit:0 -oinline:'""\n'		jls -jj $meta.b
-	atf_check -sexit:0 -oinline:'a=\nb=\nc=C\n'	jls -jj $meta
+	atf_check -sexit:0 -oinline:'a=\nc=C\n'		jls -jj $meta
 
 	# Should allow changing the whole buffer and per key at once (order matters)
 	atf_check -sexit:0				jail -m name=j $meta.a=1 $meta=ttt $meta.b=2
