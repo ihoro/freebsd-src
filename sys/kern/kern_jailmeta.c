@@ -473,8 +473,6 @@ jm_osd_method_get(void *obj, void *data, const struct meta *meta)
 		    opt->name[strlen(meta->name)] != '\0')
 			continue;
 
-		opt->seen = 1;
-
 		if (!locked) {
 			mtx_lock(&pr->pr_mtx);
 			locked = true;
@@ -489,6 +487,7 @@ jm_osd_method_get(void *obj, void *data, const struct meta *meta)
 				error = EINVAL;
 				break;
 			}
+			opt->seen = 1;
 			continue;
 		}
 
@@ -505,9 +504,12 @@ jm_osd_method_get(void *obj, void *data, const struct meta *meta)
 					error = EINVAL;
 					break;
 				}
+				opt->seen = 1;
 			}
 			p += keylen;
 		}
+		if (error != 0)
+			break;
 	}
 
 	if (locked)
@@ -564,7 +566,7 @@ jm_osd_method_check_meta(void *obj, void *data)
 }
 
 static struct meta meta = {
-	.name = "meta",
+	.name = JAIL_META_PRIVATE,
 	.osd_slot = 0,
 	.methods = {
 		[PR_METHOD_SET] =	jm_osd_method_set_meta,
@@ -597,7 +599,7 @@ jm_osd_method_check_env(void *obj, void *data)
 }
 
 static struct meta env = {
-	.name = "env",
+	.name = JAIL_META_SHARED,
 	.osd_slot = 0,
 	.methods = {
 		[PR_METHOD_SET] =	jm_osd_method_set_env,
