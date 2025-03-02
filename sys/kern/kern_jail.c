@@ -2555,7 +2555,7 @@ kern_jail_get(struct thread *td, struct uio *optuio, int flags)
 		if (!opt->seen &&
 		    (strstr(opt->name, JAIL_META_PRIVATE ".") == opt->name ||
 		    strstr(opt->name, JAIL_META_SHARED ".") == opt->name)) {
-			/* communicate back a missing key */
+			/* Communicate back a missing key. */
 			free(opt->value, M_MOUNT);
 			opt->value = NULL;
 			opt->len = 0;
