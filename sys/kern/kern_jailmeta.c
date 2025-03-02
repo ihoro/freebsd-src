@@ -165,9 +165,9 @@ struct meta {
 	osd_method_t methods[PR_MAXMETHOD];
 };
 
-/* A chain of hunks depicts the final buffer after all manipulations. */
+/* A chain of hunks depicts the final buffer after all manipulations */
 struct hunk {
-	char *p;
+	char *p;		/* a buf reference */
 	size_t len;		/* number of bytes referred */
 	char *owned;		/* must be freed */
 	struct hunk *next;
@@ -198,13 +198,13 @@ jm_h_cut_line(struct hunk *h, char *begin)
 	struct hunk *rem;
 	char *end;
 
-	/* Find the end of key=value\n */
-	for (end = begin; (end + 1) - h->p < h->len; end++)
+	/* Find the end of key=value{\n|\0} */
+	for (end = begin; (end + 1) < (h->p + h->len); end++)
 		if (*end == '\0' || *end == '\n')
 			break;
 
 	/* Pick up non-empty remainder */
-	if ((end + 1) - h->p < h->len && *(end + 1) != '\0') {
+	if ((end + 1) < (h->p + h->len) && *(end + 1) != '\0') {
 		rem = jm_h_alloc();
 		rem->p = end + 1;
 		rem->len = h->p + h->len - rem->p;
