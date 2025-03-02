@@ -161,14 +161,14 @@ jail_reset_cleanup()
 	return 0
 }
 
-atf_test_case "jls_libxo" "cleanup"
-jls_libxo_head()
+atf_test_case "jls_libxo_json" "cleanup"
+jls_libxo_json_head()
 {
-	atf_set descr 'Test that metadata can be read with jls(8) using libxo'
+	atf_set descr 'Test that metadata can be read with jls(8) using libxo JSON'
 	atf_set require.user root
 	atf_set execenv jail
 }
-jls_libxo_body()
+jls_libxo_json_body()
 {
 	setup
 
@@ -183,7 +183,7 @@ jls_libxo_body()
 	atf_check -s exit:0 -o inline:'{"__version": "2", "jail-information": {"jail": [{"env":"1 2 3"}]}}\n' \
 	    jls -jj --libxo json env
 }
-jls_libxo_cleanup()
+jls_libxo_json_cleanup()
 {
 	jail -r j
 	return 0
@@ -487,11 +487,11 @@ keyvalue_generic()
 	# Should be able to lookup keys and the whole buffer at once
 	atf_check -sexit:0 -oinline:'3 a=2\nb=3 2\n'	jls -jj $meta.b $meta $meta.a
 
-	# Should be able to lookup a key using libxo-based output
+	# Should be able to lookup a key using libxo-based JSON output
 	s='{"__version": "2", "jail-information": {"jail": [{"'$meta'.b":"3"}]}}\n'
 	atf_check -s exit:0 -o inline:"$s"		jls -jj --libxo json $meta.b
 
-	# Should provide nothing for a non-found key using libxo-based output
+	# Should provide nothing for a non-found key using libxo-based JSON output
 	s='{"__version": "2", "jail-information": {"jail": [{}]}}\n'
 	atf_check -s exit:0 -o inline:"$s"		jls -jj --libxo json $meta.c $meta.d
 
@@ -643,7 +643,7 @@ atf_init_test_cases()
 	atf_add_test_case "jail_add"
 	atf_add_test_case "jail_reset"
 
-	atf_add_test_case "jls_libxo"
+	atf_add_test_case "jls_libxo_json"
 
 	atf_add_test_case "flua_create"
 	atf_add_test_case "flua_modify"
