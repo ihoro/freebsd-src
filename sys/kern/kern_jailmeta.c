@@ -20,7 +20,7 @@
 #include <sys/proc.h>
 
 /*
- * Buffer limit
+ * Buffer limit.
  *
  * The hard limit is the actual value used during setting or modification. The
  * soft limit is used solely by the security.jail.param.meta and .env sysctl. If
@@ -38,7 +38,7 @@ jm_sysctl_meta_maxbufsize(SYSCTL_HANDLER_ARGS)
 	int error;
 	uint32_t newmax = 0;
 
-	/* only reading */
+	/* Reading only. */
 
 	if (req->newptr == NULL) {
 		sx_slock(&allprison_lock);
@@ -49,7 +49,7 @@ jm_sysctl_meta_maxbufsize(SYSCTL_HANDLER_ARGS)
 		return (error);
 	}
 
-	/* reading and writing */
+	/* Reading and writing. */
 
 	sx_xlock(&allprison_lock);
 
@@ -83,7 +83,7 @@ SYSCTL_PROC(_security_jail, OID_AUTO, meta_maxbufsize,
     "Maximum buffer size of each meta and env");
 
 
-/* Allowed chars */
+/* Allowed chars. */
 
 #define NCHARS	256
 BITSET_DEFINE(charbitset, NCHARS);
@@ -134,7 +134,7 @@ SYSCTL_PROC(_security_jail, OID_AUTO, meta_allowedchars,
     " (empty string means all chars are allowed)");
 
 
-/* Jail parameter announcement */
+/* Jail parameter announcement. */
 
 static int
 jm_sysctl_param_meta(SYSCTL_HANDLER_ARGS)
@@ -157,7 +157,7 @@ SYSCTL_PROC(_security_jail_param, OID_AUTO, env,
     "Jail meta information readable by the jail");
 
 
-/* OSD -- generic logic for any metadata buffer */
+/* Generic OSD-based logic for any metadata buffer. */
 
 struct meta {
 	char *name;
@@ -165,7 +165,7 @@ struct meta {
 	osd_method_t methods[PR_MAXMETHOD];
 };
 
-/* A chain of hunks depicts the final buffer after all manipulations */
+/* A chain of hunks representing the final buffer after all manipulations. */
 struct hunk {
 	char *p;		/* a buf reference */
 	size_t len;		/* number of bytes referred */
@@ -176,7 +176,7 @@ struct hunk {
 static inline struct hunk *
 jm_h_alloc(void)
 {
-	/* all fields are zeroed */
+	/* All fields are zeroed. */
 	return (malloc(sizeof(struct hunk), M_PRISON, M_WAITOK | M_ZERO));
 }
 
@@ -198,12 +198,12 @@ jm_h_cut_line(struct hunk *h, char *begin)
 	struct hunk *rem;
 	char *end;
 
-	/* Find the end of key=value{\n|\0} */
+	/* Find the end of key=value. */
 	for (end = begin; (end + 1) < (h->p + h->len); end++)
 		if (*end == '\0' || *end == '\n')
 			break;
 
-	/* Pick up non-empty remainder */
+	/* Pick up a non-empty remainder. */
 	if ((end + 1) < (h->p + h->len) && *(end + 1) != '\0') {
 		rem = jm_h_alloc();
 		rem->p = end + 1;
@@ -214,7 +214,7 @@ jm_h_cut_line(struct hunk *h, char *begin)
 		h->next = rem;
 	}
 
-	/* Shorten this hunk */
+	/* Shorten this hunk. */
 	h->len = begin - h->p;
 }
 
@@ -240,9 +240,9 @@ jm_h_cut_occurrences(struct hunk *h, const char *key, size_t keylen)
 			nexthunk();
 			continue;
 		}
-		/* continue with this hunk */
+		/* Continue with this hunk. */
 		p += keylen;
-		/* empty? the next hunk then */
+		/* Empty? The next hunk then. */
 		if ((p - h->p) >= h->len)
 			nexthunk();
 	}
@@ -266,7 +266,7 @@ jm_h_assemble(char *dst, struct hunk *h)
 		if (h->len > 0) {
 			memcpy(dst, h->p, h->len);
 			dst += h->len;
-			/* if not the last hunk then concatenate with \n */
+			/* If not the last hunk then concatenate with \n. */
 			if (h->next != NULL && *(dst - 1) == '\0')
 				*(dst - 1) = '\n';
 		}
@@ -317,30 +317,30 @@ again:
 	error = 0;
 	repeat = false;
 	TAILQ_FOREACH(opt, opts, link) {
-		/* Look for options with <metaname> prefix */
+		/* Look for options with <metaname> prefix. */
 		if (strstr(opt->name, meta->name) != opt->name)
 			continue;
-		/* Consider only full <metaname> or <metaname>.* ones */
+		/* Consider only full <metaname> or <metaname>.* ones. */
 		if (opt->name[strlen(meta->name)] != '.' &&
 		    opt->name[strlen(meta->name)] != '\0')
 			continue;
 		opt->seen = 1;
 
-		/* The very first preconditions */
+		/* The very first preconditions. */
 		if (opt->len < 0)
 			continue;
 		if (opt->len > jm_maxbufsize_hard) {
 			error = EFBIG;
 			break;
 		}
-		/* vfsopt is expected to provide NULL-terminated strings */
+		/* NULL-terminated strings are expected from vfsopt. */
 		if (opt->value != NULL &&
 		    ((char *)opt->value)[opt->len - 1] != '\0') {
 			error = EINVAL;
 			break;
 		}
 
-		/* Work with our own copy of existing metadata */
+		/* Work with our own copy of existing metadata. */
 		if (h == NULL) {
 			h = jm_h_alloc(); /* zeroed */
 			mtx_lock(&pr->pr_mtx);
@@ -361,7 +361,7 @@ again:
 				break;
 		}
 
-		/* 1) change the whole metadata */
+		/* 1) Change the whole metadata. */
 		if (strcmp(opt->name, meta->name) == 0) {
 			if (opt->len > jm_maxbufsize_hard) {
 				error = EFBIG;
@@ -375,7 +375,7 @@ again:
 			continue;
 		}
 
-		/* 2) or add/replace/remove existing key=value */
+		/* 2) Or add/replace/remove a specific key=value. */
 		key = opt->name + strlen(meta->name) + 1;
 		keylen = strlen(key);
 		if (keylen < 1) {
@@ -384,7 +384,7 @@ again:
 		}
 		jm_h_cut_occurrences(h, key, keylen);
 		if (opt->value == NULL)
-			continue;
+			continue; /* key removal */
 		h = jm_h_prepend(h, NULL, 0);
 		h->len = keylen + 1 + opt->len; /* key=value\0 */
 		h->owned = malloc(h->len, M_PRISON, M_WAITOK | M_ZERO);
@@ -397,7 +397,7 @@ again:
 	if (h == NULL || error != 0)
 		goto end;
 
-	/* Assemble the contiguous buffer */
+	/* Assemble the final contiguous buffer. */
 	osdlen = jm_h_len(h);
 	if (osdlen > jm_maxbufsize_hard) {
 		error = EFBIG;
@@ -407,7 +407,7 @@ again:
 		osd = malloc(osdlen, M_PRISON, M_WAITOK);
 		jm_h_assemble(osd, h);
 		osd[osdlen - 1] = '\0'; /* sealed */
-		/* Check allowed chars */
+		/* Check allowed chars. */
 		for (size_t i = 0; i < osdlen; i++) {
 			if (osd[i] == 0)
 				continue;
@@ -418,7 +418,7 @@ again:
 		}
 	}
 
-	/* Compare and swap buffers */
+	/* Compare and swap the buffers. */
 	mtx_lock(&pr->pr_mtx);
 	oldosd = osd_jail_get(pr, meta->osd_slot);
 	if (oldosd == origosd) {
@@ -481,7 +481,7 @@ jm_osd_method_get(void *obj, void *data, const struct meta *meta)
 				osd = &empty;
 		}
 
-		/* Provide full metadata */
+		/* Provide full metadata. */
 		if (strcmp(opt->name, meta->name) == 0) {
 			if (strlcpy(opt->value, osd, opt->len) >= opt->len) {
 				error = EINVAL;
@@ -491,7 +491,7 @@ jm_osd_method_get(void *obj, void *data, const struct meta *meta)
 			continue;
 		}
 
-		/* Extract a specific key=value\n */
+		/* Extract a specific key=value. */
 		p = osd;
 		key = opt->name + strlen(meta->name) + 1;
 		keylen = strlen(key);
@@ -543,7 +543,7 @@ jm_osd_destructor(void *osd)
 }
 
 
-/* OSD -- meta */
+/* OSD for "meta" param */
 
 static struct meta meta;
 
@@ -576,7 +576,7 @@ static struct meta meta = {
 };
 
 
-/* OSD -- env */
+/* OSD for "env" param */
 
 static struct meta env;
 
@@ -609,7 +609,7 @@ static struct meta env = {
 };
 
 
-/* A jail can read its 'env' */
+/* A jail can read its "env". */
 
 static int
 jm_sysctl_env(SYSCTL_HANDLER_ARGS)
@@ -656,16 +656,16 @@ SYSCTL_PROC(_security_jail, OID_AUTO, env,
     0, 0, jm_sysctl_env, "A", "Meta information provided by parent jail");
 
 
-/* Setup and tear down */
+/* Setup and tear down. */
 
 static int
 jm_sysinit(void *arg __unused)
 {
-	/* Default set of allowed chars */
+	/* Default set of allowed chars. */
 
 	BIT_ZERO(NCHARS, &allowedchars);
 
-	/* Base64 */
+	/* base64 */
 	for (size_t i = 0x41; i <= 0x5A; i++)	/* A-Z */
 		BIT_SET(NCHARS, i, &allowedchars);
 	for (size_t i = 0x61; i <= 0x7A; i++)	/* a-z */
@@ -676,11 +676,11 @@ jm_sysinit(void *arg __unused)
 	BIT_SET(NCHARS, 0x2F, &allowedchars);	/* / */
 	BIT_SET(NCHARS, 0x3D, &allowedchars);	/* = */
 
-	/* key=value\n format */
+	/* key=value[\r]\n format */
 	BIT_SET(NCHARS, 0x0A, &allowedchars);	/* LF */
 	BIT_SET(NCHARS, 0x0D, &allowedchars);	/* CR */
 
-	/* Extra */
+	/* other useful chars */
 	BIT_SET(NCHARS, 0x09, &allowedchars);	/* HT */
 	BIT_SET(NCHARS, 0x20, &allowedchars);	/* SP */
 	BIT_SET(NCHARS, 0x2C, &allowedchars);	/* , */
@@ -691,7 +691,7 @@ jm_sysinit(void *arg __unused)
 	BIT_SET(NCHARS, 0x5F, &allowedchars);	/* _ */
 
 
-	/* OSD registration */
+	/* OSD registration. */
 
 	meta.osd_slot = osd_jail_register(jm_osd_destructor, meta.methods);
 	env.osd_slot = osd_jail_register(jm_osd_destructor, env.methods);
