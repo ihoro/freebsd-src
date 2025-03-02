@@ -542,7 +542,8 @@ l_setparams(lua_State *L)
 		}
 
 		value = lua_tostring(L, -1);
-		if (value == NULL) {
+		/* Allow passing NULL for key removal */
+		if (value == NULL && !(params[i].jp_flags & JP_KEYVALUE)) {
 			jailparam_free(params, i + 1);
 			free(params);
 			return (luaL_argerror(L, 2,

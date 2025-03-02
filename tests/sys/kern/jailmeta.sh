@@ -467,6 +467,8 @@ keyvalue_generic()
 
 	atf_check -sexit:0 -oinline:'""\n'		jls -jj $meta
 
+	# Note: each sub-case depends on the results of the previous ones
+
 	# Should be able to extract a key added manually
 	atf_check -sexit:0				jail -m name=j $meta="a=1"
 	atf_check -sexit:0 -oinline:'a=1\n'		jls -jj $meta
@@ -476,8 +478,8 @@ keyvalue_generic()
 	atf_check -sexit:0 -oinline:'2\n'		jls -jj $meta.a
 	atf_check -sexit:0 -oinline:'3\n'		jls -jj $meta.b
 
-	# Should provide an empty string for a non-found key
-	atf_check -sexit:0 -oinline:'""\n'		jls -jj $meta.c
+	# Should provide nothing for a non-found key
+	atf_check -sexit:0 -oinline:'\n'		jls -jj $meta.c
 
 	# Should be able to lookup multiple keys at once
 	atf_check -sexit:0 -oinline:'3 2\n'		jls -jj $meta.b $meta.a
@@ -485,17 +487,25 @@ keyvalue_generic()
 	# Should be able to lookup keys and the whole buffer at once
 	atf_check -sexit:0 -oinline:'3 a=2\nb=3 2\n'	jls -jj $meta.b $meta $meta.a
 
-	# Should be able to lookup a key with libxo-based output
-	s='{"__version": "2", "jail-information": {"jail": [{"'$meta'.b":"3","'$meta'.c":""}]}}\n'
-	atf_check -s exit:0 -o inline:"$s"		jls -jj --libxo json $meta.b $meta.c
+	# Should be able to lookup a key using libxo-based output
+	s='{"__version": "2", "jail-information": {"jail": [{"'$meta'.b":"3"}]}}\n'
+	atf_check -s exit:0 -o inline:"$s"		jls -jj --libxo json $meta.b
 
-	# Should be able to lookup a key with flua
+	# Should provide nothing for a non-found key using libxo-based output
+	s='{"__version": "2", "jail-information": {"jail": [{}]}}\n'
+	atf_check -s exit:0 -o inline:"$s"		jls -jj --libxo json $meta.c $meta.d
+
+	# Should be able to lookup a key using flua
 	atf_check -s exit:0 -o inline:"2\n"	\
 	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("j", {"'$meta'.a"}); print(res["'$meta'.a"])'
 
+	# Should provide nil for a non-found key using flua
+	atf_check -s exit:0 -o inline:"true\n"	\
+	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("j", {"'$meta'.meta"}); print(res["'$meta'.meta"] == nil)'
+
 	# Should be fine if a buffer is empty
 	atf_check -sexit:0				jail -m name=j $meta=
-	atf_check -sexit:0 -oinline:'"" "" ""\n'	jls -jj $meta.c $meta $meta.a
+	atf_check -sexit:0 -oinline:' "" \n'		jls -jj $meta.c $meta $meta.a
 
 	# Should allow adding a new key
 	atf_check -sexit:0				jail -m name=j $meta.a=1
@@ -522,12 +532,12 @@ keyvalue_generic()
 	# Should treat NULL value as a key removal
 	atf_check -sexit:0 -oinline:'2\n'		jls -jj $meta.b
 	atf_check -sexit:0				jail -m name=j $meta.b
-	atf_check -sexit:0 -oinline:'""\n'		jls -jj $meta.b
+	atf_check -sexit:0 -oinline:'\n'		jls -jj $meta.b
 	atf_check -sexit:0 -oinline:'a=\nc=C\n'		jls -jj $meta
 
 	# Should allow changing the whole buffer and per key at once (order matters)
 	atf_check -sexit:0				jail -m name=j $meta.a=1 $meta=ttt $meta.b=2
-	atf_check -sexit:0 -oinline:'""\n'		jls -jj $meta.a
+	atf_check -sexit:0 -oinline:'\n'		jls -jj $meta.a
 	atf_check -sexit:0 -oinline:'2\n'		jls -jj $meta.b
 	atf_check -sexit:0 -oinline:'b=2\nttt\n'	jls -jj $meta
 
@@ -536,11 +546,22 @@ keyvalue_generic()
 	atf_check -sexit:0 -oinline:'=\n'		jls -jj $meta.b
 	atf_check -sexit:0 -oinline:'b==\nttt\n'	jls -jj $meta
 
-	# Should allow adding or modifying keys with flua
+	# Should allow adding or modifying keys using flua
 	atf_check -s exit:0 \
 	    /usr/libexec/flua -ljail -e 'jail.setparams("j", {["'$meta.b'"]="ttt", ["'$meta'.c"]="C"}, jail.UPDATE)'
 	atf_check -sexit:0 -oinline:'ttt\n'		jls -jj $meta.b
 	atf_check -sexit:0 -oinline:'C\n'		jls -jj $meta.c
+
+	# Should allow key removal using flua
+	atf_check -s exit:0 \
+	    /usr/libexec/flua -ljail -e 'jail.setparams("j", {["'$meta.c'"] = {}}, jail.UPDATE)'
+	atf_check -sexit:0 -oinline:'\n'		jls -jj $meta.c
+	atf_check -s exit:0 \
+	    /usr/libexec/flua -ljail -e 'jail.setparams("j", {["'$meta.b'"] = false}, jail.UPDATE)'
+	atf_check -sexit:0 -oinline:'\n'		jls -jj $meta.b
+
+	# Should respectively support "jls -s" for a missing key
+	atf_check -sexit:0 -oinline:''$meta'.missing\n'	jls -jj -s $meta.missing
 }
 keyvalue_body()
 {
