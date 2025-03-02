@@ -524,7 +524,7 @@ jailparam_set(struct jailparam *jp, unsigned njp, int flags)
 			}
 		} else if (jp[j].jp_flags & JP_KEYVALUE &&
 		    jp[j].jp_value == NULL) {
-			/* No value means key removal */
+			/* No value means key removal. */
 			jiov[i].iov_base = NULL;
 			jiov[i].iov_len = 0;
 		} else {
@@ -968,7 +968,7 @@ unknown_parameter:
 		else if ((desc.i & CTLTYPE) != CTLTYPE_NODE)
 			goto unknown_parameter;
 	}
-	/* Make sure it is a valid keyvalue param */
+	/* Make sure it is a valid keyvalue param. */
 	if (jp->jp_flags & JP_KEYVALUE) {
 		if ((desc.i & CTLTYPE) != CTLTYPE_STRING ||
 		    strcmp(desc.s, "A,keyvalue") != 0)
