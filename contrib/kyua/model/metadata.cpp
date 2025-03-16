@@ -255,6 +255,7 @@ init_tree(config::tree& tree)
     tree.define< config::strings_set_node >("required_configs");
     tree.define< bytes_node >("required_disk_space");
     tree.define< paths_set_node >("required_files");
+    tree.define< config::strings_set_node >("required_kmods");
     tree.define< bytes_node >("required_memory");
     tree.define< paths_set_node >("required_programs");
     tree.define< user_node >("required_user");
@@ -281,6 +282,7 @@ set_defaults(config::tree& tree)
                                          model::strings_set());
     tree.set< bytes_node >("required_disk_space", units::bytes(0));
     tree.set< paths_set_node >("required_files", model::paths_set());
+    tree.set< config::strings_set_node >("required_kmods", model::strings_set());
     tree.set< bytes_node >("required_memory", units::bytes(0));
     tree.set< paths_set_node >("required_programs", model::paths_set());
     tree.set< user_node >("required_user", "");
@@ -579,6 +581,22 @@ model::metadata::required_files(void) const
         return _pimpl->props.lookup< paths_set_node >("required_files");
     } else {
         return get_defaults().lookup< paths_set_node >("required_files");
+    }
+}
+
+
+/// Returns the list of kernel modules needed by the test.
+///
+/// \return Set of kernel module names.
+const model::strings_set&
+model::metadata::required_kmods(void) const
+{
+    if (_pimpl->props.is_set("required_kmods")) {
+        return _pimpl->props.lookup< config::strings_set_node >(
+            "required_kmods");
+    } else {
+        return get_defaults().lookup< config::strings_set_node >(
+            "required_kmods");
     }
 }
 
