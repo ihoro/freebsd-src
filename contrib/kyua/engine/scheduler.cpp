@@ -39,6 +39,7 @@ extern "C" {
 #include <stdexcept>
 
 #include "engine/config.hpp"
+#include "engine/debugger.hpp"
 #include "engine/exceptions.hpp"
 #include "engine/execenv/execenv.hpp"
 #include "engine/requirements.hpp"
@@ -1398,6 +1399,13 @@ scheduler::scheduler_handle::wait_any(void)
 
         if (test_data->needs_cleanup) {
             INV(test_case.get_metadata().has_cleanup());
+
+            std::shared_ptr< debugger > debugger = test_case.get_debugger();
+            if (debugger) {
+                debugger->before_cleanup(test_data->test_program, test_case,
+                    result, handle);
+            }
+
             // The test body has completed and we have processed it.  If there
             // is a cleanup routine, trigger it now and wait for any other test
             // completion.  The caller never knows about cleanup routines.
