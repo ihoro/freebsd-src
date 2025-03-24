@@ -25,7 +25,7 @@
 .\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-.Dd October 13, 2014
+.Dd March 25, 2025
 .Dt KYUA-DEBUG 1
 .Os
 .Sh NAME
@@ -37,6 +37,8 @@
 .Op Fl -kyuafile Ar file
 .Op Fl -stdout Ar path
 .Op Fl -stderr Ar path
+.Op Fl -pause-before-cleanup-upon-fail
+.Op Fl -pause-before-cleanup
 .Ar test_case
 .Sh DESCRIPTION
 The
@@ -98,6 +100,20 @@ The default is
 .Pa /dev/stdout ,
 which is a special character device that redirects the output to
 standard output on the console.
+.It Fl -pause-before-cleanup-upon-fail , Fl p
+Pauses right before the test cleanup routine is invoked if the test fails.
+It makes Kyua interactive and any key press resumes execution.
+This option is effective only if the test defines a cleanup routine.
+.sp
+It can be useful for debugging system or end-to-end tests
+which usually alter the system by leaving artifacts such as files, network
+interfaces, routing entries, firewall configuration, containers, etc.
+Such way the system state left right after the test failure can be examined.
+Otherwise, these artifacts would be removed by the test cleanup routine.
+.It Fl -pause-before-cleanup
+The unconditional variant of the previous option.
+It can be helpful to reproduce the infrastructure or fixture of a passing
+test for further development or additional analysis.
 .El
 .Pp
 For example, consider the following Kyua session:
