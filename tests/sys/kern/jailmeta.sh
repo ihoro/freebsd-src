@@ -457,7 +457,7 @@ allowedchars_cleanup()
 atf_test_case "keyvalue" "cleanup"
 keyvalue_head()
 {
-	atf_set descr 'Test that metadata can be handled as a set of key=value\n strings using jail(8) and jls(8)'
+	atf_set descr 'Test that metadata can be handled as a set of key=value\n strings using jail(8), jls(8), and flua'
 	atf_set require.user root
 	atf_set execenv jail
 }
@@ -503,7 +503,7 @@ keyvalue_generic()
 	atf_check -s exit:0 -o inline:"true\n"	\
 	    /usr/libexec/flua -ljail -e 'jid, res = jail.getparams("j", {"'$meta'.meta"}); print(res["'$meta'.meta"] == nil)'
 
-	# Should be fine if a buffer is empty
+	# Should allow resetting a buffer
 	atf_check -sexit:0				jail -m name=j $meta=
 	atf_check -sexit:0 -oinline:' "" \n'		jls -jj $meta.c $meta $meta.a
 

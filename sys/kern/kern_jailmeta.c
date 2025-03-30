@@ -63,15 +63,16 @@ jm_sysctl_meta_maxbufsize(SYSCTL_HANDLER_ARGS)
 		goto end;
 
 	jm_maxbufsize_hard = newmax;
-	if (jm_maxbufsize_hard >= jm_maxbufsize_soft)
+	if (jm_maxbufsize_hard >= jm_maxbufsize_soft) {
 		jm_maxbufsize_soft = jm_maxbufsize_hard;
-	else if (TAILQ_EMPTY(&allprison))
+	} else if (TAILQ_EMPTY(&allprison)) {
 		/*
 		 * For now, this is the simplest way to
 		 * avoid O(n) iteration over all prisons in
 		 * case of a large n.
 		 */
 		jm_maxbufsize_soft = jm_maxbufsize_hard;
+	}
 
 end:
 	sx_xunlock(&allprison_lock);
