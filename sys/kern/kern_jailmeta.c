@@ -84,57 +84,6 @@ SYSCTL_PROC(_security_jail, OID_AUTO, meta_maxbufsize,
     "Maximum buffer size of each meta and env");
 
 
-/* Allowed chars. */
-
-#define NCHARS	256
-BITSET_DEFINE(charbitset, NCHARS);
-static struct charbitset allowedchars;
-
-static int
-jm_sysctl_meta_allowedchars(SYSCTL_HANDLER_ARGS)
-{
-	int error;
-	unsigned char chars[NCHARS];
-	int len = 0;
-	const bool readonly = req->newptr == NULL;
-
-	readonly ? sx_slock(&allprison_lock) : sx_xlock(&allprison_lock);
-
-	if (!BIT_ISFULLSET(NCHARS, &allowedchars))
-		for (size_t i = 1; i < NCHARS; i++) {
-			if (!BIT_ISSET(NCHARS, i, &allowedchars))
-				continue;
-			chars[len] = i;
-			len++;
-		}
-	chars[len] = 0;
-
-	error = sysctl_handle_string(oidp, chars, arg2, req);
-
-	if (!readonly && error == 0) {
-		if (chars[0] == 0) {
-			BIT_FILL(NCHARS, &allowedchars);
-		} else {
-			BIT_ZERO(NCHARS, &allowedchars);
-			for (size_t i = 0; i < NCHARS; i++) {
-				if (chars[i] == 0)
-					break;
-				BIT_SET(NCHARS, chars[i], &allowedchars);
-			}
-		}
-	}
-
-	readonly ? sx_sunlock(&allprison_lock) : sx_xunlock(&allprison_lock);
-
-	return (error);
-}
-SYSCTL_PROC(_security_jail, OID_AUTO, meta_allowedchars,
-    CTLTYPE_STRING | CTLFLAG_RW | CTLFLAG_MPSAFE, NULL, NCHARS,
-    jm_sysctl_meta_allowedchars, "A",
-    "The single-byte chars allowed to be used for meta and env"
-    " (empty string means all chars are allowed)");
-
-
 /* Jail parameter announcement. */
 
 static int
@@ -408,15 +357,6 @@ again:
 		osd = malloc(osdlen, M_PRISON, M_WAITOK);
 		jm_h_assemble(osd, h);
 		osd[osdlen - 1] = '\0'; /* sealed */
-		/* Check allowed chars. */
-		for (size_t i = 0; i < osdlen; i++) {
-			if (osd[i] == 0)
-				continue;
-			if (!BIT_ISSET(NCHARS, osd[i], &allowedchars)) {
-				error = EINVAL;
-				goto end;
-			}
-		}
 	}
 
 	/* Compare and swap the buffers. */
@@ -662,38 +602,6 @@ SYSCTL_PROC(_security_jail, OID_AUTO, env,
 static int
 jm_sysinit(void *arg __unused)
 {
-	/* Default set of allowed chars. */
-
-	BIT_ZERO(NCHARS, &allowedchars);
-
-	/* base64 */
-	for (size_t i = 0x41; i <= 0x5A; i++)	/* A-Z */
-		BIT_SET(NCHARS, i, &allowedchars);
-	for (size_t i = 0x61; i <= 0x7A; i++)	/* a-z */
-		BIT_SET(NCHARS, i, &allowedchars);
-	for (size_t i = 0x30; i <= 0x39; i++)	/* 0-9 */
-		BIT_SET(NCHARS, i, &allowedchars);
-	BIT_SET(NCHARS, 0x2B, &allowedchars);	/* + */
-	BIT_SET(NCHARS, 0x2F, &allowedchars);	/* / */
-	BIT_SET(NCHARS, 0x3D, &allowedchars);	/* = */
-
-	/* key=value[\r]\n format */
-	BIT_SET(NCHARS, 0x0A, &allowedchars);	/* LF */
-	BIT_SET(NCHARS, 0x0D, &allowedchars);	/* CR */
-
-	/* other useful chars */
-	BIT_SET(NCHARS, 0x09, &allowedchars);	/* HT */
-	BIT_SET(NCHARS, 0x20, &allowedchars);	/* SP */
-	BIT_SET(NCHARS, 0x2C, &allowedchars);	/* , */
-	BIT_SET(NCHARS, 0x2D, &allowedchars);	/* - */
-	BIT_SET(NCHARS, 0x2E, &allowedchars);	/* . */
-	BIT_SET(NCHARS, 0x3A, &allowedchars);	/* : */
-	BIT_SET(NCHARS, 0x40, &allowedchars);	/* @ */
-	BIT_SET(NCHARS, 0x5F, &allowedchars);	/* _ */
-
-
-	/* OSD registration. */
-
 	meta.osd_slot = osd_jail_register(jm_osd_destructor, meta.methods);
 	env.osd_slot = osd_jail_register(jm_osd_destructor, env.methods);
 

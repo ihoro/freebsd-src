@@ -525,11 +525,6 @@ is hidden from the jail, the
 is readable through the
 .Va security.jail.env
 sysctl.
-The set of allowed single-byte characters for both buffers is limited by the
-global
-.Va security.jail.meta_allowedchars
-sysctl, which is also tunable by the non-jailed root user.
-All characters are allowed if it is set to an empty string.
 .Pp
 Each buffer can be treated as a set of key=value\\n strings.
 In order to add or replace a specific key the

@@ -13,16 +13,6 @@ setup()
 	if [ $(sysctl -n security.jail.meta_maxbufsize) -lt 128 ]; then
 		atf_skip "sysctl security.jail.meta_maxbufsize must be 128+ for testing."
 	fi
-
-	# Check if chars required for testing are allowed
-	allowed="$(sysctl -b security.jail.meta_allowedchars | hexdump -e '1/1 "%02x\n"')"
-	# ABCabctv =0-9\t\n
-	for b in 41 42 43 61 62 63 74 76 20 30 31 32 33 34 35 36 37 38 39 09 0a
-	do
-		if ! echo $allowed | grep -q $b; then
-			atf_skip "sysctl security.jail.meta_allowedchars is not wide enough for testing"
-		fi
-	done
 }
 
 atf_test_case "jail_create" "cleanup"
@@ -394,66 +384,6 @@ maxbufsize_cleanup()
 	return 0
 }
 
-atf_test_case "allowedchars" "cleanup"
-allowedchars_head()
-{
-	atf_set descr 'Test that the set of allowed chars can be changed'
-	atf_set require.user root
-	atf_set is.exclusive true
-}
-allowedchars_body()
-{
-	setup
-
-	jn=jailmeta_allowedchars
-	atf_check -s not-exit:0 -e match:"not found" -o ignore \
-	    jls -j $jn
-	atf_check -s exit:0 \
-	    jail -c name=$jn persist
-
-	# Save the original value
-	sysctl -b security.jail.meta_allowedchars > meta_allowedchars.bin
-
-	# All chars
-	sysctl security.jail.meta_allowedchars=
-	printf $(jot -w '\%o' -s '' -n 127 1 127) > 7bit.bin
-	atf_check -s exit:0 \
-	    jail -m name=$jn meta="$(cat 7bit.bin)" env="$(cat 7bit.bin)"
-	jls -j $jn meta > meta.bin
-	jls -j $jn env > env.bin
-	printf '\n' >> 7bit.bin # jls adds a newline
-	atf_check -s exit:0 diff 7bit.bin meta.bin
-	atf_check -s exit:0 diff 7bit.bin env.bin
-
-	# Limited set
-	sysctl security.jail.meta_allowedchars="$(printf 'AB\1\2_\3\11C')"
-	# should be okay if within the limits
-	atf_check -s exit:0 \
-	    jail -m name=$jn meta="$(printf 'C\11A\3')" env="$(printf '\1A\2B\3')"
-	# should error and not change env
-	atf_check -s not-exit:0 -o ignore -e ignore \
-	    jail -m name=$jn meta="$(printf 'XC\11A\3')" env="$(printf '_\1A\2B\3')"
-	# should error and not change meta
-	atf_check -s not-exit:0 -o ignore -e ignore \
-	    jail -m name=$jn meta="$(printf '_C\11A\3')" env="$(printf '\1A\2B\3x')"
-	# should stay intact after errors
-	atf_check -s exit:0 -o inline:"43094103" \
-	    jls -j $jn meta | hexdump -e '1/1 "%02x"'
-	atf_check -s exit:0 -o inline:"0141024303" \
-	    jls -j $jn env | hexdump -e '1/1 "%02x"'
-
-}
-allowedchars_cleanup()
-{
-	# Restore the original value
-	test -f meta_allowedchars.bin \
-	    && sysctl security.jail.meta_allowedchars="'$(cat meta_allowedchars.bin)'"
-	rm *.bin
-
-	jail -r jailmeta_allowedchars
-	return 0
-}
-
 atf_test_case "keyvalue" "cleanup"
 keyvalue_head()
 {
@@ -652,7 +582,6 @@ atf_init_test_cases()
 	atf_add_test_case "not_inheritable"
 
 	atf_add_test_case "maxbufsize"
-	atf_add_test_case "allowedchars"
 
 	atf_add_test_case "keyvalue"
 	atf_add_test_case "keyvalue_contention"
