@@ -4389,7 +4389,7 @@ sysctl_jail_list(SYSCTL_HANDLER_ARGS)
 }
 
 SYSCTL_OID(_security_jail, OID_AUTO, list,
-    CTLTYPE_STRUCT | CTLFLAG_RD | CTLFLAG_MPSAFE, NULL, 0,
+    CTLTYPE_STRUCT | CTLFLAG_RD | CTLFLAG_PRISON | CTLFLAG_MPSAFE, NULL, 0,
     sysctl_jail_list, "S", "List of active jails");
 
 static int
@@ -4404,7 +4404,7 @@ sysctl_jail_jailed(SYSCTL_HANDLER_ARGS)
 }
 
 SYSCTL_PROC(_security_jail, OID_AUTO, jailed,
-    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_MPSAFE, NULL, 0,
+    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_PRISON | CTLFLAG_MPSAFE, NULL, 0,
     sysctl_jail_jailed, "I", "Process in jail?");
 
 static int
@@ -4424,7 +4424,7 @@ sysctl_jail_vnet(SYSCTL_HANDLER_ARGS)
 }
 
 SYSCTL_PROC(_security_jail, OID_AUTO, vnet,
-    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_MPSAFE, NULL, 0,
+    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_PRISON | CTLFLAG_MPSAFE, NULL, 0,
     sysctl_jail_vnet, "I", "Jail owns vnet?");
 
 #if defined(INET) || defined(INET6)
@@ -4460,7 +4460,7 @@ sysctl_jail_default_allow(SYSCTL_HANDLER_ARGS)
 	if (arg1 != NULL)
 		i ^= arg2;
 	/*
-	 * The sysctls don't have CTLFLAGS_PRISON, so assume prison0
+	 * The sysctls don't have CTLFLAG_PRISON, so assume prison0
 	 * for writing.
 	 */
 	mtx_lock(&prison0.pr_mtx);
@@ -4546,11 +4546,11 @@ sysctl_jail_children(SYSCTL_HANDLER_ARGS)
 }
 
 SYSCTL_PROC(_security_jail_children, OID_AUTO, max,
-    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_MPSAFE,
+    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_PRISON | CTLFLAG_MPSAFE,
     NULL, offsetof(struct prison, pr_childmax), sysctl_jail_children,
     "I", "Maximum number of child jails");
 SYSCTL_PROC(_security_jail_children, OID_AUTO, cur,
-    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_MPSAFE,
+    CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_PRISON | CTLFLAG_MPSAFE,
     NULL, offsetof(struct prison, pr_childcount), sysctl_jail_children,
     "I", "Current number of child jails");
 
