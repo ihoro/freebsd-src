@@ -26,38 +26,29 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "os/freebsd/main.hpp"
+/// \file os/freebsd/rr_kmods.hpp
+/// FreeBSD requirement resolver of required_kmods.
 
-#include "engine/execenv/execenv.hpp"
-#include "os/freebsd/execenv_jail_manager.hpp"
+#if !defined(FREEBSD_RR_KMODS_HPP)
+#define FREEBSD_RR_KMODS_HPP
 
 #include "engine/rr/rr.hpp"
-#include "os/freebsd/rr_kmods.hpp"
 
-namespace execenv = engine::execenv;
 namespace rr = engine::rr;
 
 
-/// FreeBSD related features initialization.
-///
-/// \param argc The number of arguments passed on the command line.
-/// \param argv NULL-terminated array containing the command line arguments.
-///
-/// \return 0 on success, some other integer on error.
-///
-/// \throw std::exception This throws any uncaught exception.  Such exceptions
-///     are bugs, but we let them propagate so that the runtime will abort and
-///     dump core.
-int
-freebsd::main(const int, const char* const* const)
-{
-    execenv::register_execenv(
-        std::shared_ptr< execenv::manager >(new freebsd::execenv_jail_manager())
-    );
+namespace freebsd {
 
-#ifdef __FreeBSD__
-    rr::register_resolver(std::shared_ptr< rr::interface >(new freebsd::rr_kmods()));
-#endif
 
-    return 0;
-}
+class rr_kmods : public rr::interface {
+public:
+    const std::string& name() const;
+    const std::string& description() const;
+    int exec(cmdline::ui*, const cmdline::parsed_cmdline&,
+             const config::tree&) const;
+};
+
+
+}  // namespace freebsd
+
+#endif  // !defined(FREEBSD_RR_KMODS_HPP)
