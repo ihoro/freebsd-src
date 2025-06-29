@@ -1232,10 +1232,11 @@ dsl_prop_get_all_ds(dsl_dataset_t *ds, nvlist_t **nvp,
 
 #ifdef __FreeBSD__
 		nvlist_t *propval;
+		dsl_dataset_name(ds, setpoint);
 		VERIFY0(nvlist_alloc(&propval, NV_UNIQUE_NAME, KM_SLEEP));
 		VERIFY0(nvlist_add_string(propval, ZPROP_VALUE,
 		    ds->ds_jailname ? ds->ds_jailname : "0"));
-		VERIFY0(nvlist_add_string(propval, ZPROP_SOURCE, ""));
+		VERIFY0(nvlist_add_string(propval, ZPROP_SOURCE, setpoint));
 		VERIFY0(nvlist_add_nvlist(*nvp, "jail", propval));
 		nvlist_free(propval);
 #endif
