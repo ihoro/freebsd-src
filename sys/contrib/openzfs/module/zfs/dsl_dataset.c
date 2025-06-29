@@ -497,10 +497,11 @@ dsl_dataset_evict_async(void *dbu)
 	zfs_refcount_destroy(&ds->ds_longholds);
 	rrw_destroy(&ds->ds_bp_rwlock);
 
-#ifdef __FreeBSD__
-	if (ds->ds_jailname)
-		kmem_free(ds->ds_jailname, MAXPATHLEN);
-#endif
+// It is expected to be unmounted first
+//#ifdef __FreeBSD__
+//	if (ds->ds_jailname)
+//		kmem_free(ds->ds_jailname, MAXPATHLEN);
+//#endif
 
 	kmem_free(ds, sizeof (dsl_dataset_t));
 }
