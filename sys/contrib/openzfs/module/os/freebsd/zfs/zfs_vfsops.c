@@ -1315,9 +1315,8 @@ zfs_domount(vfs_t *vfsp, char *osname)
 		/* zone dataset visiblity was checked before in zfs_mount() */
 		struct prison *pr = curthread->td_ucred->cr_prison;
 		if (pr != &prison0) {
-			ASSERT3U(strlen(pr->pr_name), <, MAXPATHLEN);
 			zfsvfs->z_os->os_dsl_dataset->ds_jailname =
-			    kmem_zalloc(MAXPATHLEN, KM_SLEEP);
+			    kmem_zalloc(strlen(pr->pr_name) + 1, KM_SLEEP);
 			strcpy(zfsvfs->z_os->os_dsl_dataset->ds_jailname,
 			    pr->pr_name);
 		}
@@ -1797,7 +1796,7 @@ zfs_umount(vfs_t *vfsp, int fflag)
 		mutex_exit(&os->os_user_ptr_lock);
 
 		if (os->os_dsl_dataset->ds_jailname)
-			kmem_free(os->os_dsl_dataset->ds_jailname, MAXPATHLEN);
+			kmem_strfree(os->os_dsl_dataset->ds_jailname);
 		os->os_dsl_dataset->ds_jailname = NULL;
 
 		/*
