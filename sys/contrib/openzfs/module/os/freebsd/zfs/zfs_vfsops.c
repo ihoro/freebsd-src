@@ -1311,6 +1311,7 @@ zfs_domount(vfs_t *vfsp, char *osname)
 	if (!zfsvfs->z_issnap)
 		zfsctl_create(zfsvfs);
 
+#ifdef __FreeBSD__
 	if (error == 0) {
 		/* zone dataset visiblity was checked before in zfs_mount() */
 		struct prison *pr = curthread->td_ucred->cr_prison;
@@ -1321,6 +1322,7 @@ zfs_domount(vfs_t *vfsp, char *osname)
 			    pr->pr_name);
 		}
 	}
+#endif
 
 out:
 	if (error) {
@@ -1795,9 +1797,11 @@ zfs_umount(vfs_t *vfsp, int fflag)
 		dmu_objset_set_user(os, NULL);
 		mutex_exit(&os->os_user_ptr_lock);
 
+#ifdef __FreeBSD__
 		if (os->os_dsl_dataset->ds_jailname)
 			kmem_strfree(os->os_dsl_dataset->ds_jailname);
 		os->os_dsl_dataset->ds_jailname = NULL;
+#endif
 
 		/*
 		 * Finally release the objset
