@@ -1235,7 +1235,8 @@ dsl_prop_get_all_ds(dsl_dataset_t *ds, nvlist_t **nvp,
 		dsl_dataset_name(ds, setpoint);
 		VERIFY0(nvlist_alloc(&propval, NV_UNIQUE_NAME, KM_SLEEP));
 		VERIFY0(nvlist_add_string(propval, ZPROP_VALUE,
-		    ds->ds_jailname ? ds->ds_jailname : "0"));
+		    (ds->ds_jailname && INGLOBALZONE(curproc)) ?
+		    ds->ds_jailname : "0"));
 		VERIFY0(nvlist_add_string(propval, ZPROP_SOURCE, setpoint));
 		VERIFY0(nvlist_add_nvlist(*nvp, "jail", propval));
 		nvlist_free(propval);
