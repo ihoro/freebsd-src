@@ -1317,9 +1317,7 @@ zfs_domount(vfs_t *vfsp, char *osname)
 		struct prison *pr = curthread->td_ucred->cr_prison;
 		if (pr != &prison0) {
 			zfsvfs->z_os->os_dsl_dataset->ds_jailname =
-			    kmem_zalloc(strlen(pr->pr_name) + 1, KM_SLEEP);
-			strcpy(zfsvfs->z_os->os_dsl_dataset->ds_jailname,
-			    pr->pr_name);
+			    kmem_strdup(pr->pr_name);
 		}
 	}
 #endif
