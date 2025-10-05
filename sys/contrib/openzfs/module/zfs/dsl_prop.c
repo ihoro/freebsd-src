@@ -1231,12 +1231,10 @@ dsl_prop_get_all_ds(dsl_dataset_t *ds, nvlist_t **nvp,
 	}
 
 #ifdef __FreeBSD__
-		dsl_dataset_name(ds, setpoint);
 		nvlist_t *propval = fnvlist_alloc();
 		fnvlist_add_string(propval, ZPROP_VALUE,
 		    (ds->ds_jailname && INGLOBALZONE(curproc)) ?
 		    ds->ds_jailname : "0");
-		fnvlist_add_string(propval, ZPROP_SOURCE, setpoint);
 		fnvlist_add_nvlist(*nvp, "jail", propval);
 		nvlist_free(propval);
 #endif
