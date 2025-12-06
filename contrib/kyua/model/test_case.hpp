@@ -39,6 +39,7 @@
 #include <string>
 
 #include "engine/debugger.hpp"
+#include "engine/flaky/tracker.hpp"
 #include "model/metadata_fwd.hpp"
 #include "model/test_result_fwd.hpp"
 #include "utils/noncopyable.hpp"
@@ -75,6 +76,7 @@ public:
 
     void attach_debugger(engine::debugger_ptr) const;
     engine::debugger_ptr get_debugger() const;
+    engine::flaky::tracker_ptr get_flaky_tracker() const;
 
     bool operator==(const test_case&) const;
     bool operator!=(const test_case&) const;

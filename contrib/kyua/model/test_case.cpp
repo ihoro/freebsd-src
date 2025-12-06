@@ -63,6 +63,10 @@ struct model::test_case::impl : utils::noncopyable {
     /// Optional pointer to a debugger attached.
     engine::debugger_ptr debugger;
 
+    /// A flaky tracker attached.
+    engine::flaky::tracker_ptr flaky_tracker = nullptr;
+    bool flaky_tracker_initialized = false;
+
     /// Constructor.
     ///
     /// \param name_ The name of the test case within the test program.
@@ -251,6 +255,21 @@ engine::debugger_ptr
 model::test_case::get_debugger() const
 {
     return _pimpl->debugger;
+}
+
+
+/// Gets the optional flaky tracker.
+///
+/// \return An optional pointer to a flaky tracker.
+engine::flaky::tracker_ptr
+model::test_case::get_flaky_tracker() const
+{
+    if (!_pimpl->flaky_tracker_initialized) {
+        _pimpl->flaky_tracker = engine::flaky::make_tracker(*this);
+        _pimpl->flaky_tracker_initialized = true;
+    }
+
+    return _pimpl->flaky_tracker;
 }
 
 

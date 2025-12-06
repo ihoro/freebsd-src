@@ -1,4 +1,4 @@
-// Copyright 2011 The Kyua Authors.
+// Copyright 2025 The Kyua Authors.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -203,7 +203,16 @@ finish_test(scheduler::result_handle_ptr result_handle,
         dynamic_cast< const scheduler::test_result_handle* >(
             result_handle.get());
 
-    put_test_result(test_case_id, *test_result_handle, tx);
+    const model::test_program_ptr test_program =
+        test_result_handle->test_program();
+    const model::test_case& test_case = test_program->find(
+        test_result_handle->test_case_name());
+    auto ft = test_case.get_flaky_tracker();
+    if (ft)
+        ft->attempt_taken(test_result_handle);
+
+    if (!ft || ft->attempts_left() == 0)
+        put_test_result(test_case_id, *test_result_handle, tx);
 
     const model::test_result test_result = safe_cleanup(*test_result_handle);
     hooks.got_result(
@@ -275,6 +284,7 @@ drivers::run_tests::drive(const fs::path& kyuafile_path,
     path_to_id_map ids_cache;
     pid_to_id_map in_flight;
     std::vector< engine::scan_result > exclusive_tests;
+    std::vector< engine::scan_result > flaky_tests;
 
     const std::size_t slots = user_config.lookup< config::positive_int_node >(
         "parallelism");
@@ -286,7 +296,13 @@ drivers::run_tests::drive(const fs::path& kyuafile_path,
         // first with the assumption that the spawning is faster than any single
         // job, so we want to keep as many jobs in the background as possible.
         while (in_flight.size() < slots) {
-            optional< engine::scan_result > match = scanner.yield();
+            optional< engine::scan_result > match;
+            if (!flaky_tests.empty()) {
+                match = flaky_tests.back();
+                flaky_tests.pop_back();
+            } else {
+                match = scanner.yield();
+            }
             if (!match)
                 break;
             const model::test_program_ptr test_program = match.get().first;
@@ -323,17 +339,40 @@ drivers::run_tests::drive(const fs::path& kyuafile_path,
             in_flight.erase(iter);
 
             finish_test(result_handle, test_case_id, tx, hooks);
+
+            const scheduler::test_result_handle* test_result_handle =
+                dynamic_cast< const scheduler::test_result_handle* >(
+                result_handle.get());
+            const model::test_program_ptr test_program =
+                test_result_handle->test_program();
+            const model::test_case& test_case = test_program->find(
+                test_result_handle->test_case_name());
+            auto ft = test_case.get_flaky_tracker();
+            if (ft && ft->attempts_left() > 0)
+                flaky_tests.push_back(std::make_pair(test_program, test_case.name()));
         }
-    } while (!in_flight.empty() || !scanner.done());
+    } while (!in_flight.empty() || !flaky_tests.empty() || !scanner.done());
 
     // Run any exclusive tests that we spotted earlier sequentially.
     for (std::vector< engine::scan_result >::const_iterator
              iter = exclusive_tests.begin(); iter != exclusive_tests.end();
              ++iter) {
-        const pid_and_id_pair data = start_test(
-            handle, *iter, tx, ids_cache, user_config, hooks);
-        scheduler::result_handle_ptr result_handle = handle.wait_any();
-        finish_test(result_handle, data.second, tx, hooks);
+        engine::flaky::tracker_ptr ft = nullptr;
+        do {
+            const pid_and_id_pair data = start_test(
+                handle, *iter, tx, ids_cache, user_config, hooks);
+            scheduler::result_handle_ptr result_handle = handle.wait_any();
+            finish_test(result_handle, data.second, tx, hooks);
+
+            const scheduler::test_result_handle* test_result_handle =
+                dynamic_cast< const scheduler::test_result_handle* >(
+                result_handle.get());
+            const model::test_program_ptr test_program =
+                test_result_handle->test_program();
+            const model::test_case& test_case = test_program->find(
+                test_result_handle->test_case_name());
+            ft = test_case.get_flaky_tracker();
+        } while (ft && ft->attempts_left() > 0);
     }
 
     tx.commit();

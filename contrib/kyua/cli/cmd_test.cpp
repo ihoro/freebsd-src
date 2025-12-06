@@ -33,6 +33,7 @@
 #include "cli/common.ipp"
 #include "drivers/run_tests.hpp"
 #include "model/test_program.hpp"
+#include "model/test_case.hpp"
 #include "model/test_result.hpp"
 #include "store/layout.hpp"
 #include "utils/cmdline/options.hpp"
@@ -114,7 +115,11 @@ public:
         _ui->out(F("%s  [%s]") % cli::format_result(result) %
             cli::format_delta(duration));
 
-        type_count[result.type()]++;
+        const model::test_case& test_case = test_program.find(test_case_name);
+        auto ft = test_case.get_flaky_tracker();
+
+        if (!ft || ft->attempts_left() == 0)
+            type_count[result.type()]++;
     }
 };
 
