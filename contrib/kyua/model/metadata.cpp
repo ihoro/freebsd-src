@@ -250,6 +250,7 @@ init_tree(config::tree& tree)
     tree.define< config::string_node >("description");
     tree.define< config::string_node >("execenv");
     tree.define< config::string_node >("execenv_jail_params");
+    tree.define< config::string_node >("flaky");
     tree.define< config::bool_node >("has_cleanup");
     tree.define< config::bool_node >("is_exclusive");
     tree.define< config::strings_set_node >("required_configs");
@@ -276,6 +277,7 @@ set_defaults(config::tree& tree)
     tree.set< config::string_node >("description", "");
     tree.set< config::string_node >("execenv", "");
     tree.set< config::string_node >("execenv_jail_params", "");
+    tree.set< config::string_node >("flaky", "");
     tree.set< config::bool_node >("has_cleanup", false);
     tree.set< config::bool_node >("is_exclusive", false);
     tree.set< config::strings_set_node >("required_configs",
@@ -497,6 +499,20 @@ model::metadata::execenv_jail_params(void) const
     } else {
         return get_defaults().lookup< config::string_node >(
             "execenv_jail_params");
+    }
+}
+
+
+/// Returns flaky declaration string.
+///
+/// \return The flaky declaration string.
+const std::string&
+model::metadata::flaky(void) const
+{
+    if (_pimpl->props.is_set("flaky")) {
+        return _pimpl->props.lookup< config::string_node >("flaky");
+    } else {
+        return get_defaults().lookup< config::string_node >("flaky");
     }
 }
 
@@ -980,6 +996,21 @@ model::metadata_builder&
 model::metadata_builder::set_execenv_jail_params(const std::string& params)
 {
     set< config::string_node >(_pimpl->props, "execenv_jail_params", params);
+    return *this;
+}
+
+
+/// Sets flaky declaration string.
+///
+/// \param name The flaky declaration string.
+///
+/// \return A reference to this builder.
+///
+/// \throw model::error If the value is invalid.
+model::metadata_builder&
+model::metadata_builder::set_flaky(const std::string& name)
+{
+    set< config::string_node >(_pimpl->props, "flaky", name);
     return *this;
 }
 

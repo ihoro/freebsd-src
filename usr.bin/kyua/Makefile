@@ -118,6 +118,7 @@ SRCS+=	engine/atf.cpp			\
 	engine/config.cpp		\
 	engine/exceptions.cpp		\
 	engine/filters.cpp		\
+	engine/flaky_tracker.cpp	\
 	engine/kyuafile.cpp		\
 	engine/plain.cpp		\
 	engine/requirements.cpp		\
